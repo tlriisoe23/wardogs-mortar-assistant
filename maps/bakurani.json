@@ -1,0 +1,287 @@
+{
+  "id": "bakurani",
+  "name": "Bakurani",
+  "w": 16,
+  "h": 16,
+  "bounds": {
+    "minX": 23.35,
+    "maxX": 133.6,
+    "minY": 19.34,
+    "maxY": 129.65
+  },
+  "tiles": {
+    "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles/bakurani/revisions/s2-20261016",
+    "tileSize": 128,
+    "minZoom": 0,
+    "maxZoom": 6,
+    "extension": "webp",
+    "defaultStyle": "grayscale",
+    "styles": {
+      "grayscale": {
+        "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles/bakurani/revisions/s2-20261016",
+        "tileSize": 256
+      },
+      "color": {
+        "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles-color/bakurani/revisions/s2-20261015"
+      }
+    }
+  },
+  "markers": [
+    {
+      "icon": "tower",
+      "x": 8361,
+      "y": 7284,
+      "label": "Tower 4",
+      "towerNumber": 4,
+      "minZoom": 0.4,
+      "maxZoom": 100
+    },
+    {
+      "icon": "tower",
+      "x": 7716,
+      "y": 7343,
+      "label": "Tower 3",
+      "towerNumber": 3,
+      "minZoom": 0.4,
+      "maxZoom": 100
+    },
+    {
+      "icon": "tower",
+      "x": 7717,
+      "y": 6999,
+      "label": "Tower 2",
+      "towerNumber": 2,
+      "minZoom": 0.4,
+      "maxZoom": 100
+    },
+    {
+      "icon": "tower",
+      "x": 8049,
+      "y": 6984,
+      "label": "Tower 1",
+      "towerNumber": 1,
+      "minZoom": 0.4,
+      "maxZoom": 100
+    },
+    {
+      "icon": "tower",
+      "x": 8220,
+      "y": 6841,
+      "label": "Tower 5",
+      "towerNumber": 5,
+      "minZoom": 0.4,
+      "maxZoom": 100
+    },
+    {
+      "icon": "valkyra",
+      "x": 11874,
+      "y": 7711,
+      "label": "Valkyra",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "weapons_vendor",
+      "x": 11842,
+      "y": 7724,
+      "label": "Weapons Vendor",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "garage_vendor",
+      "x": 11827,
+      "y": 7700,
+      "label": "Garage Vendor",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "spawn_board",
+      "x": 11812,
+      "y": 7730,
+      "label": "Spawn Board",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "manticore",
+      "x": 5467,
+      "y": 9988,
+      "label": "Manticore",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "weapons_vendor",
+      "x": 5458,
+      "y": 9957,
+      "label": "Weapons Vendor",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "garage_vendor",
+      "x": 5489,
+      "y": 9956,
+      "label": "Garage Vendor",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "spawn_board",
+      "x": 5492,
+      "y": 9972,
+      "label": "Spawn Board",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "lonestar",
+      "x": 6637,
+      "y": 3502,
+      "label": "Lonestar",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "weapons_vendor",
+      "x": 6668,
+      "y": 3505,
+      "label": "Weapons Vendor",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "garage_vendor",
+      "x": 6654,
+      "y": 3538,
+      "label": "Garage Vendor",
+      "minZoom": 10,
+      "maxZoom": 100
+    },
+    {
+      "icon": "spawn_board",
+      "x": 6680,
+      "y": 3524,
+      "label": "Spawn Board",
+      "minZoom": 10,
+      "maxZoom": 100
+    }
+  ],
+  "zones": [],
+  "polygons": [
+    {
+      "color": "#d86666",
+      "renderStyle": "spawn",
+      "fillOpacity": 0.192,
+      "strokeWidth": 2,
+      "dashed": false,
+      "label": "VALKYRA Spawn",
+      "points": [
+        {
+          "x": 11397,
+          "y": 7918
+        },
+        {
+          "x": 12000,
+          "y": 8131
+        },
+        {
+          "x": 12218,
+          "y": 7527
+        },
+        {
+          "x": 11614,
+          "y": 7311
+        }
+      ]
+    },
+    {
+      "color": "#82c596",
+      "renderStyle": "spawn",
+      "fillOpacity": 0.192,
+      "strokeWidth": 2,
+      "dashed": false,
+      "label": "MANTICORE Spawn",
+      "points": [
+        {
+          "x": 5450,
+          "y": 10510
+        },
+        {
+          "x": 5911,
+          "y": 10064
+        },
+
+        {
+          "x": 5462,
+          "y": 9605
+        },
+        {
+          "x": 5003,
+          "y": 10052
+        }
+      ]
+    },
+    {
+      "color": "#5fa8d3",
+      "renderStyle": "spawn",
+      "fillOpacity": 0.192,
+      "strokeWidth": 2,
+      "dashed": false,
+      "label": "LONESTAR Spawn",
+      "points": [
+        {
+          "x": 6478,
+          "y": 3948
+        },
+        {
+          "x": 7076,
+          "y": 3717
+        },
+        {
+          "x": 6846,
+          "y": 3119
+        },
+        {
+          "x": 6248,
+          "y": 3349
+        }
+      ]
+    }
+  ],
+  "coordinateMetersPerUnit": 100,
+  "tileBounds": {
+    "minX": -0.03,
+    "maxX": 163.81,
+    "minY": -0.01,
+    "maxY": 163.83
+  },
+  "controlZones": [
+    {
+      "id": "default",
+      "labelKey": "controlZoneDefault",
+      "x": 79.593275,
+      "y": 71.53121,
+      "radiusMeters": 500.0,
+      "selectionWeight": 2.0
+    },
+    {
+      "id": "farmland",
+      "labelKey": "controlZoneFarmland",
+      "x": 81.05174,
+      "y": 69.08704,
+      "radiusMeters": 500.0,
+      "selectionWeight": 1.0
+    },
+    {
+      "id": "lumberyard",
+      "labelKey": "controlZoneLumberyard",
+      "x": 82.17683,
+      "y": 71.528,
+      "radiusMeters": 500.0,
+      "selectionWeight": 1.0
+    }
+  ]
+}

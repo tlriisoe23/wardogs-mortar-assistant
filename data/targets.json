@@ -1,0 +1,425 @@
+[
+  {
+    "id": "bak-t4",
+    "map": "bakurani",
+    "name": "Tower 4 (North Ridge Overwatch)",
+    "category": "sniper_tower",
+    "x": 83.61,
+    "y": 72.84,
+    "notes": "Primary high-ground recon sniper perch overlooking central valley and north river approach.",
+    "voice_triggers": [
+      "tower 4",
+      "tower four",
+      "north tower"
+    ]
+  },
+  {
+    "id": "bak-t3",
+    "map": "bakurani",
+    "name": "Tower 3 (NW River Catwalk)",
+    "category": "sniper_tower",
+    "x": 77.16,
+    "y": 73.43,
+    "notes": "Heavily contested catwalk tower with heavy sniper traffic covering the northwest water crossing.",
+    "voice_triggers": [
+      "tower 3",
+      "tower three",
+      "river tower"
+    ]
+  },
+  {
+    "id": "bak-t2",
+    "map": "bakurani",
+    "name": "Tower 2 (West Treeline)",
+    "category": "sniper_tower",
+    "x": 77.17,
+    "y": 69.99,
+    "notes": "Camouflaged tower inside western treeline. Common hidden sniper nest for counter-mortar spotters.",
+    "voice_triggers": [
+      "tower 2",
+      "tower two",
+      "west tower"
+    ]
+  },
+  {
+    "id": "bak-t1",
+    "map": "bakurani",
+    "name": "Tower 1 (Central Hub)",
+    "category": "sniper_tower",
+    "x": 80.49,
+    "y": 69.84,
+    "notes": "Immediate center-line tower. First structure rushed by infantry and snipers at round start.",
+    "voice_triggers": [
+      "tower 1",
+      "tower one",
+      "center tower"
+    ]
+  },
+  {
+    "id": "bak-t5",
+    "map": "bakurani",
+    "name": "Tower 5 (SE Hilltop)",
+    "category": "sniper_tower",
+    "x": 82.2,
+    "y": 68.41,
+    "notes": "Elevated southern vantage point locking down the southern approach road.",
+    "voice_triggers": [
+      "tower 5",
+      "tower five",
+      "south tower"
+    ]
+  },
+  {
+    "id": "bak-lumber",
+    "map": "bakurani",
+    "name": "Lumberyard Factory (Primary FOB Spot)",
+    "category": "fob_haven",
+    "x": 82.18,
+    "y": 71.53,
+    "notes": "Covered industrial warehouse where squads hide deployable spawn beacons and rally points.",
+    "voice_triggers": [
+      "lumberyard",
+      "lumber yard",
+      "factory",
+      "lumber"
+    ]
+  },
+  {
+    "id": "bak-farm",
+    "map": "bakurani",
+    "name": "Farmland Compound (Barn Choke)",
+    "category": "chokepoint",
+    "x": 81.05,
+    "y": 69.09,
+    "notes": "Frequent infantry standoff zone; enemies cluster inside stone walls and barn entrances.",
+    "voice_triggers": [
+      "farmland",
+      "farm",
+      "barn"
+    ]
+  },
+  {
+    "id": "bak-center-cap",
+    "map": "bakurani",
+    "name": "Central Valley Capture Zone",
+    "category": "chokepoint",
+    "x": 79.59,
+    "y": 71.53,
+    "notes": "Main objective capture point in open valley. High lethality area for early blind rounds.",
+    "voice_triggers": [
+      "center",
+      "objective",
+      "valley",
+      "central zone"
+    ]
+  },
+  {
+    "id": "bak-valkyra-choke",
+    "map": "bakurani",
+    "name": "Valkyra Spawn Exit Chokepoint",
+    "category": "spawn_funnel",
+    "x": 114.0,
+    "y": 79.2,
+    "notes": "Narrow defile exit leading out of Valkyra spawn. High-probability blind vehicle/infantry kill zone.",
+    "voice_triggers": [
+      "valkyra spawn",
+      "valkyra exit"
+    ]
+  },
+  {
+    "id": "bak-manticore-choke",
+    "map": "bakurani",
+    "name": "Manticore Spawn Exit Road",
+    "category": "spawn_funnel",
+    "x": 54.5,
+    "y": 100.5,
+    "notes": "Main road funnel exiting northern Manticore compound.",
+    "voice_triggers": [
+      "manticore spawn",
+      "manticore exit"
+    ]
+  },
+  {
+    "id": "oze-church",
+    "map": "ozeti",
+    "name": "Church Belltower & Graveyard FOB",
+    "category": "fob_haven",
+    "x": 101.23,
+    "y": 62.96,
+    "notes": "#1 most notorious sniper tower and hidden squad FOB spot in Ozeti. Shelling this yields guaranteed kills.",
+    "voice_triggers": [
+      "church",
+      "bell tower",
+      "graveyard",
+      "church tower"
+    ]
+  },
+  {
+    "id": "oze-t4",
+    "map": "ozeti",
+    "name": "Tower 4 (North River Watch)",
+    "category": "sniper_tower",
+    "x": 100.62,
+    "y": 67.64,
+    "notes": "North riverbank tower providing long-range sniper sightlines into eastern road approach.",
+    "voice_triggers": [
+      "tower 4",
+      "tower four",
+      "north tower"
+    ]
+  },
+  {
+    "id": "oze-t1",
+    "map": "ozeti",
+    "name": "Tower 1 (West Farmland)",
+    "category": "sniper_tower",
+    "x": 95.8,
+    "y": 62.82,
+    "notes": "Western watchtower frequently manned by recon teams watching western wheat fields.",
+    "voice_triggers": [
+      "tower 1",
+      "tower one",
+      "west tower"
+    ]
+  },
+  {
+    "id": "oze-t3",
+    "map": "ozeti",
+    "name": "Tower 3 (East Hilltop)",
+    "category": "sniper_tower",
+    "x": 104.49,
+    "y": 63.71,
+    "notes": "Dominates high ridge east of the church. Prime location for enemy mortar squads.",
+    "voice_triggers": [
+      "tower 3",
+      "tower three",
+      "east tower"
+    ]
+  },
+  {
+    "id": "oze-t2",
+    "map": "ozeti",
+    "name": "Tower 2 (South Orchard)",
+    "category": "sniper_tower",
+    "x": 100.37,
+    "y": 59.23,
+    "notes": "Covers southern approaches and orchard tree line.",
+    "voice_triggers": [
+      "tower 2",
+      "tower two",
+      "south tower"
+    ]
+  },
+  {
+    "id": "oze-river-bridge",
+    "map": "ozeti",
+    "name": "River Bridge Crossing Bottle-Neck",
+    "category": "chokepoint",
+    "x": 97.34,
+    "y": 62.14,
+    "notes": "Crucial river crossing bottleneck. Vehicles and infantry frequently stall and smoke here.",
+    "voice_triggers": [
+      "bridge",
+      "river crossing",
+      "river"
+    ]
+  },
+  {
+    "id": "oze-village",
+    "map": "ozeti",
+    "name": "Central Farmhouses (Urban Standoff)",
+    "category": "chokepoint",
+    "x": 99.62,
+    "y": 63.27,
+    "notes": "Dense village cluster with rooms and courtyards often fortified with deployable barriers.",
+    "voice_triggers": [
+      "village",
+      "farm houses",
+      "houses"
+    ]
+  },
+  {
+    "id": "zest-factory",
+    "map": "zestafona",
+    "name": "Small Factory Warehouse (Major FOB Hub)",
+    "category": "fob_haven",
+    "x": 70.84,
+    "y": 105.18,
+    "notes": "Prime indoor FOB location with steel roof protecting squads; shell open loading bays.",
+    "voice_triggers": [
+      "factory",
+      "small factory",
+      "warehouse"
+    ]
+  },
+  {
+    "id": "zest-water",
+    "map": "zestafona",
+    "name": "Water Treatment Filtration Plant",
+    "category": "chokepoint",
+    "x": 69.67,
+    "y": 100.0,
+    "notes": "Large open tanks and concrete walkways where defenders get pinned under fire.",
+    "voice_triggers": [
+      "water treatment",
+      "water plant",
+      "filtration"
+    ]
+  },
+  {
+    "id": "zest-t1",
+    "map": "zestafona",
+    "name": "Tower 1 (West Ridge Overwatch)",
+    "category": "sniper_tower",
+    "x": 68.6,
+    "y": 104.12,
+    "notes": "High ridge tower with extreme sightlines over the factory yard and residential zone.",
+    "voice_triggers": [
+      "tower 1",
+      "tower one",
+      "west tower"
+    ]
+  },
+  {
+    "id": "zest-t2",
+    "map": "zestafona",
+    "name": "Tower 2 (East Rail Tower)",
+    "category": "sniper_tower",
+    "x": 72.89,
+    "y": 105.03,
+    "notes": "Overlooks the train tracks and eastern freight containers.",
+    "voice_triggers": [
+      "tower 2",
+      "tower two",
+      "rail tower"
+    ]
+  },
+  {
+    "id": "zest-t3",
+    "map": "zestafona",
+    "name": "Tower 3 (South Waterworks Tower)",
+    "category": "sniper_tower",
+    "x": 70.12,
+    "y": 100.13,
+    "notes": "Overlooks the southern water facility and intake canals.",
+    "voice_triggers": [
+      "tower 3",
+      "tower three",
+      "south tower"
+    ]
+  },
+  {
+    "id": "zest-houses",
+    "map": "zestafona",
+    "name": "Residential Brick Village (Attic Campers)",
+    "category": "chokepoint",
+    "x": 68.62,
+    "y": 103.71,
+    "notes": "Multi-story brick houses with attic sniper windows; perfect target for high-angle plunging mortar shells.",
+    "voice_triggers": [
+      "houses",
+      "residential",
+      "brick houses",
+      "attics"
+    ]
+  },
+  {
+    "id": "zest-rail-junction",
+    "map": "zestafona",
+    "name": "Central Railway Intersection",
+    "category": "chokepoint",
+    "x": 70.33,
+    "y": 102.72,
+    "notes": "Dead center crossroad where trains and roads intersect. Guaranteed early engagement point.",
+    "voice_triggers": [
+      "railway",
+      "intersection",
+      "rail junction",
+      "train"
+    ]
+  },
+  {
+    "id": "fr-pad-150",
+    "map": "firing_range",
+    "name": "Range Target 150m (Close Pit)",
+    "category": "chokepoint",
+    "x": 55.86,
+    "y": 98.54,
+    "notes": "150m close-range calibration target SE of the Firing Range compound (~831 MIL).",
+    "voice_triggers": [
+      "range 150",
+      "target 150",
+      "close pit"
+    ]
+  },
+  {
+    "id": "fr-bunker-250",
+    "map": "firing_range",
+    "name": "Range Target 250m (Sandbag Bunker)",
+    "category": "fob_haven",
+    "x": 56.57,
+    "y": 97.83,
+    "notes": "250m medium-close practice bunker along the downrange firing lane (~740 MIL).",
+    "voice_triggers": [
+      "range 250",
+      "target 250",
+      "sandbag bunker"
+    ]
+  },
+  {
+    "id": "fr-wreck-350",
+    "map": "firing_range",
+    "name": "Range Target 350m (Armor Hulk)",
+    "category": "chokepoint",
+    "x": 57.27,
+    "y": 97.13,
+    "notes": "350m mid-range vehicle hull target (~638 MIL). Ideal for practicing FoV splash corrections.",
+    "voice_triggers": [
+      "range 350",
+      "target 350",
+      "armor hulk"
+    ]
+  },
+  {
+    "id": "fr-ridge-450",
+    "map": "firing_range",
+    "name": "Range Target 450m (Observation Tower)",
+    "category": "sniper_tower",
+    "x": 57.98,
+    "y": 96.42,
+    "notes": "450m downrange tower structure (~525 MIL). Great for testing high-angle plunging fire.",
+    "voice_triggers": [
+      "range 450",
+      "target 450",
+      "range tower"
+    ]
+  },
+  {
+    "id": "fr-compound-550",
+    "map": "firing_range",
+    "name": "Range Target 550m (Far Compound)",
+    "category": "fob_haven",
+    "x": 58.69,
+    "y": 95.71,
+    "notes": "550m long-range compound target (~393 MIL).",
+    "voice_triggers": [
+      "range 550",
+      "target 550",
+      "far compound"
+    ]
+  },
+  {
+    "id": "fr-max-650",
+    "map": "firing_range",
+    "name": "Range Target 650m (Max Envelope Marker)",
+    "category": "sniper_tower",
+    "x": 59.4,
+    "y": 95.0,
+    "notes": "650m extreme-range test marker near the 684m L81 Mortar limit (~222 MIL).",
+    "voice_triggers": [
+      "range 650",
+      "target 650",
+      "max range"
+    ]
+  }
+]
