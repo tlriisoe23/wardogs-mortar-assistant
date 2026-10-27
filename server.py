@@ -166,13 +166,44 @@ GLOBAL_PTT_WATCHER = GlobalPTTWatcher()
 
 
 async def generate_neural_tts(text: str, voice: str) -> bytes:
-    import edge_tts
-    communicate = edge_tts.Communicate(text, voice, rate="+8%")
-    audio_data = b""
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            audio_data += chunk["data"]
-    return audio_data
+    try:
+        import edge_tts
+        communicate = edge_tts.Communicate(text, voice, rate="+8%")
+        audio_data = b""
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_data += chunk["data"]
+        if len(audio_data) > 256:
+            return audio_data
+    except Exception:
+        pass
+    try:
+        import io
+        from gtts import gTTS
+        buf = io.BytesIO()
+        gTTS(text=text, lang="en", tld="us").write_to_fp(buf)
+        data = buf.getvalue()
+        if len(data) > 256:
+            return data
+    except Exception:
+        pass
+    import io, math, struct, wave
+    buf = io.BytesIO()
+    sample_rate = 22050
+    n_samples = int(sample_rate * 0.45)
+    frames = bytearray()
+    for i in range(n_samples):
+        t = i / sample_rate
+        freq = 880.0 if t < 0.18 else (1174.66 if t < 0.36 else 0.0)
+        env = math.sin(math.pi * (t / 0.18)) if t < 0.18 else (math.sin(math.pi * ((t - 0.18) / 0.18)) if t < 0.36 else 0.0)
+        sample = int(12000 * env * math.sin(2.0 * math.pi * freq * t)) if freq > 0 else 0
+        frames += struct.pack("<h", max(-32767, min(32767, sample)))
+    with wave.open(buf, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(bytes(frames))
+    return buf.getvalue()
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
