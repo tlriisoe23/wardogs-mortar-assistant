@@ -22,7 +22,7 @@ import sys
 
 from ocr_sniff import GLOBAL_OCR_WATCHER, capture_and_scan_coords, capture_and_scan_entries
 
-PORT = 8765
+PORT = int(os.environ.get("PORT", "8765"))
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 # In-memory audio cache for instant sub-millisecond replays
@@ -196,6 +196,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
+
+        if parsed.path in ('/api/health', '/health'):
+            self._send_json({
+                "ok": True,
+                "status": "healthy",
+                "service": "wardogs-mortar-assistant",
+                "port": PORT,
+                "weapons": ["L81 Mortar", "SPH-2 Self-Propelled Howitzer"],
+                "maps": ["Bakurani", "Ozeti", "Zestafona"],
+            })
+            return
 
         # Global In-Game Push-To-Talk (PTT) endpoints
         if parsed.path == '/api/ptt/status':
