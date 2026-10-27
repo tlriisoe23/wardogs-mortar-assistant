@@ -20,7 +20,7 @@ import json
 import os
 import sys
 
-from ocr_sniff import GLOBAL_OCR_WATCHER, capture_and_scan_coords, capture_and_scan_entries
+from ocr_sniff import GLOBAL_OCR_WATCHER, capture_and_scan_entries
 
 PORT = int(os.environ.get("PORT", "8765"))
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
