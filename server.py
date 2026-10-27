@@ -27,6 +27,8 @@ DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 # In-memory audio cache for instant sub-millisecond replays
 TTS_CACHE = {}
+MAX_TTS_TEXT_LENGTH = 1000
+TTS_TIMEOUT_SECONDS = 20.0
 
 # Human-readable names for Windows Virtual-Key (VK) codes
 VK_NAMES = {
@@ -186,9 +188,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
         super().log_message(format, *args)
 
-    def _send_json(self, data: dict):
+    def _send_json(self, data: dict, status_code: int = 200):
         payload = json.dumps(data).encode('utf-8')
-        self.send_response(200)
+        self.send_response(status_code)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
@@ -293,7 +295,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             voice = params.get('voice', ['en-US-ChristopherNeural'])[0].strip()
 
             if not text:
-                self.send_error(400, "Missing 'text' query parameter.")
+                self._send_json({"error": "Missing 'text' query parameter."}, status_code=400)
+                return
+            if len(text) > MAX_TTS_TEXT_LENGTH:
+                self._send_json({"error": "Text too long", "max_length": MAX_TTS_TEXT_LENGTH}, status_code=413)
                 return
 
             cache_key = f"{voice}:{text}"
@@ -301,12 +306,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 audio_bytes = TTS_CACHE[cache_key]
             else:
                 try:
-                    audio_bytes = asyncio.run(generate_neural_tts(text, voice))
+                    audio_bytes = asyncio.run(asyncio.wait_for(generate_neural_tts(text, voice), timeout=TTS_TIMEOUT_SECONDS))
                     if len(TTS_CACHE) < 500:
                         TTS_CACHE[cache_key] = audio_bytes
+                except asyncio.TimeoutError:
+                    print("[TTS Error] Upstream timed out")
+                    self._send_json({"error": "TTS upstream timed out"}, status_code=504)
+                    return
                 except Exception as e:
                     print(f"[TTS Error] {e}")
-                    self.send_error(500, f"TTS Generation Error: {e}")
+                    self._send_json({"error": "TTS generation failed"}, status_code=500)
                     return
 
             try:
