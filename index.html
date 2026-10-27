@@ -166,12 +166,12 @@
             font-size: 10px;
             font-family: var(--font-mono);
             font-weight: 600;
-            color: #64748b;
+            color: #cbd5e1;
             text-transform: none;
         }
 
         .workspace-tab-btn.active .workspace-tab-sub {
-            color: #bae6fd;
+            color: #cbd5e1;
         }
 
         /* Faster SPA View Transitions (modern-web-guidance: content-visibility: hidden) */
@@ -301,7 +301,7 @@
 
         .ptt-hint {
             font-size: 11px;
-            color: #64748b;
+            color: #94a3b8;
         }
 
         /* COORDINATES INPUTS */
@@ -381,7 +381,7 @@
             font-family: var(--font-mono);
             font-variant-numeric: tabular-nums;
             font-size: 11px;
-            color: #64748b;
+            color: #94a3b8;
         }
 
         .hero-delta {
@@ -768,7 +768,7 @@
         }
 
         .log-time {
-            color: #64748b;
+            color: #94a3b8;
             flex-shrink: 0;
         }
 
@@ -1256,7 +1256,7 @@
             <span class="badge-live" id="sysStatusBadge">SYSTEM READY</span>
         </div>
         <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-            <button type="button" class="action-btn" id="openHowToUseBtn" style="padding: 5px 10px; font-size: 11px; background: #0284c7;" onclick="openHowToUseModal()" title="Open Quick-Start Field Manual &amp; Voice Guide">
+            <button type="button" class="action-btn" id="openHowToUseBtn" style="padding: 5px 10px; font-size: 11px; background: #0369a1; color: #ffffff;" onclick="openHowToUseModal()" title="Open Quick-Start Field Manual &amp; Voice Guide">
                 📖 HOW TO USE
             </button>
             <button type="button" class="action-btn" style="padding: 5px 10px; font-size: 11px; background: #7c3aed;" onclick="changeTacticalMap('firing_range')" title="Switch to In-Game Firing Range Practice Mode">
@@ -1265,7 +1265,7 @@
             <button type="button" class="action-btn secondary" id="headerUndoBtn" style="padding: 5px 9px; font-size: 11px;" onclick="undoLastAction()" title="Undo last coordinate or impact change (Ctrl+Z)">
                 ↩ UNDO
             </button>
-            <button type="button" class="action-btn" id="headerMuteBtn" aria-pressed="false" style="padding: 5px 10px; font-size: 11px; background: #059669;" onclick="toggleGlobalMute()" title="Mute or Unmute all Spoken Audio &amp; Radio Chimes">
+            <button type="button" class="action-btn" id="headerMuteBtn" aria-pressed="false" style="padding: 5px 10px; font-size: 11px; background: #047857; color: #ffffff;" onclick="toggleGlobalMute()" title="Mute or Unmute all Spoken Audio &amp; Radio Chimes">
                 🔊 AUDIO: ON
             </button>
             <button type="button" class="action-btn secondary" style="padding: 5px 10px; font-size: 11px;" onclick="speakCurrentSolution()">
@@ -1277,7 +1277,7 @@
         </div>
     </header>
 
-    <div class="container">
+    <main class="container" id="main-content">
         <!-- TOP MISSION DECK: 2-PAGE WORKSPACE SWITCHER + SHARED FIRING SOLUTION HERO -->
         <div class="top-mission-deck">
             <div class="workspace-switcher" role="tablist" aria-label="Primary Workspace Pages" onkeydown="handleWorkspaceTabsKeydown(event)">
@@ -1399,7 +1399,7 @@
                             <canvas id="tacticalMapCanvas"></canvas>
                         </div>
 
-                        <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+                        <div style="font-size: 10px; color: #94a3b8; font-family: var(--font-mono); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
                             <span id="mapCursorCoords" style="color: #38bdf8;">CURSOR GPS: X: --.-- | Y: --.--</span>
                             <span id="mapModeIndicator" style="color: #f87171; font-weight: 700;">LEFT-CLICK: TARGET · RIGHT-CLICK: MORTAR · SHIFT+CLICK: SPLASH CORRECTION</span>
                             <span id="mapLastSplash" style="color: var(--accent-amber);">NO IMPACT MARKED</span>
@@ -1426,7 +1426,7 @@
                         <div id="wardogsMapFrameWrapper" style="width: 100%; height: 540px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-dim); background: #090e15; transition: height 0.2s;">
                             <iframe id="wardogsMapFrame" src="/classic-fire-control.html" title="WARDOGS Fire Control Coordinate Map" style="width: 100%; height: 100%; border: none;"></iframe>
                         </div>
-                        <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                        <div style="font-size: 10px; color: #94a3b8; font-family: var(--font-mono); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
                             <span style="color: #10b981;">⚡ Upgraded with 8.5x Deep Building Zoom (3x faster scroll wheel) &amp; automatic 2-way coordinate sync!</span>
                             <span>1 grid unit = 100 meters</span>
                         </div>
@@ -1472,7 +1472,7 @@
                         </summary>
                         <div id="targetReconBox" style="background: #090e15; border: 1px solid var(--border-dim); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 8px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-                                <span id="reconTelemetryLeft" style="font-size: 10px; color: #64748b; font-family: var(--font-mono);">APPROACH VECTOR: --° · PLUNGE ANGLE: --° · LETHAL RADIUS: 25m</span>
+                                <span id="reconTelemetryLeft" style="font-size: 10px; color: #94a3b8; font-family: var(--font-mono);">APPROACH VECTOR: --° · PLUNGE ANGLE: --° · LETHAL RADIUS: 25m</span>
                                 <div style="display: flex; gap: 4px; align-items: center;">
                                     <button type="button" class="map-tag-btn active-filter" id="reconMode_split" onclick="setReconMode('split')">⚡ Split (3D + Spotter)</button>
                                     <button type="button" class="map-tag-btn" id="reconMode_fpv3d" onclick="setReconMode('fpv3d')">🎥 3D Topo FPV</button>
@@ -1515,7 +1515,7 @@
 
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
                             <span style="font-size: 11px; font-weight: 700; color: #f87171; text-transform: uppercase;">🔴 Enemy Target</span>
-                            <span style="font-size: 10px; color: #64748b; font-family: var(--font-mono);">Left-Click Map</span>
+                            <span style="font-size: 10px; color: #94a3b8; font-family: var(--font-mono);">Left-Click Map</span>
                         </div>
                         <div class="coord-grid">
                             <div class="input-group">
@@ -1620,7 +1620,7 @@
                 <div class="card" style="gap: 12px;">
                     <div class="card-header">
                         <span>🎙️ Tactical Voice Control</span>
-                        <span id="micModeLabel" style="font-size: 10px; color: #64748b;">PUSH-TO-TALK [SPACE]</span>
+                        <span id="micModeLabel" style="font-size: 10px; color: #94a3b8;">PUSH-TO-TALK [SPACE]</span>
                     </div>
 
                     <div class="voice-hud">
@@ -1664,7 +1664,7 @@
                                 ⌨️ Bind Key
                             </button>
                         </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: #64748b;">
+                        <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: #94a3b8;">
                             <span id="globalPttStatusText">GLOBAL HOOK: STANDBY</span>
                             <span id="globalPttKeyBadge" style="color: #38bdf8;">BOUND: MOUSE 4</span>
                         </div>
@@ -1800,7 +1800,7 @@
                             <button type="button" class="nudge-btn" style="padding: 6px 12px;" onclick="triggerSingleOcrScan()" title="Scan screen once right now for coordinates">📷 Scan Screen Now</button>
                         </div>
 
-                        <div style="display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); color: #64748b;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); color: #94a3b8;">
                             <span id="ocrStatusText">STATUS: STANDBY</span>
                             <span id="ocrLastCoordsText">GPS: NO LOCK</span>
                         </div>
@@ -1838,7 +1838,7 @@
                 </div>
             </div>
         </section>
-    </div>
+    </main>
 
     <!-- QUICK-START HOW TO USE MODAL DIALOG -->
     <dialog id="howToUseModal" closedby="any" aria-labelledby="howToUseModalTitle">
@@ -4310,7 +4310,7 @@
             });
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #64748b; font-family: monospace;">No targets match the selected filters.</div>';
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #94a3b8; font-family: monospace;">No targets match the selected filters.</div>';
                 return;
             }
 
