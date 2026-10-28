@@ -1351,7 +1351,7 @@
                     </div>
 
                     <!-- TAB 1: NATIVE INTERACTIVE WARDOGS TACTICAL MAP -->
-                    <div id="mapViewContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div id="mapViewContainer" role="tabpanel" aria-labelledby="tabMapBtn" style="display: flex; flex-direction: column; gap: 8px;">
                         <div class="map-bar" style="flex-wrap: wrap; gap: 8px;">
                             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                                 <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">MAP:</span>
@@ -1407,7 +1407,7 @@
                     </div>
 
                     <!-- TAB 1B: EMBEDDED CLASSIC WARDOG-FIRE-CONTROL -->
-                    <div id="fireControlViewContainer" style="display: none; flex-direction: column; gap: 8px;">
+                    <div id="fireControlViewContainer" role="tabpanel" aria-labelledby="tabFireControlBtn" style="display: none; flex-direction: column; gap: 8px;">
                         <div class="map-bar" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                                 <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 800;">🌐 CLASSIC WARDOG FIRE CONTROL (8.5× DEEP ZOOM + LIVE SYNC):</span>
@@ -1433,7 +1433,7 @@
                     </div>
 
                     <!-- TAB 2: BLIND FIRE TARGET DATABASE (HOTSPOTS) -->
-                    <div id="targetsViewContainer" style="display: none; flex-direction: column; gap: 10px;">
+                    <div id="targetsViewContainer" role="tabpanel" aria-labelledby="tabTargetsBtn" style="display: none; flex-direction: column; gap: 10px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; background: #0d1520; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-dim);">
                             <div style="display: flex; gap: 4px; align-items: center;">
                                 <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; margin-right: 4px;">MAP:</span>
@@ -1455,7 +1455,7 @@
                     </div>
 
                     <!-- TAB 3: PYTHAGOREAN MATH HUD -->
-                    <div id="pythagorasViewContainer" style="display: none; flex-direction: column; gap: 14px;">
+                    <div id="pythagorasViewContainer" role="tabpanel" aria-labelledby="tabPythBtn" style="display: none; flex-direction: column; gap: 14px;">
                         <div class="visualizer-box">
                             <canvas id="triangleCanvas"></canvas>
                         </div>
