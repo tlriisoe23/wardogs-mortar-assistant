@@ -166,6 +166,29 @@ class GlobalPTTWatcher:
 
 GLOBAL_PTT_WATCHER = GlobalPTTWatcher()
 
+DESKTOP_HUD_STATE = {
+    "ok": True,
+    "tauri_v2_ready": True,
+    "identifier": "net.tail0908d2.wardogs-mortar-assistant",
+    "zero_background_polling": True,
+    "always_on_top": True,
+    "click_through": False,
+    "arc_mode": "low",
+    "elevation_mils_offset": 0,
+    "locked_grid": None,
+    "last_action": None,
+    "last_action_ts": 0.0,
+    "hotkeys": {
+        "Alt+M": "Lock current mortar/howitzer grid coordinates",
+        "Alt+R": "Reset target & elevation offset",
+        "Alt+Up": "Increment elevation (+5 mils)",
+        "Alt+Down": "Decrement elevation (-5 mils)",
+        "Alt+A": "Toggle High/Low ballistic arc",
+        "Alt+O": "Trigger single-shot WinRT map grid OCR (0% background polling)",
+        "Alt+C": "Toggle borderless HUD click-through mode",
+    },
+}
+
 
 async def generate_neural_tts(text: str, voice: str) -> bytes:
     try:
@@ -238,7 +261,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "port": PORT,
                 "weapons": ["L81 Mortar", "SPH-2 Self-Propelled Howitzer"],
                 "maps": ["Bakurani", "Ozeti", "Zestafona"],
+                "tauri_v2_ready": True,
             })
+            return
+
+        if parsed.path == '/api/desktop-hud':
+            self._send_json(DESKTOP_HUD_STATE)
             return
 
         # Global In-Game Push-To-Talk (PTT) endpoints
@@ -363,6 +391,36 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
         except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
             pass
+
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == '/api/desktop-hud':
+            length = int(self.headers.get('Content-Length', '0') or 0)
+            raw = self.rfile.read(length) if length > 0 else b'{}'
+            try:
+                body = json.loads(raw.decode('utf-8'))
+            except Exception:
+                body = {}
+            action = str(body.get('action') or '').strip()
+            step = int(body.get('step_mils', 5))
+            if action == 'elev_up':
+                DESKTOP_HUD_STATE['elevation_mils_offset'] += step
+            elif action == 'elev_down':
+                DESKTOP_HUD_STATE['elevation_mils_offset'] -= step
+            elif action == 'toggle_arc':
+                DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
+            elif action == 'toggle_click_through':
+                DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
+            elif action == 'lock_target':
+                DESKTOP_HUD_STATE['locked_grid'] = body.get('grid') or 'LOCKED'
+            elif action == 'reset_target':
+                DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
+                DESKTOP_HUD_STATE['locked_grid'] = None
+            DESKTOP_HUD_STATE['last_action'] = action
+            DESKTOP_HUD_STATE['last_action_ts'] = time.time()
+            self._send_json(DESKTOP_HUD_STATE)
+            return
+        self._send_json({"error": "Not found"}, status_code=404)
 
     def do_HEAD(self):
         try:
