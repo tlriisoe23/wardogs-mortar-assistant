@@ -1,14 +1,12 @@
 import sys
-import pytest
 import asyncio
 from unittest.mock import patch
 from server import generate_neural_tts
 
-@pytest.mark.asyncio
-async def test_generate_neural_tts_fallback(capsys):
+def test_generate_neural_tts_fallback(capsys):
     # Mocking missing modules to force fallbacks
     with patch.dict(sys.modules, {'edge_tts': None, 'gtts': None}):
-        result = await generate_neural_tts("Hello", "en-US-ChristopherNeural")
+        result = asyncio.run(generate_neural_tts("Hello", "en-US-ChristopherNeural"))
 
         assert result is not None
         assert isinstance(result, bytes)
