@@ -30,6 +30,9 @@ TTS_CACHE = {}
 MAX_TTS_TEXT_LENGTH = 1000
 TTS_TIMEOUT_SECONDS = 20.0
 
+# In-memory target cache for /api/targets
+TARGETS_CACHE = {"mtime": 0.0, "payload": b"[]"}
+
 # Human-readable names for Windows Virtual-Key (VK) codes
 VK_NAMES = {
     0x04: "Middle Mouse (MMB)",
@@ -333,11 +336,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Check for Blind Fire Hotspots Database endpoint
         if parsed.path == '/api/targets':
             targets_file = os.path.join(DIRECTORY, 'data', 'targets.json')
-            if os.path.exists(targets_file):
-                with open(targets_file, 'rb') as f:
-                    payload = f.read()
-            else:
+
+            try:
+                mtime = os.path.getmtime(targets_file)
+            except OSError:
+                mtime = 0.0
+
+            if mtime == 0.0:
                 payload = b"[]"
+                TARGETS_CACHE["mtime"] = 0.0
+                TARGETS_CACHE["payload"] = payload
+            elif mtime > TARGETS_CACHE["mtime"]:
+                try:
+                    with open(targets_file, 'rb') as f:
+                        payload = f.read()
+                    TARGETS_CACHE["mtime"] = mtime
+                    TARGETS_CACHE["payload"] = payload
+                except OSError:
+                    payload = b"[]"
+            else:
+                payload = TARGETS_CACHE["payload"]
+
             try:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
