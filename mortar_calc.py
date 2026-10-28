@@ -194,20 +194,37 @@ SPH_PRIMARY_MODELS = {
 }
 
 
+_SPH_GC_MAX = int(SPH_GC_X[-1])
+_SPH_GC_CACHE = [0.0] * (_SPH_GC_MAX + 1)
+def _init_sph_gc_cache():
+    for i in range(_SPH_GC_MAX + 1):
+        speed = float(i)
+        if speed <= SPH_GC_X[0]:
+            _SPH_GC_CACHE[i] = SPH_GC_Y[0]
+            continue
+        if speed >= SPH_GC_X[-1]:
+            _SPH_GC_CACHE[i] = SPH_GC_Y[-1]
+            continue
+        lo, hi = 0, len(SPH_GC_X) - 1
+        while lo + 1 < hi:
+            mid = (lo + hi) // 2
+            if SPH_GC_X[mid] <= speed:
+                lo = mid
+            else:
+                hi = mid
+        frac = (speed - SPH_GC_X[lo]) / (SPH_GC_X[hi] - SPH_GC_X[lo])
+        _SPH_GC_CACHE[i] = SPH_GC_Y[lo] + (SPH_GC_Y[hi] - SPH_GC_Y[lo]) * frac
+_init_sph_gc_cache()
+
 def _sph_drag_coeff(speed: float) -> float:
-    if speed <= SPH_GC_X[0]:
-        return SPH_GC_Y[0]
-    if speed >= SPH_GC_X[-1]:
-        return SPH_GC_Y[-1]
-    lo, hi = 0, len(SPH_GC_X) - 1
-    while lo + 1 < hi:
-        mid = (lo + hi) // 2
-        if SPH_GC_X[mid] <= speed:
-            lo = mid
-        else:
-            hi = mid
-    frac = (speed - SPH_GC_X[lo]) / (SPH_GC_X[hi] - SPH_GC_X[lo])
-    return SPH_GC_Y[lo] + (SPH_GC_Y[hi] - SPH_GC_Y[lo]) * frac
+    if speed <= 0.0:
+        return _SPH_GC_CACHE[0]
+    if speed >= _SPH_GC_MAX:
+        return _SPH_GC_CACHE[-1]
+    idx = int(speed)
+    frac = speed - idx
+    return _SPH_GC_CACHE[idx] + (_SPH_GC_CACHE[idx + 1] - _SPH_GC_CACHE[idx]) * frac
+
 
 
 def _sph_height_at_distance(angle: float, distance: float, model: Dict, dt: float = 0.02) -> Optional[float]:
@@ -219,28 +236,49 @@ def _sph_height_at_distance(angle: float, distance: float, model: Dict, dt: floa
     g = model["gravity"]
     drag = model["drag"]
     max_steps = int(math.ceil(120.0 / dt))
+    dt_half = dt * 0.5
+    dt_sixth = dt / 6.0
     for _ in range(max_steps):
         s1 = math.hypot(vx, vz)
-        q1 = drag * _sph_drag_coeff(s1) * s1
+        idx1 = int(s1)
+        if s1 <= 0.0: q1 = drag * _SPH_GC_CACHE[0] * s1
+        elif s1 >= _SPH_GC_MAX: q1 = drag * _SPH_GC_CACHE[-1] * s1
+        else: q1 = drag * (_SPH_GC_CACHE[idx1] + (_SPH_GC_CACHE[idx1 + 1] - _SPH_GC_CACHE[idx1]) * (s1 - idx1)) * s1
         a1x, a1z = -q1 * vx, -g - q1 * vz
-        v2x, v2z = vx + a1x * dt * 0.5, vz + a1z * dt * 0.5
+
+        v2x, v2z = vx + a1x * dt_half, vz + a1z * dt_half
         s2 = math.hypot(v2x, v2z)
-        q2 = drag * _sph_drag_coeff(s2) * s2
+        idx2 = int(s2)
+        if s2 <= 0.0: q2 = drag * _SPH_GC_CACHE[0] * s2
+        elif s2 >= _SPH_GC_MAX: q2 = drag * _SPH_GC_CACHE[-1] * s2
+        else: q2 = drag * (_SPH_GC_CACHE[idx2] + (_SPH_GC_CACHE[idx2 + 1] - _SPH_GC_CACHE[idx2]) * (s2 - idx2)) * s2
         a2x, a2z = -q2 * v2x, -g - q2 * v2z
-        v3x, v3z = vx + a2x * dt * 0.5, vz + a2z * dt * 0.5
+
+        v3x, v3z = vx + a2x * dt_half, vz + a2z * dt_half
         s3 = math.hypot(v3x, v3z)
-        q3 = drag * _sph_drag_coeff(s3) * s3
+        idx3 = int(s3)
+        if s3 <= 0.0: q3 = drag * _SPH_GC_CACHE[0] * s3
+        elif s3 >= _SPH_GC_MAX: q3 = drag * _SPH_GC_CACHE[-1] * s3
+        else: q3 = drag * (_SPH_GC_CACHE[idx3] + (_SPH_GC_CACHE[idx3 + 1] - _SPH_GC_CACHE[idx3]) * (s3 - idx3)) * s3
         a3x, a3z = -q3 * v3x, -g - q3 * v3z
+
         v4x, v4z = vx + a3x * dt, vz + a3z * dt
         s4 = math.hypot(v4x, v4z)
-        q4 = drag * _sph_drag_coeff(s4) * s4
-        next_x = x + dt * (vx + 2 * v2x + 2 * v3x + v4x) / 6.0
-        next_z = z + dt * (vz + 2 * v2z + 2 * v3z + v4z) / 6.0
+        idx4 = int(s4)
+        if s4 <= 0.0: q4 = drag * _SPH_GC_CACHE[0] * s4
+        elif s4 >= _SPH_GC_MAX: q4 = drag * _SPH_GC_CACHE[-1] * s4
+        else: q4 = drag * (_SPH_GC_CACHE[idx4] + (_SPH_GC_CACHE[idx4 + 1] - _SPH_GC_CACHE[idx4]) * (s4 - idx4)) * s4
+
+        next_x = x + dt_sixth * (vx + 2 * v2x + 2 * v3x + v4x)
+        next_z = z + dt_sixth * (vz + 2 * v2z + 2 * v3z + v4z)
+
         if next_x >= distance:
             return z + (next_z - z) * (distance - x) / (next_x - x) + model["offset"]
-        vx += dt * (a1x + 2 * a2x + 2 * a3x - q4 * v4x) / 6.0
-        vz += dt * (a1z + 2 * a2z + 2 * a3z - g - q4 * v4z) / 6.0
+
+        vx += dt_sixth * (a1x + 2 * a2x + 2 * a3x - q4 * v4x)
+        vz += dt_sixth * (a1z + 2 * a2z + 2 * a3z - g - q4 * v4z)
         x, z = next_x, next_z
+
         if vx <= 1e-7:
             return None
     return None
