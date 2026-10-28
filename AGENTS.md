@@ -1,4 +1,4 @@
-# AGENTS.md — WARDOGS Mortar & Artillery Assistant (`:8099`)
+# AGENTS.md — WARDOGS Mortar & Artillery Assistant (`:8765`)
 
 ## Domain & Safety Context
 - This repository is a **video-game minimap, mortar, and artillery companion web application** for the Steam video game **WARDOGS (`AppID 1867240`, Unreal Engine 5.7.4)**.
@@ -6,7 +6,7 @@
 
 ## Architecture & Key Files
 - `mortar_calc.py`: Pure Python in-game ballistics & coordinate solver.
-- `server.py`: HTTP API server (`:8099`) serving static UI, ballistics endpoints, and `/api/tts`.
+- `server.py`: HTTP API server (`:8765`) serving static UI, ballistics endpoints, and `/api/tts`.
 - `index.html`, `classic-fire-control.html`, `classic-fire-control.js`: Frontend minimap & fire-control UI (North-Up minimap orientation).
 - `tests/test_mortar_calc.py`: Deterministic unit test suite.
 
