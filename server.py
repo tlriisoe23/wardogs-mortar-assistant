@@ -209,7 +209,9 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
         import io
         from gtts import gTTS
         buf = io.BytesIO()
-        gTTS(text=text, lang="en", tld="us").write_to_fp(buf)
+        def _gtts_sync():
+            gTTS(text=text, lang="en", tld="us").write_to_fp(buf)
+        await asyncio.to_thread(_gtts_sync)
         data = buf.getvalue()
         if len(data) > 256:
             return data
@@ -254,6 +256,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_GET(self):
+        try:
+            self._do_GET_inner()
+        except Exception:
+            self._send_json({"error": "Internal server error"}, status_code=500)
+
+    def _do_GET_inner(self):
         parsed = urllib.parse.urlparse(self.path)
 
         if parsed.path in ('/api/health', '/health'):
@@ -412,34 +420,41 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             pass
 
     def do_POST(self):
-        parsed = urllib.parse.urlparse(self.path)
-        if parsed.path == '/api/desktop-hud':
-            length = int(self.headers.get('Content-Length', '0') or 0)
-            raw = self.rfile.read(length) if length > 0 else b'{}'
-            try:
-                body = json.loads(raw.decode('utf-8'))
-            except Exception:
-                body = {}
-            action = str(body.get('action') or '').strip()
-            step = int(body.get('step_mils', 5))
-            if action == 'elev_up':
-                DESKTOP_HUD_STATE['elevation_mils_offset'] += step
-            elif action == 'elev_down':
-                DESKTOP_HUD_STATE['elevation_mils_offset'] -= step
-            elif action == 'toggle_arc':
-                DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
-            elif action == 'toggle_click_through':
-                DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
-            elif action == 'lock_target':
-                DESKTOP_HUD_STATE['locked_grid'] = body.get('grid') or 'LOCKED'
-            elif action == 'reset_target':
-                DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
-                DESKTOP_HUD_STATE['locked_grid'] = None
-            DESKTOP_HUD_STATE['last_action'] = action
-            DESKTOP_HUD_STATE['last_action_ts'] = time.time()
-            self._send_json(DESKTOP_HUD_STATE)
-            return
-        self._send_json({"error": "Not found"}, status_code=404)
+        try:
+            parsed = urllib.parse.urlparse(self.path)
+            if parsed.path == '/api/desktop-hud':
+                length = int(self.headers.get('Content-Length', '0') or 0)
+                length = min(length, 1024 * 64)  # Safe byte decoding guard against OOM
+                raw = self.rfile.read(length) if length > 0 else b'{}'
+                try:
+                    body = json.loads(raw.decode('utf-8', errors='replace'))
+                except Exception:
+                    body = {}
+                action = str(body.get('action') or '').strip()
+                try:
+                    step = int(body.get('step_mils', 5))
+                except (ValueError, TypeError):
+                    step = 5
+                if action == 'elev_up':
+                    DESKTOP_HUD_STATE['elevation_mils_offset'] += step
+                elif action == 'elev_down':
+                    DESKTOP_HUD_STATE['elevation_mils_offset'] -= step
+                elif action == 'toggle_arc':
+                    DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
+                elif action == 'toggle_click_through':
+                    DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
+                elif action == 'lock_target':
+                    DESKTOP_HUD_STATE['locked_grid'] = body.get('grid') or 'LOCKED'
+                elif action == 'reset_target':
+                    DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
+                    DESKTOP_HUD_STATE['locked_grid'] = None
+                DESKTOP_HUD_STATE['last_action'] = action
+                DESKTOP_HUD_STATE['last_action_ts'] = time.time()
+                self._send_json(DESKTOP_HUD_STATE)
+                return
+            self._send_json({"error": "Not found"}, status_code=404)
+        except Exception:
+            self._send_json({"error": "Internal server error"}, status_code=500)
 
     def do_HEAD(self):
         try:
