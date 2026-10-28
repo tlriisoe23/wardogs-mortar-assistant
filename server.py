@@ -177,8 +177,8 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
                 audio_data += chunk["data"]
         if len(audio_data) > 256:
             return audio_data
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[TTS Warning] edge_tts failed: {e}. Falling back to gTTS.")
     try:
         import io
         from gtts import gTTS
@@ -187,8 +187,8 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
         data = buf.getvalue()
         if len(data) > 256:
             return data
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[TTS Warning] gTTS failed: {e}. Falling back to generated beep.")
     import io, math, struct, wave
     buf = io.BytesIO()
     sample_rate = 22050
