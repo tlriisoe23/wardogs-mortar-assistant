@@ -254,6 +254,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_GET(self):
+        try:
+            self._do_GET_impl()
+        except Exception as e:
+            print(f"[Server Error GET] {e}")
+            try:
+                self._send_json({"error": "Internal server error", "message": "An unexpected error occurred"}, status_code=500)
+            except Exception:
+                pass
+
+    def _do_GET_impl(self):
         parsed = urllib.parse.urlparse(self.path)
 
         if parsed.path in ('/api/health', '/health'):
@@ -412,16 +422,43 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             pass
 
     def do_POST(self):
+        try:
+            self._do_POST_impl()
+        except Exception as e:
+            print(f"[Server Error POST] {e}")
+            try:
+                self._send_json({"error": "Internal server error", "message": "An unexpected error occurred"}, status_code=500)
+            except Exception:
+                pass
+
+    def _do_POST_impl(self):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == '/api/desktop-hud':
-            length = int(self.headers.get('Content-Length', '0') or 0)
-            raw = self.rfile.read(length) if length > 0 else b'{}'
             try:
+                length = int(self.headers.get('Content-Length', '0') or 0)
+                if length > 1024 * 1024:
+                    self._send_json({"error": "Payload too large"}, status_code=413)
+                    return
+                raw = self.rfile.read(length) if length > 0 else b'{}'
                 body = json.loads(raw.decode('utf-8'))
             except Exception:
                 body = {}
             action = str(body.get('action') or '').strip()
-            step = int(body.get('step_mils', 5))
+
+            try:
+                step = int(body.get('step_mils', 5))
+            except (ValueError, TypeError):
+                self._send_json({"error": "Invalid step_mils value, expected integer"}, status_code=400)
+                return
+
+            if step > 1000 or step < -1000:
+                self._send_json({"error": "step_mils out of bounds"}, status_code=400)
+                return
+
+            if len(action) > 100:
+                self._send_json({"error": "Action string too long"}, status_code=400)
+                return
+
             if action == 'elev_up':
                 DESKTOP_HUD_STATE['elevation_mils_offset'] += step
             elif action == 'elev_down':
@@ -431,7 +468,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             elif action == 'toggle_click_through':
                 DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
             elif action == 'lock_target':
-                DESKTOP_HUD_STATE['locked_grid'] = body.get('grid') or 'LOCKED'
+                grid_val = str(body.get('grid') or 'LOCKED')
+                if len(grid_val) > 50:
+                    self._send_json({"error": "Grid string too long"}, status_code=400)
+                    return
+                DESKTOP_HUD_STATE['locked_grid'] = grid_val
             elif action == 'reset_target':
                 DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
                 DESKTOP_HUD_STATE['locked_grid'] = None
