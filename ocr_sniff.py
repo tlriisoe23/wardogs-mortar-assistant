@@ -45,6 +45,8 @@ IMPACT_TAG_RE = re.compile(
     re.I
 )
 
+TS_PREFIX_RE = re.compile(r'^\s*\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*')
+
 
 def is_valid_wardogs_coord(x: float, y: float) -> bool:
     """WARDOGS playable & map coordinate bounds (~15 to 155)."""
@@ -71,7 +73,7 @@ def parse_chat_coord_line(line: str) -> Optional[Dict[str, Any]]:
 
     clean = line.strip()
     # Strip leading chat timestamps like "[12:34]" or "12:34" so they aren't misread as coords
-    clean_no_ts = re.sub(r'^\s*\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*', '', clean)
+    clean_no_ts = TS_PREFIX_RE.sub('', clean)
 
     x_val: Optional[float] = None
     y_val: Optional[float] = None
