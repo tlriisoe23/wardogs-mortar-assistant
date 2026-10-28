@@ -478,7 +478,7 @@ if __name__ == '__main__':
 
     active_port = PORT
     httpd = None
-    for p in range(PORT, PORT + 20):
+    for p in ([PORT] if ("PORT" in os.environ or "--no-browser" in sys.argv) else range(PORT, PORT + 20)):
         try:
             httpd = ThreadedHTTPServer(("", p), Handler)
             active_port = p
