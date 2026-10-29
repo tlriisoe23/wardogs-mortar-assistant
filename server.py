@@ -431,6 +431,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     body = json.loads(raw.decode('utf-8', errors='replace'))
                 except Exception:
                     body = {}
+                if not isinstance(body, dict):
+                    body = {}
                 action = str(body.get('action') or '').strip()
                 try:
                     step = int(body.get('step_mils', 5))

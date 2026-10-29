@@ -56,3 +56,15 @@ def test_desktop_hud_post_endpoint(live_test_server):
         assert resp.status == 200
         data = json.loads(resp.read().decode("utf-8"))
         assert data["last_action"] == "elev_up"
+
+def test_desktop_hud_post_non_dict_payload(live_test_server):
+    payload = [1, 2, 3]
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"}
+    )
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        assert resp.status == 200
+        data = json.loads(resp.read().decode("utf-8"))
+        assert "last_action" in data
