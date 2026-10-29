@@ -8,11 +8,20 @@ inside the in-game chat box syncs coordinates with 100% accuracy.
 """
 
 import re
+import os
 import time
+import json
+import base64
 import ctypes
 import threading
+import urllib.request
+import urllib.error
 from typing import Optional, Tuple, Callable, Dict, Any, List
 from PIL import Image, ImageGrab, ImageOps
+
+OMNICONVERT_URL = os.environ.get("OMNICONVERT_URL", "http://127.0.0.1:8100").rstrip("/")
+# qwen3-vl:2b-instruct smart_vision on ai-ctl-nuc observed at 12-18s per image; 15s caused intermittent timeouts.
+OMNICONVERT_TIMEOUT_S = float(os.environ.get("OMNICONVERT_TIMEOUT_S", "45"))
 
 try:
     import winocr
@@ -146,6 +155,52 @@ def extract_all_coord_lines(text: str) -> List[Dict[str, Any]]:
         if parsed:
             results.append(parsed)
     return results
+
+
+def _flatten_markdown_table(text: str) -> str:
+    """Flatten pipe-delimited markdown tables (qwen3-vl smart_vision output) into plain lines."""
+    out = []
+    for line in (text or "").splitlines():
+        s = line.strip()
+        if s.startswith("|") and re.fullmatch(r"[|\s:\-]+", s):
+            continue
+        if "|" in s:
+            s = " ".join(cell.strip() for cell in s.strip("|").split("|") if cell.strip())
+        out.append(s)
+    return "\n".join(out)
+
+
+def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", mode: str = "smart_vision") -> Dict[str, Any]:
+    url = f"{OMNICONVERT_URL}/api/ocr/extract"
+    payload = {
+        "image_base64": base64.b64encode(image_bytes).decode("ascii"),
+        "filename": filename,
+        "mode": mode,
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=OMNICONVERT_TIMEOUT_S) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            text = data.get("text") or data.get("markdown") or ""
+            engine = data.get("engine", "qwen3-vl:2b-instruct")
+            return {
+                "ok": True,
+                "text": text,
+                "engine": engine,
+                "entries": extract_all_coord_lines(_flatten_markdown_table(text))
+            }
+    except Exception as e:
+        return {
+            "ok": False,
+            "text": "",
+            "engine": "unavailable",
+            "entries": [],
+            "error": str(e)
+        }
 
 
 def _preprocess_for_ocr(img: Image.Image) -> Image.Image:
@@ -337,6 +392,8 @@ class ScreenOcrWatcher:
         return {
             "running": self.is_running,
             "has_winocr": HAS_WINOCR,
+            "ocr_backend": "winocr" if HAS_WINOCR else "omniconvert_qwen3_vl",
+            "omniconvert_url": OMNICONVERT_URL,
             "watch_clipboard": self.watch_clipboard,
             "last_coords": self.last_coords,
             "last_role": self.last_role,

@@ -19,8 +19,9 @@ import time
 import json
 import os
 import sys
+import base64
 
-from ocr_sniff import GLOBAL_OCR_WATCHER, capture_and_scan_entries
+from ocr_sniff import GLOBAL_OCR_WATCHER, capture_and_scan_entries, extract_text_via_omniconvert
 
 PORT = int(os.environ.get("PORT", "8765"))
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
@@ -451,6 +452,49 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 DESKTOP_HUD_STATE['last_action'] = action
                 DESKTOP_HUD_STATE['last_action_ts'] = time.time()
                 self._send_json(DESKTOP_HUD_STATE)
+                return
+            elif parsed.path == '/api/ocr/extract-image':
+                length = int(self.headers.get('Content-Length', '0') or 0)
+                if length > 10 * 1024 * 1024:
+                    self._send_json({"error": "Payload exceeds 10 MiB cap"}, status_code=413)
+                    return
+                raw = self.rfile.read(length) if length > 0 else b'{}'
+                try:
+                    body = json.loads(raw.decode('utf-8', errors='replace'))
+                except Exception:
+                    self._send_json({"error": "Invalid JSON body"}, status_code=400)
+                    return
+                if not isinstance(body, dict):
+                    self._send_json({"error": "Body must be a JSON object"}, status_code=400)
+                    return
+                image_b64 = body.get('image_base64')
+                if not image_b64 or not isinstance(image_b64, str) or not image_b64.strip():
+                    self._send_json({"error": "Missing or invalid 'image_base64'"}, status_code=400)
+                    return
+                try:
+                    image_bytes = base64.b64decode(image_b64)
+                    if not image_bytes:
+                        self._send_json({"error": "Empty decoded image bytes"}, status_code=400)
+                        return
+                except Exception as e:
+                    self._send_json({"error": f"Base64 decode failed: {e}"}, status_code=400)
+                    return
+
+                filename = str(body.get('filename') or 'hud.png')
+                mode = str(body.get('mode') or 'smart_vision')
+
+                res = extract_text_via_omniconvert(image_bytes, filename=filename, mode=mode)
+                for entry in res.get("entries", []):
+                    GLOBAL_OCR_WATCHER._record_entry(entry, source="ocr")
+
+                self._send_json({
+                    "status": "ok",
+                    "engine": res.get("engine", "qwen3-vl:2b-instruct"),
+                    "text": res.get("text", ""),
+                    "entries": res.get("entries", []),
+                    "ok": res.get("ok", True),
+                    **({"error": res["error"]} if res.get("error") else {}),
+                })
                 return
             self._send_json({"error": "Not found"}, status_code=404)
         except Exception:
