@@ -11,7 +11,7 @@
 - `tests/test_mortar_calc.py`: Deterministic unit test suite.
 
 ## Build, Lint & Test Commands (Google Jules Cloud VM)
-- Run unit tests: `python3 -m pytest -q` (or `python3 -m unittest discover -s tests`)
+- Run unit tests: `python3 -m pytest -q`
 - Syntax check: `python3 -m py_compile mortar_calc.py server.py ocr_sniff.py`
 
 ## Strict Guardrails for Autonomous Agents (Google Jules & Paperclip)
