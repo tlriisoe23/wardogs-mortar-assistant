@@ -89,9 +89,11 @@ def live_test_server():
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     base_url = f"http://127.0.0.1:{port}"
-    yield base_url
-    server.shutdown()
-    server.server_close()
+    try:
+        yield base_url
+    finally:
+        server.shutdown()
+        server.server_close()
 
 
 def test_post_extract_image_endpoint_success(live_test_server):
@@ -140,6 +142,7 @@ def test_post_extract_image_endpoint_validation_errors(live_test_server):
     with pytest.raises(urllib.error.HTTPError) as exc_info:
         urllib.request.urlopen(req, timeout=5)
     assert exc_info.value.code == 400
+    exc_info.value.close()
 
     # Invalid base64
     req2 = urllib.request.Request(
@@ -150,6 +153,7 @@ def test_post_extract_image_endpoint_validation_errors(live_test_server):
     with pytest.raises(urllib.error.HTTPError) as exc_info2:
         urllib.request.urlopen(req2, timeout=5)
     assert exc_info2.value.code == 400
+    exc_info2.value.close()
 
 
 def test_extract_text_via_omniconvert_parses_markdown_table_output():
