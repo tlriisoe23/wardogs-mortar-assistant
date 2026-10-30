@@ -82,6 +82,29 @@ def test_extract_text_via_omniconvert_upstream_failure():
         assert "Connection refused" in result["error"]
 
 
+def test_extract_text_via_omniconvert_http_error_fallback():
+    class MockHTTPError(urllib.error.HTTPError):
+        def __init__(self):
+            pass
+        def __str__(self):
+            return "HTTP Error 502: Bad Gateway"
+        def close(self):
+            pass
+
+    mock_err = MockHTTPError()
+    mock_err.close = MagicMock()
+
+    with patch("urllib.request.urlopen", side_effect=mock_err):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_omniconvert(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "unavailable"
+        assert result["entries"] == []
+        assert "HTTP Error 502: Bad Gateway" in result["error"]
+        mock_err.close.assert_called_once()
+
+
 @pytest.fixture(scope="module")
 def live_test_server():
     server = ThreadedHTTPServer(("127.0.0.1", 0), Handler)
