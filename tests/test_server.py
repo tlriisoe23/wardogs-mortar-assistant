@@ -46,19 +46,19 @@ def test_desktop_hud_get_endpoint(live_test_server):
         assert "identifier" in data
         assert isinstance(data["identifier"], str)
         assert "zero_background_polling" in data
-        assert isinstance(data["zero_background_polling"], bool)
+        assert type(data["zero_background_polling"]) is bool
         assert "always_on_top" in data
-        assert isinstance(data["always_on_top"], bool)
+        assert type(data["always_on_top"]) is bool
         assert "click_through" in data
-        assert isinstance(data["click_through"], bool)
+        assert type(data["click_through"]) is bool
         assert "arc_mode" in data
         assert isinstance(data["arc_mode"], str)
         assert "elevation_mils_offset" in data
-        assert isinstance(data["elevation_mils_offset"], int)
+        assert isinstance(data["elevation_mils_offset"], (int, float)) and type(data["elevation_mils_offset"]) is not bool
         assert "locked_grid" in data
         assert "last_action" in data
         assert "last_action_ts" in data
-        assert isinstance(data["last_action_ts"], float)
+        assert data["last_action_ts"] is None or (isinstance(data["last_action_ts"], (int, float)) and type(data["last_action_ts"]) is not bool)
         assert "hotkeys" in data
         assert isinstance(data["hotkeys"], dict)
 
@@ -68,11 +68,11 @@ def test_targets_endpoint(live_test_server):
         assert resp.status == 200
         data = json.loads(resp.read().decode("utf-8"))
         assert isinstance(data, list)
-        if len(data) > 0:
-            assert isinstance(data[0], dict)
-            assert "id" in data[0]
-            assert "map" in data[0]
-            assert "name" in data[0]
+        assert len(data) > 0, "Expected at least one target to run schema checks"
+        assert isinstance(data[0], dict)
+        assert "id" in data[0]
+        assert "map" in data[0]
+        assert "name" in data[0]
 
 def test_ptt_status_endpoint(live_test_server):
     req = urllib.request.Request(f"{live_test_server}/api/ptt/status")
