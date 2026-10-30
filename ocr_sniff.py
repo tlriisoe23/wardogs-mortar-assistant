@@ -55,6 +55,7 @@ IMPACT_TAG_RE = re.compile(
 )
 
 TS_PREFIX_RE = re.compile(r'^\s*\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*')
+MD_TABLE_SEP_RE = re.compile(r"[|\s:\-]+")
 
 
 def is_valid_wardogs_coord(x: float, y: float) -> bool:
@@ -162,7 +163,7 @@ def _flatten_markdown_table(text: str) -> str:
     out = []
     for line in (text or "").splitlines():
         s = line.strip()
-        if s.startswith("|") and re.fullmatch(r"[|\s:\-]+", s):
+        if s.startswith("|") and MD_TABLE_SEP_RE.fullmatch(s):
             continue
         if "|" in s:
             s = " ".join(cell.strip() for cell in s.strip("|").split("|") if cell.strip())
