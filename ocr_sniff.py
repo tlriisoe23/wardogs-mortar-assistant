@@ -194,6 +194,18 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
                 "engine": engine,
                 "entries": extract_all_coord_lines(_flatten_markdown_table(text))
             }
+    except urllib.error.HTTPError as e:
+        try:
+            error_msg = str(e)
+        finally:
+            e.close()
+        return {
+            "ok": False,
+            "text": "",
+            "engine": "unavailable",
+            "entries": [],
+            "error": error_msg
+        }
     except Exception as e:
         return {
             "ok": False,
