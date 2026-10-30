@@ -537,6 +537,7 @@ def interactive_cli() -> None:
     print("  left <m>       : Shift left by <m> meters")
     print("  miss <long> <right> : Inverse correction for missed shot")
     print("  impact <x> <y> : Adjust based on observed impact coordinates")
+    print("  calc           : Calculate fire solution")
     print("  q              : Quit")
     print("=" * 60)
     
@@ -591,7 +592,11 @@ def interactive_cli() -> None:
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] == '--test':
+    if len(sys.argv) > 1 and sys.argv[1] in ('-h', '--help'):
+        print("Usage: python mortar_calc.py [--test | -h | --help]")
+        print("Run without arguments to start the interactive CLI.")
+        sys.exit(0)
+    elif len(sys.argv) > 1 and sys.argv[1] == '--test':
         calc = MortarCalculator(10.0, 10.0)
         calc.set_target(13.0, 14.0)
         sol = calc.calculate_solution()

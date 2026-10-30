@@ -30,6 +30,11 @@ def test_health_endpoint(live_test_server):
         data = json.loads(resp.read().decode("utf-8"))
         assert data["ok"] is True
         assert data["status"] == "healthy"
+        assert "service" in data
+        assert "port" in data
+        assert "weapons" in data
+        assert "maps" in data
+        assert "tauri_v2_ready" in data
 
 def test_desktop_hud_get_endpoint(live_test_server):
     req = urllib.request.Request(f"{live_test_server}/api/desktop-hud")
