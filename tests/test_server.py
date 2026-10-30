@@ -68,3 +68,36 @@ def test_desktop_hud_post_non_dict_payload(live_test_server):
         assert resp.status == 200
         data = json.loads(resp.read().decode("utf-8"))
         assert "last_action" in data
+
+def test_tts_fallback_timeout(live_test_server, monkeypatch):
+    import asyncio
+    import server
+
+    # The user asked to mock asyncio.wait_for to raise asyncio.TimeoutError
+    async def _mock_wait_for(coro, timeout):
+        coro.close()
+        raise asyncio.TimeoutError()
+
+    monkeypatch.setattr(server.asyncio, "wait_for", _mock_wait_for)
+
+    req = urllib.request.Request(f"{live_test_server}/api/tts?text=Timeout&voice=test")
+    try:
+        urllib.request.urlopen(req, timeout=5)
+    except urllib.error.HTTPError as e:
+        assert e.code == 504
+        data = json.loads(e.read().decode("utf-8"))
+        assert data["error"] == "TTS upstream timed out"
+
+def test_tts_fallback_endpoint(live_test_server, monkeypatch):
+    import sys
+    # Patch sys.modules dynamically so the fallback paths hit Exception
+    monkeypatch.setitem(sys.modules, "edge_tts", None)
+    monkeypatch.setitem(sys.modules, "gtts", None)
+
+    req = urllib.request.Request(f"{live_test_server}/api/tts?text=Fallback&voice=test")
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        assert resp.status == 200
+        assert resp.headers.get("Content-Type") == "audio/mpeg"
+        data = resp.read()
+        assert data.startswith(b"RIFF")
+        assert len(data) > 1000
