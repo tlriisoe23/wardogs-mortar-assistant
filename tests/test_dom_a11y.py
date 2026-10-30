@@ -48,3 +48,39 @@ class TestIndexHtmlA11y(unittest.TestCase):
             label = self.soup.find(id=label_id)
             self.assertIsNotNone(label, f"Tab label {label_id} not found")
             self.assertEqual(label.get('role'), 'tab')
+
+    def test_empty_error_loading_states_have_aria_live(self):
+        """Verify that dynamic status elements (empty, error, loading) have aria-live or role=status."""
+        # Elements like range-status, aimOffsetBanner, ocrStatusText, globalPttStatusText, demHeightBadge
+
+        status_elements = [
+            'rangeStatus',
+            'aimOffsetBanner',
+            'ocrStatusText',
+            'globalPttStatusText',
+            'voiceStatus',
+            'demHeightBadge'
+        ]
+
+        for element_id in status_elements:
+            el = self.soup.find(id=element_id)
+            if el:
+                has_aria_live = el.has_attr('aria-live')
+                has_role_status = el.get('role') == 'status'
+                has_role_alert = el.get('role') == 'alert'
+                has_role_log = el.get('role') == 'log'
+
+                # Check parents up to 3 levels for aria-live
+                parent_has_live = False
+                parent = el.parent
+                for _ in range(3):
+                    if parent and parent.has_attr('aria-live'):
+                        parent_has_live = True
+                        break
+                    if parent:
+                        parent = parent.parent
+
+                self.assertTrue(
+                    has_aria_live or has_role_status or has_role_alert or has_role_log or parent_has_live,
+                    f"Dynamic status element '{element_id}' is missing accessibility attributes (aria-live or role=status/alert)"
+                )
