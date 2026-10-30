@@ -188,6 +188,17 @@ def get_terrain_elevation(map_id: str, x: float, y: float) -> Optional[float]:
 
 SPH_GC_X = [0, 30, 61, 91, 122, 150, 183, 213, 244, 274, 300, 335, 366, 396, 427, 450, 488, 518, 549, 579, 600]
 SPH_GC_Y = [0.71, 0.69, 0.66, 0.64, 0.65, 0.66, 0.68, 0.72, 0.80, 0.92, 1.10, 1.25, 1.33, 1.39, 1.44, 1.48, 1.50, 1.54, 1.57, 1.58, 1.60]
+
+import bisect
+
+_SPH_GC_COEFFS = []
+for i in range(len(SPH_GC_X) - 1):
+    dx = SPH_GC_X[i+1] - SPH_GC_X[i]
+    dy = SPH_GC_Y[i+1] - SPH_GC_Y[i]
+    m = dy / dx if dx != 0 else 0
+    b = SPH_GC_Y[i] - m * SPH_GC_X[i]
+    _SPH_GC_COEFFS.append((m, b))
+
 SPH_PRIMARY_MODELS = {
     "high": {"speed": 9389.43881652221, "gravity": 147.2063947858103, "drag": 0.0008516971618643472, "offset": -960.0413878819479},
     "low":  {"speed": 300.0, "gravity": 8.85397505384648, "drag": 0.0007351626163587786, "offset": 95.03019643400405}
@@ -199,15 +210,9 @@ def _sph_drag_coeff(speed: float) -> float:
         return SPH_GC_Y[0]
     if speed >= SPH_GC_X[-1]:
         return SPH_GC_Y[-1]
-    lo, hi = 0, len(SPH_GC_X) - 1
-    while lo + 1 < hi:
-        mid = (lo + hi) // 2
-        if SPH_GC_X[mid] <= speed:
-            lo = mid
-        else:
-            hi = mid
-    frac = (speed - SPH_GC_X[lo]) / (SPH_GC_X[hi] - SPH_GC_X[lo])
-    return SPH_GC_Y[lo] + (SPH_GC_Y[hi] - SPH_GC_Y[lo]) * frac
+    lo = bisect.bisect_right(SPH_GC_X, speed) - 1
+    m, b = _SPH_GC_COEFFS[lo]
+    return m * speed + b
 
 
 def _sph_height_at_distance(angle: float, distance: float, model: Dict, dt: float = 0.02) -> Optional[float]:
