@@ -185,7 +185,12 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
     )
     try:
         with urllib.request.urlopen(req, timeout=OMNICONVERT_TIMEOUT_S) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+            try:
+                data = json.loads(resp.read().decode("utf-8", errors="replace"))
+            except Exception:
+                data = {}
+            if not isinstance(data, dict):
+                data = {}
             text = data.get("text") or data.get("markdown") or ""
             engine = data.get("engine", "qwen3-vl:2b-instruct")
             return {
