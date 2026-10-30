@@ -8,7 +8,7 @@ and Forward Observer (FO) fire adjustments.
 """
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any, Callable
 
 # Official WARDOGS L81 Mortar Ballistics Table [distance_m, elevation_mils]
 # Standard flat-ground sight limits: 150 - 850 MIL (132m - 684m).
@@ -183,7 +183,7 @@ def get_terrain_elevation(map_id: str, x: float, y: float) -> Optional[float]:
     ty = fy - y0
     top = heights[y0][x0] + (heights[y0][x1] - heights[y0][x0]) * tx
     bot = heights[y1][x0] + (heights[y1][x1] - heights[y1][x0]) * tx
-    return top + (bot - top) * ty
+    return float(top + (bot - top) * ty)
 
 
 SPH_GC_X = [0, 30, 61, 91, 122, 150, 183, 213, 244, 274, 300, 335, 366, 396, 427, 450, 488, 518, 549, 579, 600]
@@ -210,7 +210,7 @@ def _sph_drag_coeff(speed: float) -> float:
     return SPH_GC_Y[lo] + (SPH_GC_Y[hi] - SPH_GC_Y[lo]) * frac
 
 
-def _sph_height_at_distance(angle: float, distance: float, model: Dict, dt: float = 0.02) -> Optional[float]:
+def _sph_height_at_distance(angle: float, distance: float, model: Dict[str, Any], dt: float = 0.02) -> Optional[float]:
     if angle <= 0 or angle >= math.pi / 2 or distance <= 0:
         return None
     x, z = 0.0, 0.0
@@ -237,7 +237,7 @@ def _sph_height_at_distance(angle: float, distance: float, model: Dict, dt: floa
         next_x = x + dt * (vx + 2 * v2x + 2 * v3x + v4x) / 6.0
         next_z = z + dt * (vz + 2 * v2z + 2 * v3z + v4z) / 6.0
         if next_x >= distance:
-            return z + (next_z - z) * (distance - x) / (next_x - x) + model["offset"]
+            return float(z + (next_z - z) * (distance - x) / (next_x - x) + model["offset"])
         vx += dt * (a1x + 2 * a2x + 2 * a3x - q4 * v4x) / 6.0
         vz += dt * (a1z + 2 * a2z + 2 * a3z - g - q4 * v4z) / 6.0
         x, z = next_x, next_z
@@ -246,7 +246,7 @@ def _sph_height_at_distance(angle: float, distance: float, model: Dict, dt: floa
     return None
 
 
-def _sph_bisect(fn, left: float, right: float, tol: float) -> Optional[float]:
+def _sph_bisect(fn: Callable[[float], Optional[float]], left: float, right: float, tol: float) -> Optional[float]:
     fl, fr = fn(left), fn(right)
     if fl is None or fr is None or fl * fr > 0:
         return None
@@ -270,7 +270,7 @@ def _sph_bisect(fn, left: float, right: float, tol: float) -> Optional[float]:
     return 0.5 * (left + right)
 
 
-def _sph_on_arc(arc: str, fn, root: float, step: float) -> bool:
+def _sph_on_arc(arc: str, fn: Callable[[float], Optional[float]], root: float, step: float) -> bool:
     c, l, r = fn(root), fn(root - step), fn(root + step)
     if c is None:
         return False
@@ -290,7 +290,7 @@ def solve_sph2_terrain_mils(arc: str, distance_m: float, flat_mils: Optional[flo
     center = flat_mils / 1000.0
     min_a = 0.0001 if arc == "low" else 0.3
     max_a = 1.0 if arc == "low" else 1.55
-    fn0 = lambda a: _sph_height_at_distance(a, distance_m, model)
+    def fn0(a: float) -> Optional[float]: return _sph_height_at_distance(a, distance_m, model)
     f0 = fn0(center)
     ref = None
     for span in (0.002, 0.005, 0.01, 0.02, 0.04, 0.08, 0.12, 0.2, 0.3):
@@ -324,7 +324,9 @@ def solve_sph2_terrain_mils(arc: str, distance_m: float, flat_mils: Optional[flo
         return None
     min_cmd = 20.0 if arc == "low" else 610.0
     max_cmd = 600.0 if arc == "low" else 1390.0
-    fn_h = lambda cmd: (lambda h: None if h is None else h - delta_z_m)(_sph_height_at_distance(ref + (cmd - flat_mils) / 1000.0, distance_m, model))
+    def fn_h(cmd: float) -> Optional[float]:
+        h = _sph_height_at_distance(ref + (cmd - flat_mils) / 1000.0, distance_m, model)
+        return None if h is None else h - delta_z_m
     f_flat = fn_h(flat_mils)
     direction = (1.0 if arc == "low" else -1.0) * (1.0 if delta_z_m >= 0 else -1.0)
     if f_flat is not None:
@@ -358,20 +360,20 @@ class MortarCalculator:
         self.hull_heading_deg: Optional[float] = None
         self.has_target = False
 
-    def set_mortar(self, x: float, y: float):
+    def set_mortar(self, x: float, y: float) -> None:
         if not math.isfinite(x) or not math.isfinite(y):
             raise ValueError("Coordinates must be finite numbers")
         self.mortar_x = x
         self.mortar_y = y
 
-    def set_target(self, x: float, y: float):
+    def set_target(self, x: float, y: float) -> None:
         if not math.isfinite(x) or not math.isfinite(y):
             raise ValueError("Coordinates must be finite numbers")
         self.target_x = x
         self.target_y = y
         self.has_target = True
 
-    def calculate_solution(self) -> Dict:
+    def calculate_solution(self) -> Dict[str, Any]:
         """
         Calculate fire solution using Pythagorean theorem and coordinate geometry.
         1 game unit = 100 meters.
@@ -452,7 +454,7 @@ class MortarCalculator:
             "max_range": max_range
         }
 
-    def adjust_relative(self, range_meters: float, deflection_meters: float) -> Dict:
+    def adjust_relative(self, range_meters: float, deflection_meters: float) -> Dict[str, Any]:
         """
         Forward Observer correction relative to the Gun-Target Line of Fire:
         range_meters: positive = ADD (push target farther), negative = DROP (pull closer)
@@ -485,7 +487,7 @@ class MortarCalculator:
         
         return self.calculate_solution()
 
-    def adjust_missed_shot(self, long_short_meters: float, left_right_meters: float) -> Dict:
+    def adjust_missed_shot(self, long_short_meters: float, left_right_meters: float) -> Dict[str, Any]:
         """
         Adjust based on where the shot missed:
         long_short_meters: + = landed long (overshot), - = landed short (undershot)
@@ -495,7 +497,7 @@ class MortarCalculator:
         deflection_correction = -left_right_meters
         return self.adjust_relative(range_correction, deflection_correction)
 
-    def adjust_impact_point(self, impact_x: float, impact_y: float) -> Dict:
+    def adjust_impact_point(self, impact_x: float, impact_y: float) -> Dict[str, Any]:
         """
         Adjust target when spotter reports exact coordinates of impact.
         New Aim = Target - (Impact - Target) = 2*Target - Impact
@@ -507,7 +509,7 @@ class MortarCalculator:
         self.target_y += shift_y
         return self.calculate_solution()
 
-def print_solution(sol: Dict):
+def print_solution(sol: Dict[str, Any]) -> None:
     print("=" * 55)
     print(f" WEAPON: {sol.get('weapon', 'mortar').upper()} ({sol.get('arc', 'high').upper()} ARC)")
     print(f" GUN:    ({sol['mortar'][0]:.2f}, {sol['mortar'][1]:.2f})  -->  TARGET: ({sol['target'][0]:.2f}, {sol['target'][1]:.2f})")
@@ -521,7 +523,7 @@ def print_solution(sol: Dict):
         print(f" Elevation:             OUT OF RANGE (<{sol['min_range']:.0f}m or >{sol['max_range']:.0f}m)")
     print("=" * 55)
 
-def interactive_cli():
+def interactive_cli() -> None:
     print("=" * 60)
     print("   WARDOGS MORTAR & ARTILLERY PYTHAGOREAN CALCULATOR")
     print("=" * 60)
