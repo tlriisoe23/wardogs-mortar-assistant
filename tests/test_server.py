@@ -30,6 +30,11 @@ def test_health_endpoint(live_test_server):
         data = json.loads(resp.read().decode("utf-8"))
         assert data["ok"] is True
         assert data["status"] == "healthy"
+        assert data["service"] == "wardogs-mortar-assistant"
+        assert isinstance(data["port"], int)
+        assert isinstance(data["weapons"], list)
+        assert isinstance(data["maps"], list)
+        assert data["tauri_v2_ready"] is True
 
 def test_desktop_hud_get_endpoint(live_test_server):
     req = urllib.request.Request(f"{live_test_server}/api/desktop-hud")
@@ -37,7 +42,37 @@ def test_desktop_hud_get_endpoint(live_test_server):
         assert resp.status == 200
         data = json.loads(resp.read().decode("utf-8"))
         assert data["ok"] is True
-        assert "tauri_v2_ready" in data
+        assert data["tauri_v2_ready"] is True
+        assert "identifier" in data
+        assert isinstance(data["identifier"], str)
+        assert "zero_background_polling" in data
+        assert isinstance(data["zero_background_polling"], bool)
+        assert "always_on_top" in data
+        assert isinstance(data["always_on_top"], bool)
+        assert "click_through" in data
+        assert isinstance(data["click_through"], bool)
+        assert "arc_mode" in data
+        assert isinstance(data["arc_mode"], str)
+        assert "elevation_mils_offset" in data
+        assert isinstance(data["elevation_mils_offset"], int)
+        assert "locked_grid" in data
+        assert "last_action" in data
+        assert "last_action_ts" in data
+        assert isinstance(data["last_action_ts"], float)
+        assert "hotkeys" in data
+        assert isinstance(data["hotkeys"], dict)
+
+def test_targets_endpoint(live_test_server):
+    req = urllib.request.Request(f"{live_test_server}/api/targets")
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        assert resp.status == 200
+        data = json.loads(resp.read().decode("utf-8"))
+        assert isinstance(data, list)
+        if len(data) > 0:
+            assert isinstance(data[0], dict)
+            assert "id" in data[0]
+            assert "map" in data[0]
+            assert "name" in data[0]
 
 def test_ptt_status_endpoint(live_test_server):
     req = urllib.request.Request(f"{live_test_server}/api/ptt/status")
