@@ -12,9 +12,11 @@ def live_test_server():
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     base_url = f"http://127.0.0.1:{port}"
-    yield base_url
-    server.shutdown()
-    server.server_close()
+    try:
+        yield base_url
+    finally:
+        server.shutdown()
+        server.server_close()
 
 def test_get_vk_name():
     assert get_vk_name(0x04) == "Middle Mouse (MMB)"
