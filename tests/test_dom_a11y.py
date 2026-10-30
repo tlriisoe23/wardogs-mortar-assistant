@@ -49,6 +49,69 @@ class TestIndexHtmlA11y(unittest.TestCase):
             self.assertIsNotNone(label, f"Tab label {label_id} not found")
             self.assertEqual(label.get('role'), 'tab')
 
+    def test_input_accessibility(self):
+        """Verify that all interactive inputs have an associated label or aria-label."""
+        interactive_elements = self.soup.find_all(['input', 'select', 'textarea'])
+        self.assertTrue(len(interactive_elements) > 0, "No interactive elements found to test")
+        for el in interactive_elements:
+            # Skip hidden inputs
+            if el.name == 'input' and el.get('type') == 'hidden':
+                continue
+
+            has_aria_label = bool(el.get('aria-label', '').strip()) or bool(el.get('aria-labelledby', '').strip())
+            has_title = bool(el.get('title', '').strip())
+
+            # Button-like inputs can take name from 'value' or 'alt'
+            has_value = False
+            has_alt = False
+            if el.name == 'input':
+                type_attr = el.get('type', '').lower()
+                if type_attr in ('submit', 'button', 'reset'):
+                    has_value = bool(el.get('value', '').strip())
+                elif type_attr == 'image':
+                    has_alt = bool(el.get('alt', '').strip())
+
+            # Check if it has an associated <label for="...">
+            has_explicit_label = False
+            if el.has_attr('id'):
+                label = self.soup.find('label', attrs={'for': el['id']})
+                if label:
+                    has_explicit_label = True
+
+            # Check if it is nested inside a <label>
+            has_implicit_label = False
+            parent = el.parent
+            while parent is not None and parent.name != 'body':
+                if parent.name == 'label':
+                    has_implicit_label = True
+                    break
+                parent = parent.parent
+
+            self.assertTrue(
+                has_aria_label or has_title or has_value or has_alt or has_explicit_label or has_implicit_label,
+                f"Interactive element {el.name} (id='{el.get('id')}') is missing an accessible label"
+            )
+
+    def test_button_accessibility(self):
+        """Verify that all buttons have accessible names (text, aria-label, aria-labelledby, or title)."""
+        buttons = self.soup.find_all('button')
+        self.assertTrue(len(buttons) > 0, "No buttons found to test")
+        for btn in buttons:
+            label = btn.get('aria-label', '').strip() or btn.get('title', '').strip() or btn.get_text(strip=True)
+
+            has_valid_labelledby = False
+            labelledby = btn.get('aria-labelledby', '').strip()
+            if labelledby:
+                # Need to check if id exists
+                target = self.soup.find(id=labelledby)
+                if target:
+                    has_valid_labelledby = True
+
+            self.assertTrue(
+                bool(label) or has_valid_labelledby,
+                f"Button {btn.get('id') or btn} is missing an accessible name"
+            )
+
     def test_empty_error_loading_states_have_aria_live(self):
         """Verify that dynamic status elements (empty, error, loading) have aria-live or role=status."""
         # Elements like range-status, aimOffsetBanner, ocrStatusText, globalPttStatusText, demHeightBadge
