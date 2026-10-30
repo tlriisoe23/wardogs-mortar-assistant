@@ -379,7 +379,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/tts':
             params = urllib.parse.parse_qs(parsed.query)
             text = params.get('text', [''])[0].strip()
-            voice = params.get('voice', ['en-US-ChristopherNeural'])[0].strip()
+            voice = str(params.get('voice', ['en-US-ChristopherNeural'])[0]).strip()[:50]
 
             if not text:
                 self._send_json({"error": "Missing 'text' query parameter."}, status_code=400)
@@ -436,18 +436,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 action = str(body.get('action') or '').strip()
                 try:
                     step = int(body.get('step_mils', 5))
-                except (ValueError, TypeError):
+                    step = max(-6400, min(6400, step))
+                except (ValueError, TypeError, OverflowError):
                     step = 5
                 if action == 'elev_up':
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] += step
+                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, DESKTOP_HUD_STATE['elevation_mils_offset'] + step))
                 elif action == 'elev_down':
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] -= step
+                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, DESKTOP_HUD_STATE['elevation_mils_offset'] - step))
                 elif action == 'toggle_arc':
                     DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
                 elif action == 'toggle_click_through':
                     DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
                 elif action == 'lock_target':
-                    DESKTOP_HUD_STATE['locked_grid'] = body.get('grid') or 'LOCKED'
+                    DESKTOP_HUD_STATE['locked_grid'] = str(body.get('grid') or 'LOCKED')[:100]
                 elif action == 'reset_target':
                     DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
                     DESKTOP_HUD_STATE['locked_grid'] = None
@@ -482,8 +483,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json({"error": f"Base64 decode failed: {e}"}, status_code=400)
                     return
 
-                filename = str(body.get('filename') or 'hud.png')
-                mode = str(body.get('mode') or 'smart_vision')
+                filename = str(body.get('filename') or 'hud.png')[:200]
+                mode = str(body.get('mode') or 'smart_vision')[:100]
 
                 res = extract_text_via_omniconvert(image_bytes, filename=filename, mode=mode)
                 for entry in res.get("entries", []):

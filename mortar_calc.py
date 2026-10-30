@@ -359,10 +359,14 @@ class MortarCalculator:
         self.has_target = False
 
     def set_mortar(self, x: float, y: float):
+        if not math.isfinite(x) or not math.isfinite(y):
+            raise ValueError("Coordinates must be finite numbers")
         self.mortar_x = x
         self.mortar_y = y
 
     def set_target(self, x: float, y: float):
+        if not math.isfinite(x) or not math.isfinite(y):
+            raise ValueError("Coordinates must be finite numbers")
         self.target_x = x
         self.target_y = y
         self.has_target = True
