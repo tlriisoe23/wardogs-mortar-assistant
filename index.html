@@ -1263,6 +1263,7 @@
                 </button>
             </div>
             <span class="badge-live" id="sysStatusBadge">SYSTEM READY</span>
+            <span class="badge-weapon" id="tauriHudBadge" style="display: none;" title="Tauri v2 Native Desktop HUD Active (Alt+M Lock, Alt+Up/Down ΔZ, Alt+A Arc, Alt+O OCR, Alt+C Click-Through, Alt+S Mute)">⚡ TAURI HUD: READY</span>
         </div>
         <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
             <button type="button" class="action-btn" id="openHowToUseBtn" style="padding: 5px 10px; font-size: 11px; background: #0369a1; color: #ffffff;" onclick="openHowToUseModal()" title="Open Quick-Start Field Manual &amp; Voice Guide">
@@ -2664,6 +2665,7 @@
                 frBanner.style.display = (newMapId === 'firing_range') ? 'flex' : 'none';
             }
             renderFiringRangeButtons();
+            initTauriDesktopBridge();
             calculate(false);
             focusCombatZone();
             logEvent('SYS', `Tactical map switched to ${cfg.name}`);
@@ -6410,6 +6412,74 @@
             window.speechSynthesis.onvoiceschanged = () => {
                 window.speechSynthesis.getVoices();
             };
+        }
+
+        let tauriClickThroughActive = false;
+        let tauriBridgeInitialized = false;
+
+        function postDesktopHudAction(action, extra = {}) {
+            fetch('/api/desktop-hud', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, ...extra })
+            }).catch(() => {});
+        }
+
+        function handleTauriHotkey(rawKey) {
+            const k = String(rawKey || '').toUpperCase().replace(/\s+/g, '');
+            const badge = document.getElementById('tauriHudBadge');
+            if (k.includes('ALT') && k.endsWith('M')) {
+                toggleMortarLock();
+                const mx = parseFloat(document.getElementById('mortarX')?.value) || 0;
+                const my = parseFloat(document.getElementById('mortarY')?.value) || 0;
+                postDesktopHudAction('lock_target', { grid: `${mx.toFixed(2)},${my.toFixed(2)}` });
+            } else if (k.includes('ALT') && k.endsWith('R')) {
+                resetAll();
+                postDesktopHudAction('reset_target');
+            } else if (k.includes('ALT') && (k.endsWith('UP') || k.endsWith('ARROWUP'))) {
+                nudgeTargetDeltaZ(5);
+                postDesktopHudAction('elev_up', { step_mils: 5 });
+            } else if (k.includes('ALT') && (k.endsWith('DOWN') || k.endsWith('ARROWDOWN'))) {
+                nudgeTargetDeltaZ(-5);
+                postDesktopHudAction('elev_down', { step_mils: 5 });
+            } else if (k.includes('ALT') && k.endsWith('A')) {
+                const nextArc = (activeWeapon === 'sph2' && activeArc === 'low') ? 'high' : 'low';
+                selectWeaponSystem('sph2', nextArc, true);
+                postDesktopHudAction('toggle_arc');
+            } else if (k.includes('ALT') && k.endsWith('O')) {
+                triggerSingleOcrScan();
+                postDesktopHudAction('scan_ocr_once');
+            } else if (k.includes('ALT') && k.endsWith('C')) {
+                tauriClickThroughActive = !tauriClickThroughActive;
+                if (badge) {
+                    badge.style.display = 'inline-flex';
+                    badge.textContent = tauriClickThroughActive ? '👻 HUD: CLICK-THROUGH (Alt+C)' : '⚡ TAURI HUD: READY';
+                    badge.style.borderColor = tauriClickThroughActive ? 'var(--accent-amber)' : 'var(--accent-cyan)';
+                    badge.style.color = tauriClickThroughActive ? 'var(--accent-amber)' : 'var(--accent-cyan)';
+                }
+                logEvent('SYS', tauriClickThroughActive ? '👻 HUD Click-Through ON (press Alt+C in-game to restore mouse clicks).' : '⚡ HUD Click-Through OFF (mouse interaction active).');
+                postDesktopHudAction('toggle_click_through');
+            } else if (k.includes('ALT') && k.endsWith('S')) {
+                toggleGlobalMute();
+                postDesktopHudAction('toggle_mute');
+            }
+        }
+
+        function initTauriDesktopBridge() {
+            if (tauriBridgeInitialized) return;
+            tauriBridgeInitialized = true;
+            const badge = document.getElementById('tauriHudBadge');
+            const isHudParam = window.location.search.includes('hud=1') || window.location.hash.includes('hud');
+            const hasTauri = Boolean(window.__TAURI__ || window.__TAURI_INTERNALS__);
+            if (badge && (hasTauri || isHudParam)) {
+                badge.style.display = 'inline-flex';
+            }
+            if (window.__TAURI__ && window.__TAURI__.event && typeof window.__TAURI__.event.listen === 'function') {
+                window.__TAURI__.event.listen('wardogs-hotkey', (ev) => {
+                    if (ev && ev.payload) handleTauriHotkey(ev.payload);
+                }).catch(() => {});
+                logEvent('SYS', '⚡ Tauri v2 Native Desktop HUD active (Alt+M Lock, Alt+Up/Down ΔZ, Alt+A Arc, Alt+O OCR, Alt+C Click-Through, Alt+S Mute).');
+            }
         }
 
         let appInitialized = false;

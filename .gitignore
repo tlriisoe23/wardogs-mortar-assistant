@@ -6,3 +6,7 @@ Thumbs.db
 *.log
 .env
 .coverage
+.pytest_cache/
+src-tauri/target/
+src-tauri/gen/
+src-tauri/Cargo.lock

@@ -5,17 +5,17 @@
   "identifier": "net.tail0908d2.wardogs-mortar-assistant",
   "build": {
     "frontendDist": "../",
-    "devUrl": "https://pve-ubuntu.tail0908d2.ts.net:8099"
+    "devUrl": "http://127.0.0.1:8765"
   },
   "app": {
     "withGlobalTauri": true,
     "windows": [
       {
         "label": "main",
-        "title": "WARDOGS Mortar & Artillery Assistant HUD (:8099)",
-        "url": "https://pve-ubuntu.tail0908d2.ts.net:8099/?hud=1",
-        "width": 1280,
-        "height": 860,
+        "title": "WARDOGS Mortar & Artillery Assistant HUD",
+        "url": "http://127.0.0.1:8765/index.html?hud=1",
+        "width": 1440,
+        "height": 900,
         "resizable": true,
         "alwaysOnTop": true,
         "decorations": true,
@@ -23,11 +23,18 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' https://pve-ubuntu.tail0908d2.ts.net:8099 http://127.0.0.1:8099 'unsafe-inline' data: blob:; connect-src 'self' https://pve-ubuntu.tail0908d2.ts.net:8099 http://127.0.0.1:8099;"
+      "csp": "default-src 'self' http://127.0.0.1:8765 http://localhost:8765 https://pve-ubuntu.tail0908d2.ts.net:8099 http://127.0.0.1:8099 'unsafe-inline' data: blob:; connect-src 'self' http://127.0.0.1:8765 http://localhost:8765 https://pve-ubuntu.tail0908d2.ts.net:8099 http://127.0.0.1:8099;"
     }
   },
   "bundle": {
     "active": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
     "targets": [
       "msi",
       "nsis"
