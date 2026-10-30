@@ -1,15 +1,20 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Least-privilege Tauri v2 ACL for WARDOGS Mortar Assistant HUD on Tanner-Z390 (event-driven hotkeys, zero background polling).",
+  "description": "Least-privilege Tauri v2 ACL for WARDOGS Mortar Assistant HUD v3.0 on Tanner-Z390 (TrayIconBuilder, multi-window PIP recon, event-driven hotkeys, zero background polling).",
   "windows": [
-    "main"
+    "main",
+    "pip-recon"
   ],
   "permissions": [
     "core:default",
     "core:window:allow-set-always-on-top",
     "core:window:allow-set-ignore-cursor-events",
     "core:window:allow-set-decorations",
+    "core:window:allow-create-webview-window",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",
     "window-state:allow-restore-state",

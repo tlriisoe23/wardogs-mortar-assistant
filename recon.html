@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WARDOGS 3D FPV Recon Scope PIP</title>
+    <style>
+        :root {
+            --bg-night: #05080f;
+            --bg-card: #090e17;
+            --border-dim: #1e293b;
+            --border-glow: #38bdf8;
+            --accent-cyan: #38bdf8;
+            --accent-green: #22c55e;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+            --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background: rgba(5, 8, 15, 0.94);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            font-size: 11px;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Draggable Title Header */
+        .pip-header {
+            height: 32px;
+            background: #080d17;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            cursor: grab;
+            flex-shrink: 0;
+        }
+
+        .pip-header:active {
+            cursor: grabbing;
+        }
+
+        .pip-title-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pip-badge {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            letter-spacing: 0.5px;
+        }
+
+        .pip-callout {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--accent-amber);
+            font-weight: 600;
+        }
+
+        .pip-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-ctrl {
+            background: #0f172a;
+            border: 1px solid var(--border-dim);
+            color: var(--text-dim);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: var(--font-ui);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-ctrl:hover {
+            border-color: var(--accent-cyan);
+            color: var(--text-main);
+            background: #1e293b;
+        }
+
+        .btn-ctrl.active {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .btn-close:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: var(--accent-red);
+        }
+
+        /* Viewport Canvas Container */
+        .pip-canvas-container {
+            flex: 1;
+            position: relative;
+            background: #04060a;
+            overflow: hidden;
+        }
+
+        canvas#reconCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Overlay Telemetry HUD */
+        .pip-telemetry-hud {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, transparent, rgba(5, 8, 15, 0.95));
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+            border-top: 1px solid rgba(30, 41, 59, 0.4);
+        }
+
+        .telem-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .telem-label {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .telem-val {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .telem-val.green { color: var(--accent-green); }
+        .telem-val.amber { color: var(--accent-amber); }
+        .telem-val.cyan { color: var(--accent-cyan); }
+        .telem-val.red { color: var(--accent-red); }
+
+        /* Ridge Hazard Warning Ribbon */
+        .ridge-hazard {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(239, 68, 68, 0.92);
+            color: #fff;
+            padding: 3px 12px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+            display: none;
+            z-index: 20;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DRAGGABLE TITLEBAR -->
+    <div class="pip-header" data-tauri-drag-region>
+        <div class="pip-title-box">
+            <span class="pip-badge">🎥 3D FPV SCOPE</span>
+            <span class="pip-callout" id="pipCalloutText">BAKURANI SECTOR · SCANNING</span>
+        </div>
+        <div class="pip-controls">
+            <button class="btn-ctrl active" id="btnModeSplit" onclick="setReconMode('split')">⚡ Split</button>
+            <button class="btn-ctrl" id="btnMode3D" onclick="setReconMode('fpv3d')">🎥 3D Topo</button>
+            <button class="btn-ctrl" id="btnModeSpotter" onclick="setReconMode('spotter')">🛰️ Spotter</button>
+            <button class="btn-close" onclick="closePipWindow()" title="Close PIP window">✕</button>
+        </div>
+    </div>
+
+    <!-- MAIN RECON CANVAS -->
+    <div class="pip-canvas-container">
+        <canvas id="reconCanvas"></canvas>
+        <div class="ridge-hazard" id="ridgeHazardBanner">⚠️ TERRAIN COLLISION: RIDGE CREST INTERSECTS TRAJECTORY</div>
+
+        <!-- BOTTOM TELEMETRY OVERLAY -->
+        <div class="pip-telemetry-hud">
+            <div class="telem-col">
+                <span class="telem-label">Distance / Azimuth</span>
+                <span class="telem-val cyan" id="telemDistAz">-- m · --°</span>
+            </div>
+            <div class="telem-col">
+                <span class="telem-label">Elevation / Arc</span>
+                <span class="telem-val green" id="telemElevArc">-- MIL (HIGH)</span>
+            </div>
+            <div class="telem-col">
+                <span class="telem-label">Terrain ΔZ / Plunge</span>
+                <span class="telem-val amber" id="telemDeltaZ">ΔZ: -- m · --°</span>
+            </div>
+            <div class="telem-col">
+                <span class="telem-label">Time of Flight</span>
+                <span class="telem-val" id="telemTof">-- s</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'split'; // 'split', 'fpv3d', 'spotter'
+        let currentTelemetry = {
+            mortar: [78.50, 69.50],
+            target: [82.18, 71.53],
+            distance_m: 420.3,
+            azimuth_deg: 61.1,
+            azimuth_mils: 1087,
+            elevation_mils: 642,
+            delta_z_m: 2.3,
+            plunge_deg: 64.2,
+            tof_s: 18.4,
+            weapon: 'mortar',
+            arc: 'high',
+            callout: 'Sunflower Church North Ridge',
+            map_id: 'bakurani',
+            ridge_warning: false
+        };
+
+        const canvas = document.getElementById('reconCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth * window.devicePixelRatio;
+            canvas.height = canvas.parentElement.clientHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            render();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function setReconMode(mode) {
+            currentMode = mode;
+            document.getElementById('btnModeSplit').classList.toggle('active', mode === 'split');
+            document.getElementById('btnMode3D').classList.toggle('active', mode === 'fpv3d');
+            document.getElementById('btnModeSpotter').classList.toggle('active', mode === 'spotter');
+            render();
+        }
+
+        function closePipWindow() {
+            if (window.__TAURI__ && window.__TAURI__.window) {
+                window.__TAURI__.window.getCurrentWindow().hide();
+            } else {
+                window.close();
+            }
+        }
+
+        function render() {
+            const w = canvas.parentElement.clientWidth;
+            const h = canvas.parentElement.clientHeight;
+            ctx.clearRect(0, 0, w, h);
+
+            if (currentMode === 'split') {
+                const halfW = Math.floor(w * 0.55);
+                render3dHorizon(0, 0, halfW, h);
+                renderSpotterScope(halfW, 0, w - halfW, h);
+                // Divider line
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(halfW, 0);
+                ctx.lineTo(halfW, h);
+                ctx.stroke();
+            } else if (currentMode === 'fpv3d') {
+                render3dHorizon(0, 0, w, h);
+            } else {
+                renderSpotterScope(0, 0, w, h);
+            }
+        }
+
+        function render3dHorizon(vx, vy, vw, vh) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(vx, vy, vw, vh);
+            ctx.clip();
+
+            // Sky gradient
+            const sky = ctx.createLinearGradient(vx, vy, vx, vy + vh * 0.6);
+            sky.addColorStop(0, '#020617');
+            sky.addColorStop(1, '#0f172a');
+            ctx.fillStyle = sky;
+            ctx.fillRect(vx, vy, vw, vh * 0.6);
+
+            // Ground gradient
+            const ground = ctx.createLinearGradient(vx, vy + vh * 0.6, vx, vy + vh);
+            ground.addColorStop(0, '#06131f');
+            ground.addColorStop(1, '#020408');
+            ctx.fillStyle = ground;
+            ctx.fillRect(vx, vy + vh * 0.6, vw, vh * 0.4);
+
+            // Artificial Horizon & Pitch Ladder
+            const horizonY = vy + vh * 0.58;
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(vx + 15, horizonY);
+            ctx.lineTo(vx + vw - 15, horizonY);
+            ctx.stroke();
+
+            // Synthetic Topo Terrain Ridge Silhouette
+            ctx.fillStyle = '#0a1d30';
+            ctx.beginPath();
+            ctx.moveTo(vx, horizonY);
+            const segments = 16;
+            for (let i = 0; i <= segments; i++) {
+                const px = vx + (i / segments) * vw;
+                const wave = Math.sin(i * 0.8 + 1.2) * 18 + Math.cos(i * 1.5) * 8;
+                ctx.lineTo(px, horizonY - 12 + wave);
+            }
+            ctx.lineTo(vx + vw, vy + vh);
+            ctx.lineTo(vx, vy + vh);
+            ctx.closePath();
+            ctx.fill();
+
+            // Plunge Flight Vector Cone
+            const cx = vx + vw * 0.5;
+            const cy = horizonY - 20;
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx - 35, cy - 45);
+            ctx.lineTo(cx, cy);
+            ctx.lineTo(cx + 35, cy - 45);
+            ctx.stroke();
+
+            // Target Ground Crosshair
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy + 10, 16, 0, Math.PI * 2);
+            ctx.moveTo(cx - 24, cy + 10); ctx.lineTo(cx + 24, cy + 10);
+            ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy + 34);
+            ctx.stroke();
+
+            // Label
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '10px monospace';
+            ctx.fillText(`PLUNGE: ${currentTelemetry.plunge_deg.toFixed(1)}°`, vx + 12, vy + 22);
+            ctx.fillText(`AZIMUTH: ${currentTelemetry.azimuth_deg.toFixed(1)}° (${currentTelemetry.azimuth_mils} MIL)`, vx + 12, vy + 36);
+
+            ctx.restore();
+        }
+
+        function renderSpotterScope(vx, vy, vw, vh) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(vx, vy, vw, vh);
+            ctx.clip();
+
+            // Background slate
+            ctx.fillStyle = '#060a12';
+            ctx.fillRect(vx, vy, vw, vh);
+
+            const cx = vx + vw * 0.5;
+            const cy = vy + vh * 0.5;
+
+            // Concentric rings (1m/px scale, 25m lethal splash, 50m concussion)
+            const pxPerMeter = 1.6;
+            const r25 = 25 * pxPerMeter;
+            const r50 = 50 * pxPerMeter;
+
+            // 50m Concussion Ring
+            ctx.strokeStyle = 'rgba(234, 179, 8, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.arc(cx, cy, r50, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 25m Lethal Splash Ring (High-vis Red)
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 3]);
+            ctx.beginPath();
+            ctx.arc(cx, cy, r25, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Scope Crosshairs
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx - 40, cy); ctx.lineTo(cx + 40, cy);
+            ctx.moveTo(cx, cy - 40); ctx.lineTo(cx, cy + 40);
+            ctx.stroke();
+
+            // Mil Dots
+            for (let d = -30; d <= 30; d += 10) {
+                if (d === 0) continue;
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(cx + d - 1, cy - 1, 2, 2);
+                ctx.fillRect(cx - 1, cy + d - 1, 2, 2);
+            }
+
+            // Legend
+            ctx.fillStyle = '#ef4444';
+            ctx.font = '9px monospace';
+            ctx.fillText('🔴 25m LETHAL ZONE', vx + 10, vy + vh - 22);
+            ctx.fillStyle = '#eab308';
+            ctx.fillText('🟡 50m CONCUSSION', vx + 10, vy + vh - 10);
+
+            ctx.restore();
+        }
+
+        // Inter-Window Tauri IPC Sync Listener
+        if (window.__TAURI__ && window.__TAURI__.event) {
+            window.__TAURI__.event.listen('recon-sync', (ev) => {
+                if (ev && ev.payload) {
+                    Object.assign(currentTelemetry, ev.payload);
+                    updateHudUI();
+                    render();
+                }
+            }).catch(() => {});
+        }
+
+        function updateHudUI() {
+            document.getElementById('pipCalloutText').textContent = currentTelemetry.callout || 'ACTIVE SECTOR TARGET';
+            document.getElementById('telemDistAz').textContent = `${currentTelemetry.distance_m.toFixed(1)} m · ${currentTelemetry.azimuth_deg.toFixed(1)}°`;
+            document.getElementById('telemElevArc').textContent = `${currentTelemetry.elevation_mils ? currentTelemetry.elevation_mils.toFixed(0) : 'OUT'} MIL (${currentTelemetry.arc.toUpperCase()})`;
+            document.getElementById('telemDeltaZ').textContent = `ΔZ: ${currentTelemetry.delta_z_m >= 0 ? '+' : ''}${currentTelemetry.delta_z_m.toFixed(1)} m · ${currentTelemetry.plunge_deg.toFixed(0)}°`;
+            document.getElementById('telemTof').textContent = `${currentTelemetry.tof_s.toFixed(1)} s`;
+
+            const hazard = document.getElementById('ridgeHazardBanner');
+            if (hazard) {
+                hazard.style.display = currentTelemetry.ridge_warning ? 'block' : 'none';
+            }
+        }
+
+        // Initial setup
+        resizeCanvas();
+        updateHudUI();
+    </script>
+</body>
+</html>

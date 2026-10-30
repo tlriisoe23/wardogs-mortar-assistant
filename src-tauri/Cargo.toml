@@ -1,8 +1,8 @@
 [package]
 name = "wardogs-mortar-assistant-desktop"
-version = "2.1.0"
-description = "WARDOGS Mortar & Artillery Assistant (:8099) — Tauri v2 Native Desktop Wrapper & Global Hotkey HUD"
-authors = ["AI Stack Workflow"]
+version = "3.0.0"
+description = "WARDOGS Mortar & Artillery Assistant (:8099) — Pure-Rust Native Desktop HUD & Detachable 3D Recon Scope (AIS-337)"
+authors = ["AI Stack Autonomous Fleet", "Prism-AGY <role: designer>"]
 edition = "2021"
 
 [lib]
@@ -10,15 +10,29 @@ name = "wardogs_mortar_assistant_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.0", features = [] }
+tauri-build = { version = "2.1", features = [] }
 
 [dependencies]
-tauri = { version = "2.1", features = ["tray-icon"] }
+tauri = { version = "2.1", features = ["tray-icon", "image-png", "image-ico"] }
 tauri-plugin-global-shortcut = "2.0"
 tauri-plugin-window-state = "2.0"
 tauri-plugin-clipboard-manager = "2.0"
+tauri-plugin-updater = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tokio = { version = "1", features = ["sync", "time", "rt"] }
+regex = "1.10"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Media_Ocr",
+    "Graphics_Imaging",
+    "Storage_Streams",
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_Graphics_Gdi",
+] }
 
 [profile.release]
 panic = "abort"
