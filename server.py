@@ -484,8 +484,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if not image_bytes:
                         self._send_json({"error": "Empty decoded image bytes"}, status_code=400)
                         return
-                except Exception as e:
-                    self._send_json({"error": f"Base64 decode failed: {e}"}, status_code=400)
+                except Exception:
+                    self._send_json({"error": "Base64 decode failed"}, status_code=400)
                     return
 
                 filename = str(body.get('filename') or 'hud.png')[:200]
