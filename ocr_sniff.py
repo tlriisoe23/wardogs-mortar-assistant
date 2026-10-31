@@ -25,7 +25,7 @@ OMNICONVERT_URL = os.environ.get("OMNICONVERT_URL", "http://127.0.0.1:8100").rst
 OMNICONVERT_TIMEOUT_S = float(os.environ.get("OMNICONVERT_TIMEOUT_S", "45"))
 
 try:
-    import winocr
+    import winocr  # type: ignore
     HAS_WINOCR = True
 except ImportError:
     HAS_WINOCR = False
@@ -400,7 +400,7 @@ class ScreenOcrWatcher:
                 return 0
         return 0
 
-    def start(self):
+    def start(self) -> None:
         if self.is_running:
             return
         self.is_running = True
@@ -408,10 +408,10 @@ class ScreenOcrWatcher:
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
 
-    def stop(self):
+    def stop(self) -> None:
         self.is_running = False
 
-    def _record_entry(self, entry: Dict[str, Any], source: str):
+    def _record_entry(self, entry: Dict[str, Any], source: str) -> None:
         x, y = entry["x"], entry["y"]
         role = entry["role"]
         raw_line = entry.get("raw_line", f"{x:.2f} {y:.2f}")
@@ -463,7 +463,7 @@ class ScreenOcrWatcher:
             return True
         return False
 
-    def _run_loop(self):
+    def _run_loop(self) -> None:
         last_ocr_ts = 0.0
         while self.is_running:
             now = time.time()
@@ -478,7 +478,7 @@ class ScreenOcrWatcher:
 
             time.sleep(0.2)
 
-    def get_status(self) -> dict:
+    def get_status(self) -> Dict[str, Any]:
         return {
             "running": self.is_running,
             "has_winocr": HAS_WINOCR,

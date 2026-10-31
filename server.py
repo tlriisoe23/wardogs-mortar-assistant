@@ -20,6 +20,7 @@ import json
 import os
 import sys
 import base64
+from typing import Any, Dict, Optional, Tuple, Callable
 
 from ocr_sniff import (
     GLOBAL_OCR_WATCHER,
@@ -32,12 +33,12 @@ PORT = int(os.environ.get("PORT", "8765"))
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 # In-memory audio cache for instant sub-millisecond replays
-TTS_CACHE = {}
+TTS_CACHE: dict[str, bytes] = {}
 MAX_TTS_TEXT_LENGTH = 1000
 TTS_TIMEOUT_SECONDS = 20.0
 
 # In-memory target cache for /api/targets
-TARGETS_CACHE = {"mtime_ns": 0, "size": 0, "payload": b"[]"}
+TARGETS_CACHE: dict[str, Any] = {"mtime_ns": 0, "size": 0, "payload": b"[]"}
 
 # Human-readable names for Windows Virtual-Key (VK) codes
 VK_NAMES = {
@@ -109,7 +110,7 @@ class GlobalPTTWatcher:
     Polls Windows GetAsyncKeyState at 50Hz in a background daemon thread so the browser
     can detect global hardware Push-To-Talk presses while inside full-screen WARDOGS.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.enabled = False
         self.vk = 0x05  # Default: Mouse 4 (Thumb Back button)
         self.pressed = False
@@ -117,7 +118,7 @@ class GlobalPTTWatcher:
         self.last_release_ts = 0.0
         self.binding_mode = False
         self.bind_deadline = 0.0
-        self._user32 = ctypes.windll.user32 if os.name == 'nt' else None
+        self._user32: Any = getattr(ctypes, 'windll').user32 if os.name == 'nt' and hasattr(ctypes, 'windll') else None
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
 
@@ -126,11 +127,11 @@ class GlobalPTTWatcher:
             return False
         return bool(self._user32.GetAsyncKeyState(vk) & 0x8000)
 
-    def start_bind_capture(self, timeout_sec: float = 6.0):
+    def start_bind_capture(self, timeout_sec: float = 6.0) -> None:
         self.binding_mode = True
         self.bind_deadline = time.time() + timeout_sec
 
-    def _loop(self):
+    def _loop(self) -> None:
         # Candidate VKs for "Press any key/mouse button to bind" (excludes Left/Right mouse 0x01/0x02)
         bind_candidates = (
             [0x04, 0x05, 0x06, 0x08, 0x09, 0x14, 0x20, 0x2D, 0x2E, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xC0, 0xDB, 0xDD, 0xDC]
@@ -161,7 +162,7 @@ class GlobalPTTWatcher:
 
             time.sleep(0.02)
 
-    def get_status(self) -> dict:
+    def get_status(self) -> dict[str, Any]:
         return {
             "enabled": self.enabled,
             "vk": self.vk,
@@ -175,7 +176,7 @@ class GlobalPTTWatcher:
 
 GLOBAL_PTT_WATCHER = GlobalPTTWatcher()
 
-DESKTOP_HUD_STATE = {
+DESKTOP_HUD_STATE: dict[str, Any] = {
     "ok": True,
     "tauri_v2_ready": True,
     "identifier": "net.tail0908d2.wardogs-mortar-assistant",
@@ -201,7 +202,7 @@ DESKTOP_HUD_STATE = {
 
 async def generate_neural_tts(text: str, voice: str) -> bytes:
     try:
-        import edge_tts
+        import edge_tts  # type: ignore
         communicate = edge_tts.Communicate(text, voice, rate="+8%")
         audio_data = b""
         async for chunk in communicate.stream():
@@ -213,9 +214,9 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
         print(f"[TTS Warning] edge_tts failed: {e}. Falling back to gTTS.")
     try:
         import io
-        from gtts import gTTS
+        from gtts import gTTS  # type: ignore
         buf = io.BytesIO()
-        def _gtts_sync():
+        def _gtts_sync() -> None:
             gTTS(text=text, lang="en", tld="us").write_to_fp(buf)
         await asyncio.to_thread(_gtts_sync)
         data = buf.getvalue()
@@ -243,17 +244,17 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
-    def log_message(self, format, *args):
+    def log_message(self, format: str, *args: Any) -> None:
         # Silence high-frequency background status polls to keep terminal output clean
         if len(args) > 0 and isinstance(args[0], str):
             if '/api/ptt/status' in args[0] or '/api/ocr/status' in args[0]:
                 return
         super().log_message(format, *args)
 
-    def _send_json(self, data: dict, status_code: int = 200):
+    def _send_json(self, data: dict[str, Any], status_code: int = 200) -> None:
         payload = json.dumps(data).encode('utf-8')
         self.send_response(status_code)
         self.send_header('Content-Type', 'application/json')
@@ -261,13 +262,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         try:
             self._do_GET_inner()
         except Exception:
             self._send_json({"error": "Internal server error"}, status_code=500)
 
-    def _do_GET_inner(self):
+    def _do_GET_inner(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
 
         if parsed.path in ('/api/health', '/health'):
@@ -430,7 +431,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
             pass
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         try:
             parsed = urllib.parse.urlparse(self.path)
             if parsed.path == '/api/desktop-hud':
@@ -450,9 +451,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 except (ValueError, TypeError, OverflowError):
                     step = 5
                 if action == 'elev_up':
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, DESKTOP_HUD_STATE['elevation_mils_offset'] + step))
+                    current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
+                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) + step))
                 elif action == 'elev_down':
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, DESKTOP_HUD_STATE['elevation_mils_offset'] - step))
+                    current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
+                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) - step))
                 elif action == 'toggle_arc':
                     DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
                 elif action == 'toggle_click_through':
@@ -517,13 +520,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception:
             self._send_json({"error": "Internal server error"}, status_code=500)
 
-    def do_HEAD(self):
+    def do_HEAD(self) -> None:
         try:
             self.do_GET()
         except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
             pass
 
-    def end_headers(self):
+    def end_headers(self) -> None:
         self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
         self.send_header('Access-Control-Allow-Origin', '*')
         super().end_headers()
