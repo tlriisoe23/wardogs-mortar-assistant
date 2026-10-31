@@ -70,10 +70,24 @@ SPH2_LOW_TABLE: List[Tuple[float, float]] = [
     (2623, 570), (2626, 580), (2628, 590), (2629, 600)
 ]
 
+VALID_WEAPONS = ("mortar", "sph2")
+VALID_ARCS = ("high", "low")
+# L81 sight limits in MIL; 0.4 MIL tolerance mirrors the index.html slope-only check
+# so rounded table endpoints (132m -> 850, 684m -> 150) stay in range.
+L81_SIGHT_MIN_MILS = 150.0
+L81_SIGHT_MAX_MILS = 850.0
+L81_SIGHT_TOLERANCE_MILS = 0.4
+
+
+def _is_finite_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
 
 def interpolate_table(table: List[Tuple[float, float]], distance_m: float) -> Optional[float]:
     """Linearly interpolate elevation in mils from a [distance_m, mils] table."""
-    if not table or distance_m < table[0][0] or distance_m > table[-1][0]:
+    if not table or not _is_finite_number(distance_m):
+        return None
+    if distance_m < table[0][0] or distance_m > table[-1][0]:
         return None
     # Check multi-value plateau at identical distance (e.g., SPH-2 High Arc 2629m -> 610..620 MIL)
     same_dist = [m for d, m in table if abs(d - distance_m) < 1e-6]
@@ -110,7 +124,10 @@ def sph_platform_correct_aim(
     Compensates the SPH-2 5.0° fore/aft hull pitch component when the turret is
     rotated away from the forward hull direction (relative yaw != 0°).
     """
-    if hull_heading_deg is None:
+    if hull_heading_deg is None or not all(
+        _is_finite_number(v) for v in (baseline_mil, target_azimuth_deg, hull_heading_deg, baseline_pitch_deg)
+    ):
+        # Unknown or malformed hull heading: no compensation rather than a NaN solution
         return {"corrected_mil": baseline_mil, "mil_delta": 0.0, "relative_yaw_deg": 0.0}
 
     pitch = math.radians(baseline_pitch_deg)
@@ -157,6 +174,8 @@ def get_terrain_elevation(map_id: str, x: float, y: float) -> Optional[float]:
     global _TERRAIN_DEM_CACHE
     if map_id == "firing_range":
         return 0.0
+    if not _is_finite_number(x) or not _is_finite_number(y):
+        return None
     if _TERRAIN_DEM_CACHE is None:
         import json
         import os
@@ -171,8 +190,13 @@ def get_terrain_elevation(map_id: str, x: float, y: float) -> Optional[float]:
         return None
     heights = dem["heights"]
     n = dem.get("gridSize", len(heights))
-    fx = ((x - dem["minX"]) / (dem["maxX"] - dem["minX"])) * (n - 1)
-    fy = ((y - dem["minY"]) / (dem["maxY"] - dem["minY"])) * (n - 1)
+    span_x = dem["maxX"] - dem["minX"]
+    span_y = dem["maxY"] - dem["minY"]
+    if n < 2 or span_x <= 0 or span_y <= 0:
+        # Degenerate DEM (single sample or zero-width bounds) cannot be interpolated
+        return None
+    fx = ((x - dem["minX"]) / span_x) * (n - 1)
+    fy = ((y - dem["minY"]) / span_y) * (n - 1)
     if fx < 0 or fx > n - 1 or fy < 0 or fy > n - 1:
         return None
     x0 = max(0, min(n - 1, int(math.floor(fx))))
@@ -282,6 +306,10 @@ def solve_sph2_terrain_mils(arc: str, distance_m: float, flat_mils: Optional[flo
     """Exact upstream wardogs-artillery.com RK4 drag solver for SPH-2 terrain height offset ΔZ."""
     if flat_mils is None:
         return None
+    if not _is_finite_number(flat_mils) or not _is_finite_number(distance_m) or distance_m <= 0:
+        return None
+    if not _is_finite_number(delta_z_m):
+        return None
     if abs(delta_z_m) <= 0.05:
         return flat_mils
     model = SPH_PRIMARY_MODELS.get(arc)
@@ -340,6 +368,17 @@ def solve_sph2_terrain_mils(arc: str, distance_m: float, flat_mils: Optional[flo
     return None
 
 
+def _normalize_weapon_arc(weapon: Any, arc: Any) -> Tuple[str, str]:
+    """Validate weapon/arc so an unknown weapon can't mix mortar range limits with SPH-2 tables."""
+    w = str(weapon).strip().lower() if weapon is not None else ""
+    a = str(arc).strip().lower() if arc is not None else ""
+    if w not in VALID_WEAPONS:
+        raise ValueError(f"Unknown weapon {weapon!r}; expected one of {VALID_WEAPONS}")
+    if a not in VALID_ARCS:
+        raise ValueError(f"Unknown arc {arc!r}; expected one of {VALID_ARCS}")
+    return w, a
+
+
 class MortarCalculator:
     def __init__(
         self,
@@ -349,25 +388,23 @@ class MortarCalculator:
         arc: str = "high",
         map_id: Optional[str] = None
     ):
-        self.mortar_x = mortar_x
-        self.mortar_y = mortar_y
+        self.set_mortar(mortar_x, mortar_y)
         self.target_x = 0.0
         self.target_y = 0.0
-        self.weapon = weapon
-        self.arc = arc
+        self.weapon, self.arc = _normalize_weapon_arc(weapon, arc)
         self.map_id = map_id
         self.delta_z_m: Optional[float] = None
         self.hull_heading_deg: Optional[float] = None
         self.has_target = False
 
     def set_mortar(self, x: float, y: float) -> None:
-        if not math.isfinite(x) or not math.isfinite(y):
+        if not _is_finite_number(x) or not _is_finite_number(y):
             raise ValueError("Coordinates must be finite numbers")
         self.mortar_x = x
         self.mortar_y = y
 
     def set_target(self, x: float, y: float) -> None:
-        if not math.isfinite(x) or not math.isfinite(y):
+        if not _is_finite_number(x) or not _is_finite_number(y):
             raise ValueError("Coordinates must be finite numbers")
         self.target_x = x
         self.target_y = y
@@ -378,6 +415,7 @@ class MortarCalculator:
         Calculate fire solution using Pythagorean theorem and coordinate geometry.
         1 game unit = 100 meters.
         """
+        weapon, arc = _normalize_weapon_arc(self.weapon, self.arc)
         dx_units = self.target_x - self.mortar_x
         dy_units = self.target_y - self.mortar_y
         
@@ -392,11 +430,12 @@ class MortarCalculator:
         # +Y is North (0°/360°), +X is East (90°), -Y is South (180°), -X is West (270°)
         bearing_rad = math.atan2(dx_meters, dy_meters)
         bearing_deg = (math.degrees(bearing_rad) + 360.0) % 360.0
-        bearing_mils = round(bearing_deg * (6400.0 / 360.0))
+        # Wrap so bearings just shy of North (e.g. 359.99°) report 0 mils, not 6400
+        bearing_mils = round(bearing_deg * (6400.0 / 360.0)) % 6400
         
         # Sight range bounds per weapon
-        if self.weapon == "sph2":
-            min_range = 1181.0 if self.arc == "low" else 780.0
+        if weapon == "sph2":
+            min_range = 1181.0 if arc == "low" else 780.0
             max_range = 2629.0
         else:
             # Level-ground sight limits for L81 Mortar: 132m (850 MIL) to 684m (150 MIL)
@@ -411,33 +450,48 @@ class MortarCalculator:
             dz_m = (tz - gz) if (gz is not None and tz is not None) else 0.0
         elif dz_m is None:
             dz_m = 0.0
+        if not _is_finite_number(dz_m):
+            # Malformed manual/DEM height differential: fall back to flat-ground solution
+            dz_m = 0.0
 
         eff_distance_m = distance_meters
         hull_delta_mils = 0.0
-        if self.weapon == "mortar":
+        if weapon == "mortar":
             base_mils = interpolate_elevation(distance_meters, "mortar", "high")
             if abs(dz_m) > 0.05 and base_mils is not None:
                 plunge_rad = max(0.18, min(1.38, base_mils / 1000.0))
                 eff_distance_m = distance_meters + (dz_m / math.tan(plunge_rad)) * 0.65
             elevation_mils = interpolate_elevation(eff_distance_m, "mortar", "high")
         else:
-            flat_mils = interpolate_elevation(distance_meters, "sph2", self.arc)
-            elevation_mils = solve_sph2_terrain_mils(self.arc, distance_meters, flat_mils, dz_m)
+            flat_mils = interpolate_elevation(distance_meters, "sph2", arc)
+            elevation_mils = solve_sph2_terrain_mils(arc, distance_meters, flat_mils, dz_m)
             if elevation_mils is not None and self.hull_heading_deg is not None:
                 corr = sph_platform_correct_aim(elevation_mils, bearing_deg, self.hull_heading_deg)
                 elevation_mils = corr["corrected_mil"]
                 hull_delta_mils = corr["mil_delta"]
 
-        in_effective_range = (min_range <= distance_meters <= max_range and elevation_mils is not None)
+        # Mirrors index.html calculate(): with a height differential the L81 sight limit
+        # (150-850 MIL) applies to the corrected elevation and effective distance, so a
+        # target that needs >850 MIL is slope-only even if its flat distance is in range.
         slope_only = (
-            self.weapon == "mortar"
+            weapon == "mortar"
             and elevation_mils is not None
-            and (distance_meters < 132.0 or distance_meters > 684.0)
+            and (
+                eff_distance_m < min_range
+                or eff_distance_m > max_range
+                or elevation_mils > L81_SIGHT_MAX_MILS + L81_SIGHT_TOLERANCE_MILS
+                or elevation_mils < L81_SIGHT_MIN_MILS - L81_SIGHT_TOLERANCE_MILS
+            )
         )
-        
+        in_effective_range = (
+            min_range <= eff_distance_m <= max_range
+            and elevation_mils is not None
+            and not slope_only
+        )
+
         return {
-            "weapon": self.weapon,
-            "arc": self.arc,
+            "weapon": weapon,
+            "arc": arc,
             "mortar": (self.mortar_x, self.mortar_y),
             "target": (self.target_x, self.target_y),
             "dx_meters": dx_meters,
@@ -460,6 +514,8 @@ class MortarCalculator:
         range_meters: positive = ADD (push target farther), negative = DROP (pull closer)
         deflection_meters: positive = RIGHT, negative = LEFT
         """
+        if not _is_finite_number(range_meters) or not _is_finite_number(deflection_meters):
+            raise ValueError("Corrections must be finite numbers")
         dx = self.target_x - self.mortar_x
         dy = self.target_y - self.mortar_y
         length = math.hypot(dx, dy)
@@ -502,6 +558,8 @@ class MortarCalculator:
         Adjust target when spotter reports exact coordinates of impact.
         New Aim = Target - (Impact - Target) = 2*Target - Impact
         """
+        if not _is_finite_number(impact_x) or not _is_finite_number(impact_y):
+            raise ValueError("Coordinates must be finite numbers")
         shift_x = self.target_x - impact_x
         shift_y = self.target_y - impact_y
         
