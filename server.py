@@ -367,13 +367,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 TARGETS_CACHE["payload"] = payload
             elif mtime_ns != TARGETS_CACHE.get("mtime_ns") or size != TARGETS_CACHE.get("size"):
                 try:
-                    with open(targets_file, 'rb') as f:
-                        payload = f.read()
+                    with open(targets_file, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    payload = json.dumps(data, separators=(',', ':')).encode('utf-8')
                     TARGETS_CACHE["mtime_ns"] = mtime_ns
                     TARGETS_CACHE["size"] = size
                     TARGETS_CACHE["payload"] = payload
-                except OSError:
+                except (OSError, json.JSONDecodeError):
                     payload = b"[]"
+                    TARGETS_CACHE["mtime_ns"] = 0
+                    TARGETS_CACHE["size"] = 0
+                    TARGETS_CACHE["payload"] = payload
             else:
                 payload = TARGETS_CACHE["payload"]
 
