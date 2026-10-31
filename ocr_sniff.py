@@ -33,8 +33,10 @@ except ImportError:
 # 1) Explicit X/Y: "X: 78.50 Y: 69.50"
 # 2) Decimal or integer pair with separator: "78.5 69.5", "78.50, 69.50", "78 by 69"
 # 3) Compact 4-digit/5-digit grid pair: "7850 6950" -> (78.50, 69.50)
+# Digit lookarounds reject over-long tokens ("Y: 1234" must not truncate to 123.0) and the
+# X/Y separator is optional because OCR often drops the space ("X:78.50Y:69.50").
 ExplicitXYRe = re.compile(
-    r'[xX]\s*[:=]?\s*(\d{2,3}(?:\.\d{1,2})?)[\s,;/|]+[yY]\s*[:=]?\s*(\d{2,3}(?:\.\d{1,2})?)',
+    r'(?<![\w.])[xX]\s*[:=]?\s*(\d{2,3}(?:\.\d{1,2})?)(?![\d.])[\s,;/|]*[yY]\s*[:=]?\s*(\d{2,3}(?:\.\d{1,2})?)(?![\d.])',
     re.I
 )
 CompactGridRe = re.compile(

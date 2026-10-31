@@ -1406,7 +1406,7 @@
                         </div>
 
                         <div class="map-canvas-container" id="mapCanvasContainer" style="height: 520px;">
-                            <canvas id="tacticalMapCanvas"></canvas>
+                            <canvas id="tacticalMapCanvas" role="img" aria-label="North-up tactical minimap showing gun, target and gun-target line. Fire solution is also announced in the range status readout."></canvas>
                         </div>
 
                         <div style="font-size: 10px; color: #94a3b8; font-family: var(--font-mono); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
@@ -1467,7 +1467,7 @@
                     <!-- TAB 3: PYTHAGOREAN MATH HUD -->
                     <div id="pythagorasViewContainer" role="tabpanel" aria-labelledby="tabPythBtn" style="display: none; flex-direction: column; gap: 14px;">
                         <div class="visualizer-box">
-                            <canvas id="triangleCanvas"></canvas>
+                            <canvas id="triangleCanvas" role="img" aria-label="Pythagorean range triangle: east-west and north-south legs with hypotenuse distance to target."></canvas>
                         </div>
                         <div class="math-breakdown" id="mathBreakdown"></div>
                     </div>
@@ -1490,7 +1490,7 @@
                                 </div>
                             </div>
                             <div style="width: 100%; height: 220px; border-radius: 5px; overflow: hidden; border: 1px solid #1e293b; background: #06090e; position: relative;">
-                                <canvas id="targetReconCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+                                <canvas id="targetReconCanvas" role="img" aria-label="Target recon view of terrain around the aim point." style="width: 100%; height: 100%; display: block;"></canvas>
                             </div>
                             <div id="reconTelemetryRight" style="font-size: 9px; color: #94a3b8; font-family: var(--font-mono);">1m/px SATELLITE + 20m TOPOGRAPHIC DEM ELEVATION PROFILE</div>
                         </div>
@@ -5123,7 +5123,8 @@
             // Azimuth: +Y is North (0°/360°), +X is East (90°)
             let bearingRad = Math.atan2(dxMeters, dyMeters);
             let bearingDeg = (bearingRad * (180 / Math.PI) + 360) % 360;
-            let bearingMils = Math.round(bearingDeg * (6400 / 360));
+            // Wrap so bearings just shy of North (e.g. 359.99°) read 0 mils, not 6400
+            let bearingMils = Math.round(bearingDeg * (6400 / 360)) % 6400;
 
             // Standard level-ground sight limits:
             // L81 Mortar: 132m - 684m (150 - 850 MIL). Extended slope rows exist from 80m-131m and 685m-697m.
