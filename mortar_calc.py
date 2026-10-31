@@ -382,6 +382,8 @@ class MortarCalculator:
         arc: str = "high",
         map_id: Optional[str] = None
     ):
+        if not math.isfinite(mortar_x) or not math.isfinite(mortar_y):
+            raise ValueError("Coordinates must be finite numbers")
         self.mortar_x = mortar_x
         self.mortar_y = mortar_y
         self.target_x = 0.0
@@ -493,6 +495,8 @@ class MortarCalculator:
         range_meters: positive = ADD (push target farther), negative = DROP (pull closer)
         deflection_meters: positive = RIGHT, negative = LEFT
         """
+        if not math.isfinite(range_meters) or not math.isfinite(deflection_meters):
+            raise ValueError("Adjustment parameters must be finite numbers")
         dx = self.target_x - self.mortar_x
         dy = self.target_y - self.mortar_y
         length = math.hypot(dx, dy)
@@ -526,6 +530,8 @@ class MortarCalculator:
         long_short_meters: + = landed long (overshot), - = landed short (undershot)
         left_right_meters: + = landed right, - = landed left
         """
+        if not math.isfinite(long_short_meters) or not math.isfinite(left_right_meters):
+            raise ValueError("Missed shot parameters must be finite numbers")
         range_correction = -long_short_meters
         deflection_correction = -left_right_meters
         return self.adjust_relative(range_correction, deflection_correction)
@@ -535,6 +541,8 @@ class MortarCalculator:
         Adjust target when spotter reports exact coordinates of impact.
         New Aim = Target - (Impact - Target) = 2*Target - Impact
         """
+        if not math.isfinite(impact_x) or not math.isfinite(impact_y):
+            raise ValueError("Impact coordinates must be finite numbers")
         shift_x = self.target_x - impact_x
         shift_y = self.target_y - impact_y
         
