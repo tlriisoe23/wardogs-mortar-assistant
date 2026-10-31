@@ -79,13 +79,13 @@ def test_extract_text_via_omniconvert_upstream_failure():
         assert result["ok"] is False
         assert result["engine"] == "unavailable"
         assert result["entries"] == []
-        assert "Connection refused" in result["error"]
+        assert "OCR extraction failed" in result["error"]
 
 
 def test_extract_text_via_omniconvert_http_error_fallback():
     class MockHTTPError(urllib.error.HTTPError):
         def __init__(self):
-            pass
+            self.code = 502
         def __str__(self):
             return "HTTP Error 502: Bad Gateway"
         def close(self):
@@ -101,7 +101,7 @@ def test_extract_text_via_omniconvert_http_error_fallback():
         assert result["ok"] is False
         assert result["engine"] == "unavailable"
         assert result["entries"] == []
-        assert "HTTP Error 502: Bad Gateway" in result["error"]
+        assert "HTTP Error 502" in result["error"]
         mock_err.close.assert_called_once()
 
 

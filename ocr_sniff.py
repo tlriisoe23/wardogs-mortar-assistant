@@ -194,7 +194,10 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
     )
     try:
         with urllib.request.urlopen(req, timeout=OMNICONVERT_TIMEOUT_S) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+            raw_data = resp.read(10 * 1024 * 1024)
+            data = json.loads(raw_data.decode("utf-8", errors="replace"))
+            if not isinstance(data, dict):
+                data = {}
             text = data.get("text") or data.get("markdown") or ""
             engine = data.get("engine", "qwen3-vl:2b-instruct")
             return {
@@ -205,7 +208,7 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
             }
     except urllib.error.HTTPError as e:
         try:
-            error_msg = str(e)
+            error_msg = f"HTTP Error {e.code}"
         finally:
             e.close()
         return {
@@ -215,13 +218,13 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
             "entries": [],
             "error": error_msg
         }
-    except Exception as e:
+    except Exception:
         return {
             "ok": False,
             "text": "",
             "engine": "unavailable",
             "entries": [],
-            "error": str(e)
+            "error": "OCR extraction failed"
         }
 
 
