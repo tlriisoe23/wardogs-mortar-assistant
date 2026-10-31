@@ -71,24 +71,61 @@ SPH2_LOW_TABLE: List[Tuple[float, float]] = [
 ]
 
 
+import bisect
+import sys
+
+class _KeyWrapper:
+    def __init__(self, table: List[Tuple[float, float]]):
+        self.table = table
+    def __len__(self) -> int:
+        return len(self.table)
+    def __getitem__(self, i: int) -> float:
+        return self.table[i][0]
+
 def interpolate_table(table: List[Tuple[float, float]], distance_m: float) -> Optional[float]:
     """Linearly interpolate elevation in mils from a [distance_m, mils] table."""
     if not table or distance_m < table[0][0] or distance_m > table[-1][0]:
         return None
+    if len(table) < 2:
+        return None
+
+    if sys.version_info >= (3, 10):
+        idx = bisect.bisect_left(table, distance_m - 1e-6, key=lambda x: x[0])
+    else:
+        keys = _KeyWrapper(table)
+        idx = bisect.bisect_left(keys, distance_m - 1e-6)
+
     # Check multi-value plateau at identical distance (e.g., SPH-2 High Arc 2629m -> 610..620 MIL)
-    same_dist = [m for d, m in table if abs(d - distance_m) < 1e-6]
+    same_dist = []
+    i = idx
+    while i < len(table) and table[i][0] - distance_m <= 1e-6:
+        if abs(table[i][0] - distance_m) < 1e-6:
+            same_dist.append(table[i][1])
+        i += 1
+
     if len(same_dist) > 1:
         return sum(same_dist) / len(same_dist)
 
-    for i in range(len(table) - 1):
-        d0, m0 = table[i]
-        d1, m1 = table[i + 1]
-        if d0 <= distance_m <= d1:
-            if abs(d1 - d0) < 1e-6:
-                return (m0 + m1) / 2.0
-            ratio = (distance_m - d0) / (d1 - d0)
-            return m0 + ratio * (m1 - m0)
-    return None
+    if sys.version_info >= (3, 10):
+        idx_right = bisect.bisect_right(table, distance_m, key=lambda x: x[0])
+    else:
+        keys = _KeyWrapper(table)
+        idx_right = bisect.bisect_right(keys, distance_m)
+
+    if idx_right == 0:
+        return table[0][1]
+
+    if idx_right == len(table):
+        idx_right = len(table) - 1
+
+    d0, m0 = table[idx_right - 1]
+    d1, m1 = table[idx_right]
+
+    if abs(d1 - d0) < 1e-6:
+        return (m0 + m1) / 2.0
+
+    ratio = (distance_m - d0) / (d1 - d0)
+    return m0 + ratio * (m1 - m0)
 
 
 def interpolate_elevation(distance_m: float, weapon: str = "mortar", arc: str = "high") -> Optional[float]:
