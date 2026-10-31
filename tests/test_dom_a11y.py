@@ -17,6 +17,7 @@ class TestIndexHtmlA11y(unittest.TestCase):
         for dialog in dialogs:
             has_label = dialog.has_attr('aria-label')
             has_labelledby = dialog.has_attr('aria-labelledby')
+            self.assertTrue(dialog.has_attr('aria-modal') and dialog['aria-modal'] == 'true', f"Dialog {dialog.get('id')} missing aria-modal='true'")
             self.assertTrue(has_label or has_labelledby, f"Dialog {dialog.get('id')} missing accessibility label")
 
             if has_labelledby:
