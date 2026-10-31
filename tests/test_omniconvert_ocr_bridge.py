@@ -164,8 +164,10 @@ def test_post_extract_image_endpoint_validation_errors(live_test_server):
     )
     with pytest.raises(urllib.error.HTTPError) as exc_info:
         urllib.request.urlopen(req, timeout=5)
-    assert exc_info.value.code == 400
-    exc_info.value.close()
+    try:
+        assert exc_info.value.code == 400
+    finally:
+        exc_info.value.close()
 
     # Invalid base64
     req2 = urllib.request.Request(
@@ -175,8 +177,10 @@ def test_post_extract_image_endpoint_validation_errors(live_test_server):
     )
     with pytest.raises(urllib.error.HTTPError) as exc_info2:
         urllib.request.urlopen(req2, timeout=5)
-    assert exc_info2.value.code == 400
-    exc_info2.value.close()
+    try:
+        assert exc_info2.value.code == 400
+    finally:
+        exc_info2.value.close()
 
 
 def test_extract_text_via_omniconvert_parses_markdown_table_output():
@@ -193,3 +197,47 @@ def test_extract_text_via_omniconvert_parses_markdown_table_output():
     assert result["entries"][0]["role"] == "cl"
     assert result["entries"][0]["x"] == 78.50
     assert result["entries"][0]["y"] == 69.50
+
+
+def test_post_extract_image_endpoint_fallback_to_winocr(live_test_server):
+    failed_res = {
+        "ok": False,
+        "engine": "unavailable",
+        "text": "",
+        "entries": [],
+        "error": "HTTP Error 502"
+    }
+
+    mock_winocr_res = {
+        "ok": True,
+        "engine": "winocr",
+        "text": "Target 100.00, 200.00",
+        "entries": [
+            {"x": 100.00, "y": 200.00, "role": "target", "raw_line": "Target 100.00, 200.00"}
+        ]
+    }
+
+    with patch("server.extract_text_via_omniconvert", return_value=failed_res), \
+         patch("server.GLOBAL_OCR_WATCHER.get_status", return_value={"has_winocr": True}), \
+         patch("server.extract_text_via_winocr_bytes", return_value=mock_winocr_res):
+
+        payload = {
+            "image_base64": base64.b64encode(b"hud_screenshot").decode("ascii"),
+            "filename": "hud.png",
+            "mode": "smart_vision"
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            f"{live_test_server}/api/ocr/extract-image",
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            body = json.loads(resp.read().decode("utf-8"))
+            assert body["status"] == "ok"
+            assert body["ok"] is True
+            assert body["engine"] == "winocr"
+            assert len(body["entries"]) == 1
+            assert body["entries"][0]["x"] == 100.00
