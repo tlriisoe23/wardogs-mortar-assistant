@@ -21,7 +21,12 @@ import os
 import sys
 import base64
 
-from ocr_sniff import GLOBAL_OCR_WATCHER, capture_and_scan_entries, extract_text_via_omniconvert
+from ocr_sniff import (
+    GLOBAL_OCR_WATCHER,
+    capture_and_scan_entries,
+    extract_text_via_omniconvert,
+    extract_text_via_winocr_bytes,
+)
 
 PORT = int(os.environ.get("PORT", "8765"))
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
@@ -315,8 +320,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             entries = capture_and_scan_entries()
             last_entry = entries[-1] if entries else None
             coords = (last_entry["x"], last_entry["y"]) if last_entry else None
-            if last_entry:
-                GLOBAL_OCR_WATCHER._record_entry(last_entry, source="ocr_snapshot")
+            for entry in entries:
+                GLOBAL_OCR_WATCHER._record_entry(entry, source="ocr_snapshot")
             self._send_json({
                 "found": bool(coords),
                 "coords": coords,
@@ -492,6 +497,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 mode = str(body.get('mode') or 'smart_vision')[:100]
 
                 res = extract_text_via_omniconvert(image_bytes, filename=filename, mode=mode)
+                if not res.get("ok") and GLOBAL_OCR_WATCHER.get_status().get("has_winocr"):
+                    winocr_res = extract_text_via_winocr_bytes(image_bytes)
+                    if winocr_res.get("ok"):
+                        res = winocr_res
                 for entry in res.get("entries", []):
                     GLOBAL_OCR_WATCHER._record_entry(entry, source="ocr")
 

@@ -37,7 +37,7 @@
         }
 
         button, select {
-            min-height: 40px;
+            min-height: 28px;
         }
 
         body {
@@ -53,12 +53,12 @@
         header {
             background: linear-gradient(180deg, #16202e 0%, #0f1722 100%);
             border-bottom: 1px solid var(--border-dim);
-            padding: 10px 18px;
+            padding: 5px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
 
         .header-title {
@@ -93,10 +93,10 @@
         .container {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            padding: 12px 18px 18px 18px;
+            gap: 8px;
+            padding: 6px 14px 8px 14px;
             flex: 1;
-            max-width: 1720px;
+            max-width: 1760px;
             margin: 0 auto;
             width: 100%;
             position: relative;
@@ -106,12 +106,12 @@
         .top-mission-deck {
             display: grid;
             grid-template-columns: auto 1fr;
-            gap: 14px;
+            gap: 10px;
             align-items: stretch;
             background: var(--bg-panel);
             border: 1px solid var(--border-dim);
             border-radius: 8px;
-            padding: 10px 14px;
+            padding: 6px 12px;
         }
 
         @media (max-width: 1180px) {
@@ -124,9 +124,9 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 6px;
-            min-width: 320px;
-            padding-right: 14px;
+            gap: 4px;
+            min-width: 265px;
+            padding-right: 10px;
             border-right: 1px solid var(--border-dim);
         }
 
@@ -135,7 +135,7 @@
                 border-right: none;
                 border-bottom: 1px solid var(--border-dim);
                 padding-right: 0;
-                padding-bottom: 10px;
+                padding-bottom: 6px;
             }
         }
 
@@ -144,16 +144,16 @@
             color: #94a3b8;
             border: 1px solid var(--border-dim);
             border-radius: 6px;
-            padding: 9px 14px;
-            font-size: 12px;
+            padding: 5px 10px;
+            font-size: 11px;
             font-weight: 800;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             text-transform: uppercase;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 8px;
             transition: all 0.15s ease;
             text-align: left;
         }
@@ -209,15 +209,15 @@
 
         .manual-workspace-grid {
             display: grid;
-            grid-template-columns: 1fr 370px;
-            gap: 14px;
+            grid-template-columns: 1fr 348px;
+            gap: 10px;
             align-items: start;
         }
 
         .voice-workspace-grid {
             display: grid;
-            grid-template-columns: 370px 1fr 370px;
-            gap: 14px;
+            grid-template-columns: 335px 1fr 325px;
+            gap: 10px;
             align-items: start;
         }
 
@@ -232,10 +232,10 @@
             background: var(--bg-panel);
             border: 1px solid var(--border-dim);
             border-radius: 8px;
-            padding: 16px;
+            padding: 10px 12px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 8px;
         }
 
         .card-header {
@@ -243,8 +243,8 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border-dim);
-            padding-bottom: 8px;
-            font-size: 13px;
+            padding-bottom: 5px;
+            font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -254,24 +254,25 @@
         /* VOICE CONTROL PANEL */
         .voice-hud {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            flex-direction: row;
+            gap: 10px;
             align-items: center;
             background: var(--bg-card);
-            padding: 16px;
+            padding: 8px 12px;
             border-radius: 8px;
             border: 1px solid var(--border-dim);
-            text-align: center;
+            text-align: left;
         }
 
         .mic-btn {
-            width: 80px;
-            height: 80px;
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
             border-radius: 50%;
             border: 3px solid var(--border-dim);
             background: #1f2937;
             color: #94a3b8;
-            font-size: 32px;
+            font-size: 22px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -317,17 +318,17 @@
         .coord-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 6px;
         }
 
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
 
         .input-group label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
@@ -338,9 +339,9 @@
             border: 1px solid var(--border-dim);
             color: #f8fafc;
             font-family: var(--font-mono);
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 600;
-            padding: 8px 10px;
+            padding: 5px 8px;
             border-radius: 4px;
             outline: none;
             width: 100%;
@@ -355,11 +356,11 @@
         .solution-hero {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
+            gap: 8px;
             background: #0d1520;
             border: 1px solid #1e293b;
-            border-radius: 8px;
-            padding: 16px;
+            border-radius: 6px;
+            padding: 6px 12px;
             text-align: center;
         }
 
@@ -367,11 +368,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
         }
 
         .hero-label {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -380,16 +381,16 @@
         .hero-val {
             font-family: var(--font-mono);
             font-variant-numeric: tabular-nums;
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 800;
             color: #38bdf8;
-            line-height: 1;
+            line-height: 1.05;
         }
 
         .hero-sub {
             font-family: var(--font-mono);
             font-variant-numeric: tabular-nums;
-            font-size: 11px;
+            font-size: 10px;
             color: #94a3b8;
         }
 
@@ -398,11 +399,11 @@
             font-variant-numeric: tabular-nums;
             font-size: 10px;
             font-weight: 700;
-            padding: 2px 6px;
+            padding: 1px 5px;
             border-radius: 3px;
             background: rgba(56, 189, 248, 0.12);
             color: #38bdf8;
-            margin-top: 2px;
+            margin-top: 0;
         }
 
         .hero-delta.shift-active {
@@ -420,9 +421,9 @@
         }
 
         .range-status {
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             text-align: center;
             font-family: var(--font-mono);
@@ -443,16 +444,16 @@
         /* VIEW TABS */
         .view-tabs {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             border-bottom: 1px solid var(--border-dim);
-            padding-bottom: 8px;
+            padding-bottom: 5px;
         }
 
         .view-tab {
             background: #1e293b;
             color: var(--text-muted);
             border: 1px solid var(--border-dim);
-            padding: 8px 16px;
+            padding: 5px 12px;
             border-radius: 4px;
             font-size: 11px;
             font-weight: 700;
@@ -475,7 +476,7 @@
 
         .map-canvas-container {
             width: 100%;
-            height: 480px;
+            height: clamp(340px, calc(100dvh - 305px), 540px);
             border-radius: 6px;
             overflow: hidden;
             border: 1px solid var(--border-dim);
@@ -539,9 +540,9 @@
             color: #94a3b8;
             border: 1px solid var(--border-dim);
             border-radius: 4px;
-            min-block-size: 28px;
-            min-inline-size: 28px;
-            padding: 5px 10px;
+            min-block-size: 26px;
+            min-inline-size: 26px;
+            padding: 3px 8px;
             font-size: 11px;
             font-family: var(--font-mono);
             cursor: pointer;
@@ -719,16 +720,16 @@
         .adj-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            gap: 5px;
         }
 
         .adj-btn {
             background: #1e293b;
             color: var(--text-main);
             border: 1px solid var(--border-dim);
-            padding: 10px 4px;
+            padding: 6px 4px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             font-family: var(--font-mono);
             cursor: pointer;
@@ -1288,58 +1289,78 @@
     </header>
 
     <main class="container" id="main-content">
-        <!-- TOP MISSION DECK: 2-PAGE WORKSPACE SWITCHER + SHARED FIRING SOLUTION HERO -->
+        <!-- TOP MISSION DECK: 2-PAGE WORKSPACE SWITCHER + SHARED FIRING SOLUTION HERO + QUICK CL/OCR BAR -->
         <div class="top-mission-deck">
             <div class="workspace-switcher" role="tablist" aria-label="Primary Workspace Pages" onkeydown="handleWorkspaceTabsKeydown(event)">
-                <div style="font-size: 10px; font-weight: 800; color: #94a3b8; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px;">
-                    WORKSPACE MODE
-                </div>
                 <button type="button" role="tab" id="pageTabManual" aria-selected="true" aria-controls="pageManualWorkspace" tabindex="0" class="workspace-tab-btn active" onclick="switchWorkspacePage('manual')">
                     <div>
                         <div>🗺️ 1. Manual Map &amp; Adjustments</div>
                         <div class="workspace-tab-sub">Click Mortar &amp; Target · Walk In Rounds</div>
                     </div>
-                    <span style="font-size: 14px;">▸</span>
+                    <span style="font-size: 13px;">▸</span>
                 </button>
                 <button type="button" role="tab" id="pageTabVoiceChat" aria-selected="false" aria-controls="pageVoiceChatWorkspace" tabindex="-1" class="workspace-tab-btn" onclick="switchWorkspacePage('voicechat')">
                     <div>
                         <div>🎙️ 2. Voice, CL Chat &amp; Auto-OCR</div>
                         <div class="workspace-tab-sub">Voice PTT · Private CL Chat · Screen OCR</div>
                     </div>
-                    <span style="font-size: 14px;">▸</span>
+                    <span style="font-size: 13px;">▸</span>
                 </button>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 8px; justify-content: center;">
-                <div class="solution-hero" aria-live="polite" aria-atomic="true" aria-relevant="text" style="padding: 12px 16px;">
+            <div style="display: flex; flex-direction: column; gap: 5px; justify-content: center;">
+                <div class="solution-hero" aria-live="polite" aria-atomic="true" aria-relevant="text" style="padding: 5px 10px;">
                     <div class="hero-metric">
                         <span class="hero-label">Distance (Range)</span>
                         <span class="hero-val" id="solDistance">420.5m</span>
-                        <span class="hero-sub" id="solDelta">ΔX: 368m | ΔY: 203m</span>
-                        <span class="hero-delta" id="solTofBadge">⏱️ TOF: ~17.2s</span>
+                        <div style="display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                            <span class="hero-sub" id="solDelta">ΔX: 368m | ΔY: 203m</span>
+                            <span class="hero-delta" id="solTofBadge">⏱️ TOF: ~17.2s</span>
+                        </div>
                     </div>
                     <div class="hero-metric">
                         <span class="hero-label">Azimuth (Bearing)</span>
                         <span class="hero-val azimuth" id="solAzimuth">061°</span>
-                        <span class="hero-sub" id="solMils">1087 MILS</span>
-                        <span class="hero-delta" id="solAzimuthDelta">Δ AIM: 0° (0 MIL)</span>
+                        <div style="display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                            <span class="hero-sub" id="solMils">1087 MILS</span>
+                            <span class="hero-delta" id="solAzimuthDelta">Δ AIM: 0° (0 MIL)</span>
+                        </div>
                     </div>
                     <div class="hero-metric">
                         <span class="hero-label" id="solElevHeaderLabel">Gun Elevation</span>
                         <span class="hero-val elevation" id="solElevation">559 MIL</span>
-                        <span class="hero-sub" id="solArcLabel">L81 MORTAR · HIGH ARC</span>
-                        <div id="dualArcPills" style="display: none; gap: 4px; justify-content: center; flex-wrap: wrap; margin-top: 2px;"></div>
-                        <span class="hero-delta" id="solElevDelta">Δ ELEV: 0 MIL</span>
+                        <div style="display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                            <span class="hero-sub" id="solArcLabel">L81 MORTAR · HIGH ARC</span>
+                            <span class="hero-delta" id="solElevDelta">Δ ELEV: 0 MIL</span>
+                        </div>
+                        <div id="dualArcPills" style="display: none; gap: 4px; justify-content: center; flex-wrap: wrap;"></div>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <div id="rangeStatus" class="range-status in-range" role="status" aria-live="polite" style="flex: 1; padding: 5px 10px;">
+                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                    <div id="rangeStatus" class="range-status in-range" role="status" aria-live="polite" style="flex: 0 1 auto; padding: 3px 9px; white-space: nowrap;">
                         TARGET WITHIN EFFECTIVE ENVELOPE (132m - 684m)
                     </div>
-                    <div id="aimOffsetBanner" aria-live="polite" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px; padding: 4px 10px; font-family: var(--font-mono); font-size: 11px; color: #fbbf24; gap: 8px; align-items: center;">
+                    <div id="aimOffsetBanner" aria-live="polite" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px; padding: 2px 8px; font-family: var(--font-mono); font-size: 10px; color: #fbbf24; gap: 6px; align-items: center;">
                         <span id="aimOffsetText">🎯 AIM OFFSET: (82.18, 71.53)</span>
-                        <button type="button" class="map-tag-btn" style="color: #fde047; border-color: #f59e0b; padding: 2px 8px; min-block-size: 24px;" onclick="clearAimOffset()">Zero Offset</button>
+                        <button type="button" class="map-tag-btn" style="color: #fde047; border-color: #f59e0b; padding: 1px 6px; min-block-size: 22px;" onclick="clearAimOffset()">Zero Offset</button>
+                    </div>
+                    <form onsubmit="submitQuickCoordBar(event)" style="display: flex; gap: 4px; flex: 1; min-width: 220px; margin: 0; align-items: center;">
+                        <input type="text" id="quickCoordInput" aria-label="Quick Coordinate or CL Input" class="input-field" style="flex: 1; padding: 3px 8px; font-size: 11px; min-height: 26px;" placeholder="⚡ Quick Coords: 78.5 69.5 CL  |  82.18 71.53  |  82.5 71.8 HIT (Enter)">
+                        <button type="submit" class="map-tag-btn" style="padding: 3px 8px; border-color: #38bdf8; color: #38bdf8; font-weight: 700;" title="Apply coordinate line (CL = Gun, Unmarked = Target, HIT = Splash)">SET</button>
+                    </form>
+                    <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="map-tag-btn" id="topOcrToggleBtn" aria-pressed="false" onclick="toggleQuickOcrFromChat()" title="1-Click Toggle: Auto-Sync Screen Chat/HUD OCR + In-Game Ctrl+C Watcher">
+                            📷 Auto-OCR: OFF
+                        </button>
+                        <button type="button" class="map-tag-btn" id="topOcrScanNowBtn" onclick="triggerSingleOcrScan()" title="Scan screen once right now for coordinates (Alt+O)">
+                            🔍 Scan Now
+                        </button>
+                        <button type="button" class="map-tag-btn" id="topOcrPasteImgBtn" onclick="triggerClipboardOrImageOcr()" title="OCR a clipboard screenshot (Ctrl+V) or upload an image">
+                            🖼️ Paste/OCR
+                        </button>
+                        <input type="file" id="ocrImageUploadInput" accept="image/*" aria-label="Upload Screenshot for OCR" style="display: none;" onchange="handleOcrImageFileSelect(event)">
+                        <span id="topOcrStatusBadge" role="status" aria-live="polite" style="font-size: 10px; font-family: var(--font-mono); padding: 3px 7px; border-radius: 4px; background: #090e15; border: 1px solid var(--border-dim); color: #94a3b8; white-space: nowrap;">OCR: STANDBY</span>
                     </div>
                     <span id="solutionTime" style="display: none;">LIVE COMPUTED</span>
                 </div>
@@ -1405,7 +1426,7 @@
                             <div id="firingRangeCalibratorBtns" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"></div>
                         </div>
 
-                        <div class="map-canvas-container" id="mapCanvasContainer" style="height: 520px;">
+                        <div class="map-canvas-container" id="mapCanvasContainer">
                             <canvas id="tacticalMapCanvas"></canvas>
                         </div>
 
@@ -1433,7 +1454,7 @@
                                 </a>
                             </div>
                         </div>
-                        <div id="wardogsMapFrameWrapper" style="width: 100%; height: 540px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-dim); background: #090e15; transition: height 0.2s;">
+                        <div id="wardogsMapFrameWrapper" style="width: 100%; height: clamp(340px, calc(100dvh - 305px), 540px); border-radius: 6px; overflow: hidden; border: 1px solid var(--border-dim); background: #090e15; transition: height 0.2s;">
                             <iframe id="wardogsMapFrame" src="/classic-fire-control.html" title="WARDOGS Fire Control Coordinate Map" style="width: 100%; height: 100%; border: none;"></iframe>
                         </div>
                         <div style="font-size: 10px; color: #94a3b8; font-family: var(--font-mono); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
@@ -1498,9 +1519,9 @@
                 </div>
 
                 <!-- RIGHT SIDEBAR: MANUAL COORDINATES & FORWARD OBSERVER MISS ADJUSTMENTS -->
-                <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
                     <!-- CARD 1: COORDINATES & TERRAIN -->
-                    <div class="card" style="gap: 10px;">
+                    <div class="card" style="gap: 6px;">
                         <div class="card-header">
                             <span id="leftPanelWeaponTitle">📍 Coordinates &amp; Terrain</span>
                             <span id="leftPanelWeaponRange" style="font-size: 10px; color: var(--accent-green);">132m – 684m</span>
@@ -1570,19 +1591,19 @@
                             </div>
                         </div>
 
-                        <button type="button" class="action-btn" style="padding: 8px 14px; font-size: 12px;" onclick="calculate(true)">
+                        <button type="button" class="action-btn" style="padding: 6px 12px; font-size: 11px;" onclick="calculate(true)">
                             🔊 Compute &amp; Speak Solution
                         </button>
                     </div>
 
                     <!-- CARD 2: FORWARD OBSERVER (MISS ADJUSTMENTS) -->
-                    <div class="card" style="gap: 10px;">
+                    <div class="card" style="gap: 6px;">
                         <div class="card-header">
                             <span>🎯 Forward Observer Adjustments</span>
                         </div>
 
-                        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.35;">
-                            Walk missed shells onto target along your Line of Fire (or <strong>Shift+Click</strong> where the shell landed on the map):
+                        <div style="font-size: 10px; color: var(--text-muted); line-height: 1.25;">
+                            Walk missed shells along Line of Fire (or <strong>Shift+Click</strong> splash on map):
                         </div>
 
                         <div class="adj-grid">
@@ -1627,7 +1648,7 @@
         <section id="pageVoiceChatWorkspace" class="workspace-page inactive" role="tabpanel" aria-labelledby="pageTabVoiceChat" aria-hidden="true" tabindex="-1">
             <div class="voice-workspace-grid">
                 <!-- COLUMN 1: TACTICAL VOICE & IN-GAME PTT -->
-                <div class="card" style="gap: 12px;">
+                <div class="card" style="gap: 8px;">
                     <div class="card-header">
                         <span>🎙️ Tactical Voice Control</span>
                         <span id="micModeLabel" style="font-size: 10px; color: #94a3b8;">PUSH-TO-TALK [SPACE]</span>
@@ -1637,8 +1658,10 @@
                         <button type="button" class="mic-btn" id="micBtn" aria-label="Toggle voice microphone" title="Hold SPACE or click to speak">
                             🎙️
                         </button>
-                        <div class="voice-status" id="voiceStatus" aria-live="polite">Click mic or hold [SPACE] to talk</div>
-                        <div class="ptt-hint">Speaks back Bearing (°), Range (m) &amp; Elevation (MIL)</div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <div class="voice-status" id="voiceStatus" aria-live="polite">Click mic or hold [SPACE] to talk</div>
+                            <div class="ptt-hint">Speaks Bearing (°), Range (m) &amp; Elevation (MIL)</div>
+                        </div>
                     </div>
 
                     <!-- IN-GAME GLOBAL PUSH-TO-TALK (WORKS WITHOUT ALT-TABBING) -->
@@ -1720,73 +1743,75 @@
                         </div>
                     </div>
 
-                    <!-- QUICK TESTABLE VOICE COMMAND CHIPS -->
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <!-- QUICK TESTABLE VOICE COMMAND CHIPS (COMPACT 2x2 GRID) -->
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
                         <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Quick Voice Examples (Click to Test):</div>
-                        <button type="button" class="voice-chip" onclick="simulateVoice('78.5 by 69.5 CL')">
-                            <span>🗣️ "78.5 by 69.5 CL" (Sets &amp; Locks Gun)</span>
-                            <span class="chip-badge">Try</span>
-                        </button>
-                        <button type="button" class="voice-chip" onclick="simulateVoice('82 18 by 71 53')">
-                            <span>🗣️ "82 18 by 71 53" (Sets Target)</span>
-                            <span class="chip-badge">Try</span>
-                        </button>
-                        <button type="button" class="voice-chip" onclick="simulateVoice('strike at 82.50 by 71.80')">
-                            <span>🗣️ "Strike at 82.50 by 71.80" (Splash Fix)</span>
-                            <span class="chip-badge">Try</span>
-                        </button>
-                        <button type="button" class="voice-chip" onclick="simulateVoice('add 50')">
-                            <span>🗣️ "Add 50" / "Drop 25 left 20"</span>
-                            <span class="chip-badge">Try</span>
-                        </button>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                            <button type="button" class="voice-chip" style="padding: 5px 7px; font-size: 10px;" onclick="simulateVoice('78.5 by 69.5 CL')">
+                                <span>🗣️ "78.5 by 69.5 CL"</span>
+                                <span class="chip-badge">Gun</span>
+                            </button>
+                            <button type="button" class="voice-chip" style="padding: 5px 7px; font-size: 10px;" onclick="simulateVoice('82 18 by 71 53')">
+                                <span>🗣️ "82 18 by 71 53"</span>
+                                <span class="chip-badge">Tgt</span>
+                            </button>
+                            <button type="button" class="voice-chip" style="padding: 5px 7px; font-size: 10px;" onclick="simulateVoice('strike at 82.50 by 71.80')">
+                                <span>🗣️ "Strike 82.5 71.8"</span>
+                                <span class="chip-badge">Hit</span>
+                            </button>
+                            <button type="button" class="voice-chip" style="padding: 5px 7px; font-size: 10px;" onclick="simulateVoice('add 50')">
+                                <span>🗣️ "Add 50" / "Drop 25"</span>
+                                <span class="chip-badge">FO</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- COLUMN 2 (CENTERPIECE): PRIVATE COORD CHAT (CL RULE) & AUTO-OCR -->
-                <div class="card" style="gap: 12px;">
+                <div class="card" style="gap: 8px;">
                     <div class="card-header">
                         <span>💬 Private Coordinate Chat &amp; Smart OCR</span>
                         <span id="chatClBadge" style="font-size: 11px; font-family: var(--font-mono); background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 4px;">CL: 78.50, 69.50</span>
                     </div>
 
                     <!-- SIMPLE 3-RULE BANNER -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 6px; padding: 8px 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 6px; padding: 6px 8px;">
                             <div style="font-size: 11px; font-weight: 800; color: #34d399;">🟢 1. Add "CL" = Gun</div>
-                            <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px; font-family: var(--font-mono);">78.5 69.5 CL</div>
-                            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Sets &amp; locks your Current Location</div>
+                            <div style="font-size: 10px; color: #cbd5e1; margin-top: 1px; font-family: var(--font-mono);">ex: 78.5 69.5 CL</div>
+                            <div style="font-size: 9px; color: #94a3b8; margin-top: 1px;">Sets &amp; locks Current Location</div>
                         </div>
-                        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 8px 10px;">
+                        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 6px 8px;">
                             <div style="font-size: 11px; font-weight: 800; color: #f87171;">🔴 2. Any Coord = Target</div>
-                            <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px; font-family: var(--font-mono);">82.18 71.53</div>
-                            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Assumed Target until a new CL</div>
+                            <div style="font-size: 10px; color: #cbd5e1; margin-top: 1px; font-family: var(--font-mono);">ex: 82.18 71.53</div>
+                            <div style="font-size: 9px; color: #94a3b8; margin-top: 1px;">Assumed Target until new CL</div>
                         </div>
-                        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 6px; padding: 8px 10px;">
+                        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 6px; padding: 6px 8px;">
                             <div style="font-size: 11px; font-weight: 800; color: #fbbf24;">💥 3. Add "HIT" = Splash</div>
-                            <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px; font-family: var(--font-mono);">82.50 71.80 HIT</div>
-                            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Walks missed round onto Target</div>
+                            <div style="font-size: 10px; color: #cbd5e1; margin-top: 1px; font-family: var(--font-mono);">ex: 82.50 71.80 HIT</div>
+                            <div style="font-size: 9px; color: #94a3b8; margin-top: 1px;">Walks missed round onto Target</div>
                         </div>
                     </div>
 
                     <!-- SPACIOUS COORDINATE CHAT FEED -->
-                    <div id="coordChatFeed" role="log" aria-live="polite" style="background: #070c12; border: 1px solid #1e293b; border-radius: 6px; padding: 10px 12px; height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-family: var(--font-mono); font-size: 12px;">
+                    <div id="coordChatFeed" role="log" aria-live="polite" style="background: #070c12; border: 1px solid #1e293b; border-radius: 6px; padding: 8px 10px; height: clamp(135px, calc(100dvh - 490px), 210px); overflow-y: auto; display: flex; flex-direction: column; gap: 5px; font-family: var(--font-mono); font-size: 11px;">
                         <div style="color: #34d399;">🟢 [CL] (78.50, 69.50) — Current Location active</div>
                         <div style="color: #f87171;">🔴 [TGT] (82.18, 71.53) — Default Target ready</div>
                     </div>
 
                     <!-- CHAT INPUT FORM -->
-                    <form onsubmit="submitPrivateCoordChat(event)" style="display: flex; gap: 8px; margin: 0;">
-                        <input type="text" id="coordChatInput" aria-label="Private Coordinate Chat Line" class="input-field" style="flex: 1; font-size: 13px; padding: 9px 12px;" placeholder="Type coordinates:  78.5 69.5 CL   or   82.18 71.53   or   7850 6950 CL">
-                        <button type="submit" class="action-btn" style="width: auto; padding: 9px 18px; font-size: 12px;">SEND LINE</button>
+                    <form onsubmit="submitPrivateCoordChat(event)" style="display: flex; gap: 6px; margin: 0;">
+                        <input type="text" id="coordChatInput" aria-label="Private Coordinate Chat Line" class="input-field" style="flex: 1; font-size: 12px; padding: 6px 10px;" placeholder="Type coordinates:  78.5 69.5 CL   or   82.18 71.53   or   7850 6950 CL">
+                        <button type="submit" class="action-btn" style="width: auto; padding: 6px 14px; font-size: 11px;">SEND LINE</button>
                     </form>
 
                     <!-- DEDICATED SCREEN OCR & IN-GAME CTRL+C WATCHER CARD -->
-                    <div style="background: linear-gradient(180deg, #0f1b29 0%, #0b131d 100%); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="background: linear-gradient(180deg, #0f1b29 0%, #0b131d 100%); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <div>
-                                <div style="font-size: 12px; font-weight: 800; color: #38bdf8;">📷 Auto-Sync Screen OCR + In-Game Ctrl+C Watcher</div>
-                                <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
-                                    Reads your in-game chat box automatically — or type coords in WARDOGS chat and press <code>Ctrl+A</code> &rarr; <code>Ctrl+C</code>!
+                                <div style="font-size: 12px; font-weight: 800; color: #38bdf8;">📷 Auto-Sync Screen OCR + In-Game Ctrl+C / Ctrl+V Watcher</div>
+                                <div style="font-size: 10px; color: #94a3b8; margin-top: 1px;">
+                                    Scans in-game chat/HUD automatically, or press <code>Ctrl+C</code> in-game / <code>Ctrl+V</code> screenshot here!
                                 </div>
                             </div>
                             <div style="display: flex; gap: 6px; align-items: center;">
@@ -1800,17 +1825,18 @@
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 6px; align-items: center; justify-content: space-between;">
-                            <select id="ocrRouteSelect" aria-label="OCR Coordinate Destination" class="input-field" style="flex: 1; font-size: 11px; padding: 5px 8px;">
+                        <div style="display: flex; gap: 5px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                            <select id="ocrRouteSelect" aria-label="OCR Coordinate Destination" class="input-field" style="flex: 1; min-width: 210px; font-size: 11px; padding: 4px 8px;">
                                 <option value="auto" selected>⚡ Smart Auto ("CL" = Gun, Any Other Coord = Target, "HIT" = Splash)</option>
                                 <option value="mortar">🔵 Force All OCR → Gun / Mortar (CL)</option>
                                 <option value="target">🔴 Force All OCR → Enemy Target</option>
                                 <option value="impact">💥 Force All OCR → Impact / Splash</option>
                             </select>
-                            <button type="button" class="nudge-btn" style="padding: 6px 12px;" onclick="triggerSingleOcrScan()" title="Scan screen once right now for coordinates">📷 Scan Screen Now</button>
+                            <button type="button" class="nudge-btn" style="padding: 5px 10px;" onclick="triggerSingleOcrScan()" title="Scan screen once right now for coordinates (Alt+O)">📷 Scan Screen Now</button>
+                            <button type="button" class="nudge-btn" style="padding: 5px 10px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.45);" onclick="triggerClipboardOrImageOcr()" title="OCR a clipboard screenshot (Ctrl+V) or upload an image">🖼️ OCR Screenshot</button>
                         </div>
 
-                        <div aria-live="polite" style="display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); color: #94a3b8;">
+                        <div aria-live="polite" style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: #94a3b8;">
                             <span id="ocrStatusText">STATUS: STANDBY</span>
                             <span id="ocrLastCoordsText">GPS: NO LOCK</span>
                         </div>
@@ -1818,7 +1844,7 @@
                 </div>
 
                 <!-- COLUMN 3: ACTIVE MISSION STATUS & TACTICAL RADIO LOG -->
-                <div class="card" style="gap: 12px;">
+                <div class="card" style="gap: 8px;">
                     <div class="card-header">
                         <span>📡 Active Coordinates &amp; Radio Log</span>
                         <button type="button" class="map-tag-btn" style="padding: 3px 8px; font-size: 10px; color: #38bdf8; border-color: #38bdf8;" onclick="switchWorkspacePage('manual')">
@@ -1827,18 +1853,18 @@
                     </div>
 
                     <!-- LIVE MISSION SUMMARY PILLS -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <div style="background: #0d1520; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 6px; padding: 8px 10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <div style="background: #0d1520; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 6px; padding: 6px 8px;">
                             <div style="font-size: 10px; font-weight: 700; color: #34d399; text-transform: uppercase;">🟢 Current Location (CL)</div>
-                            <div id="voicePageClVal" style="font-family: var(--font-mono); font-size: 16px; font-weight: 800; color: #f8fafc; margin-top: 2px;">78.50, 69.50</div>
+                            <div id="voicePageClVal" style="font-family: var(--font-mono); font-size: 15px; font-weight: 800; color: #f8fafc; margin-top: 1px;">78.50, 69.50</div>
                         </div>
-                        <div style="background: #0d1520; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 8px 10px;">
+                        <div style="background: #0d1520; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 6px 8px;">
                             <div style="font-size: 10px; font-weight: 700; color: #f87171; text-transform: uppercase;">🔴 Enemy Target</div>
-                            <div id="voicePageTgtVal" style="font-family: var(--font-mono); font-size: 16px; font-weight: 800; color: #f8fafc; margin-top: 2px;">82.18, 71.53</div>
+                            <div id="voicePageTgtVal" style="font-family: var(--font-mono); font-size: 15px; font-weight: 800; color: #f8fafc; margin-top: 1px;">82.18, 71.53</div>
                         </div>
                     </div>
 
-                    <div class="log-list" id="logList" role="log" aria-live="polite" style="height: 390px;">
+                    <div class="log-list" id="logList" role="log" aria-live="polite" style="height: clamp(220px, calc(100dvh - 360px), 380px);">
                         <div class="log-entry">
                             <span class="log-time">00:00</span>
                             <span class="log-tag system">SYS</span>
@@ -4454,33 +4480,67 @@
             return null;
         }
 
+        function applyRawCoordTextInput(raw, sourceLabel = 'CHAT') {
+            if (!raw || !raw.trim()) return false;
+            const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            let appliedCount = 0;
+            for (const line of lines) {
+                const parsed = parseChatCoordLineJs(line);
+                if (parsed) {
+                    applyOcrCoordinatePair(parsed.x, parsed.y, true, parsed.role, line, sourceLabel);
+                    appliedCount++;
+                }
+            }
+            if (appliedCount > 0) return true;
+            parseTacticalVoiceCommand(raw.trim());
+            return true;
+        }
+
         function submitPrivateCoordChat(event) {
             if (event) event.preventDefault();
             const input = document.getElementById('coordChatInput');
             if (!input) return;
             const raw = input.value.trim();
             if (!raw) return;
-
-            const parsed = parseChatCoordLineJs(raw);
-            if (parsed) {
-                input.value = '';
-                applyOcrCoordinatePair(parsed.x, parsed.y, true, parsed.role, raw, 'CHAT');
-                return;
-            }
-
-            // Fallback: if user typed a voice/tactical command (e.g. "add 50", "sph", "low arc")
             input.value = '';
-            parseTacticalVoiceCommand(raw);
+            applyRawCoordTextInput(raw, 'CHAT');
+        }
+
+        function submitQuickCoordBar(event) {
+            if (event) event.preventDefault();
+            const input = document.getElementById('quickCoordInput');
+            if (!input) return;
+            const raw = input.value.trim();
+            if (!raw) return;
+            input.value = '';
+            applyRawCoordTextInput(raw, 'QUICK');
+        }
+
+        function setTopOcrBadge(text, color = '#94a3b8', borderColor = 'var(--border-dim)') {
+            const topBadge = document.getElementById('topOcrStatusBadge');
+            if (topBadge) {
+                topBadge.textContent = text;
+                topBadge.style.color = color;
+                topBadge.style.borderColor = borderColor;
+            }
         }
 
         function syncQuickOcrBtnUi(enabled) {
             const qBtn = document.getElementById('quickOcrToggleBtn');
+            const topBtn = document.getElementById('topOcrToggleBtn');
             const chk = document.getElementById('ocrToggle');
             if (chk && chk.checked !== enabled) chk.checked = enabled;
-            if (qBtn) {
-                qBtn.className = enabled ? 'map-tag-btn active-filter' : 'map-tag-btn';
-                qBtn.setAttribute('aria-pressed', String(enabled));
-                qBtn.textContent = enabled ? '📷 Auto-OCR: ON' : '📷 Auto-OCR: OFF';
+            for (const btn of [qBtn, topBtn]) {
+                if (btn) {
+                    btn.className = enabled ? 'map-tag-btn active-filter' : 'map-tag-btn';
+                    btn.setAttribute('aria-pressed', String(enabled));
+                    btn.textContent = enabled ? '📷 Auto-OCR: ON' : '📷 Auto-OCR: OFF';
+                }
+            }
+            if (enabled) {
+                setTopOcrBadge('OCR: SCANNING', 'var(--accent-amber)', 'rgba(245, 158, 11, 0.45)');
+            } else {
+                setTopOcrBadge('OCR: STANDBY', '#94a3b8', 'var(--border-dim)');
             }
         }
 
@@ -4497,8 +4557,10 @@
             syncQuickOcrBtnUi(enable);
 
             if (enable) {
-                statusEl.textContent = 'STATUS: SCANNING CHAT/HUD...';
-                statusEl.style.color = 'var(--accent-amber)';
+                if (statusEl) {
+                    statusEl.textContent = 'STATUS: SCANNING CHAT/HUD...';
+                    statusEl.style.color = 'var(--accent-amber)';
+                }
 
                 fetch('/api/ocr/toggle?state=on')
                     .then(r => r.json())
@@ -4513,17 +4575,22 @@
                     })
                     .catch(err => {
                         console.warn('OCR toggle error:', err);
-                        statusEl.textContent = 'STATUS: OFFLINE';
-                        statusEl.style.color = 'var(--accent-red)';
+                        if (statusEl) {
+                            statusEl.textContent = 'STATUS: OFFLINE';
+                            statusEl.style.color = 'var(--accent-red)';
+                        }
+                        setTopOcrBadge('OCR: OFFLINE', 'var(--accent-red)', 'rgba(239, 68, 68, 0.45)');
                     });
             } else {
                 if (ocrPollInterval) {
                     clearInterval(ocrPollInterval);
                     ocrPollInterval = null;
                 }
-                statusEl.textContent = 'STATUS: STANDBY';
-                statusEl.style.color = '#64748b';
-                coordsEl.textContent = 'GPS: NO LOCK';
+                if (statusEl) {
+                    statusEl.textContent = 'STATUS: STANDBY';
+                    statusEl.style.color = '#64748b';
+                }
+                if (coordsEl) coordsEl.textContent = 'GPS: NO LOCK';
                 fetch('/api/ocr/toggle?state=off').catch(() => {});
                 logEvent('SYS', 'Screen OCR Coordinate Sniffer stopped.');
             }
@@ -4549,14 +4616,16 @@
                 effectiveRole = 'target';
             }
 
+            const roleTag = effectiveRole === 'cl' ? 'CL' : (effectiveRole === 'impact' ? 'HIT' : 'TGT');
             if (coordsEl) {
-                coordsEl.textContent = `${effectiveRole.toUpperCase()}: (${x.toFixed(2)}, ${y.toFixed(2)})`;
+                coordsEl.textContent = `${roleTag}: (${x.toFixed(2)}, ${y.toFixed(2)})`;
                 coordsEl.style.color = 'var(--accent-green)';
             }
             if (statusEl) {
-                statusEl.textContent = `STATUS: ${sourceLabel} → ${effectiveRole.toUpperCase()}`;
+                statusEl.textContent = `STATUS: ${sourceLabel} → ${roleTag}`;
                 statusEl.style.color = 'var(--accent-green)';
             }
+            setTopOcrBadge(`${roleTag}: ${x.toFixed(2)}, ${y.toFixed(2)}`, '#34d399', 'rgba(16, 185, 129, 0.5)');
 
             if (forceApply || !lastOcrCoords || Math.abs(lastOcrCoords[0] - x) > 0.05 || Math.abs(lastOcrCoords[1] - y) > 0.05 || lastOcrCoords[2] !== effectiveRole) {
                 lastOcrCoords = [x, y, effectiveRole];
@@ -4594,8 +4663,20 @@
                     const statusEl = document.getElementById('ocrStatusText');
                     if (!data.running) return;
 
+                    if (Array.isArray(data.recent_events) && data.recent_events.length > 0) {
+                        const unseen = data.recent_events.filter(ev => typeof ev.seq === 'number' && ev.seq > lastOcrEventSeq);
+                        if (unseen.length > 0) {
+                            for (const ev of unseen) {
+                                lastOcrEventSeq = Math.max(lastOcrEventSeq, ev.seq);
+                                const src = (ev.source === 'clipboard') ? 'CTRL+C' : 'OCR';
+                                applyOcrCoordinatePair(ev.x, ev.y, true, ev.role || 'target', ev.raw_line || '', src);
+                            }
+                            return;
+                        }
+                    }
+
                     if (data.last_coords && typeof data.event_seq === 'number') {
-                        if (data.event_seq !== lastOcrEventSeq) {
+                        if (data.event_seq > lastOcrEventSeq) {
                             lastOcrEventSeq = data.event_seq;
                             const [x, y] = data.last_coords;
                             const src = (data.last_source === 'clipboard') ? 'CTRL+C' : 'OCR';
@@ -4613,12 +4694,20 @@
             const statusEl = document.getElementById('ocrStatusText');
             if (statusEl) {
                 statusEl.textContent = 'STATUS: SNAPSHOT OCR...';
-                statusEl.style.color = 'var(--accent-blue)';
+                statusEl.style.color = '#38bdf8';
             }
+            setTopOcrBadge('OCR: SCANNING...', '#38bdf8', 'rgba(56, 189, 248, 0.5)');
             fetch('/api/ocr/scan_once')
                 .then(r => r.json())
                 .then(data => {
-                    if (data.coords && Array.isArray(data.coords)) {
+                    if (typeof data.event_seq === 'number') {
+                        lastOcrEventSeq = Math.max(lastOcrEventSeq, data.event_seq);
+                    }
+                    if (Array.isArray(data.entries) && data.entries.length > 0) {
+                        for (const entry of data.entries) {
+                            applyOcrCoordinatePair(entry.x, entry.y, true, entry.role || 'target', entry.raw_line || '', 'OCR');
+                        }
+                    } else if (data.coords && Array.isArray(data.coords)) {
                         const [x, y] = data.coords;
                         applyOcrCoordinatePair(x, y, true, data.role || 'target', data.raw_line || '', 'OCR');
                     } else {
@@ -4626,6 +4715,7 @@
                             statusEl.textContent = 'STATUS: NO COORDS ON SCREEN';
                             statusEl.style.color = 'var(--accent-amber)';
                         }
+                        setTopOcrBadge('OCR: NO COORDS', 'var(--accent-amber)', 'rgba(245, 158, 11, 0.45)');
                         logEvent('SYS', 'OCR Snapshot: No valid (X, Y) coordinates [15..155] found on screen.');
                     }
                 })
@@ -4634,8 +4724,110 @@
                         statusEl.textContent = 'STATUS: OCR ERROR';
                         statusEl.style.color = 'var(--accent-red)';
                     }
+                    setTopOcrBadge('OCR: ERROR', 'var(--accent-red)', 'rgba(239, 68, 68, 0.45)');
                 });
         }
+
+        function processOcrImageBlob(blob, filename = 'clipboard.png') {
+            const statusEl = document.getElementById('ocrStatusText');
+            if (statusEl) {
+                statusEl.textContent = 'STATUS: IMAGE OCR...';
+                statusEl.style.color = '#38bdf8';
+            }
+            setTopOcrBadge('OCR: IMAGE...', '#38bdf8', 'rgba(56, 189, 248, 0.5)');
+            const reader = new FileReader();
+            reader.onload = () => {
+                const dataUrl = String(reader.result || '');
+                const b64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+                fetch('/api/ocr/extract-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_base64: b64, filename, mode: 'smart_vision' })
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (typeof data.event_seq === 'number') {
+                            lastOcrEventSeq = Math.max(lastOcrEventSeq, data.event_seq);
+                        }
+                        if (Array.isArray(data.entries) && data.entries.length > 0) {
+                            for (const entry of data.entries) {
+                                applyOcrCoordinatePair(entry.x, entry.y, true, entry.role || 'target', entry.raw_line || '', 'IMG-OCR');
+                            }
+                        } else {
+                            if (statusEl) {
+                                statusEl.textContent = 'STATUS: NO COORDS IN IMAGE';
+                                statusEl.style.color = 'var(--accent-amber)';
+                            }
+                            setTopOcrBadge('OCR: NO COORDS', 'var(--accent-amber)', 'rgba(245, 158, 11, 0.45)');
+                            logEvent('SYS', 'Image OCR: No valid WARDOGS coordinates [15..155] detected in image.');
+                        }
+                    })
+                    .catch(() => {
+                        setTopOcrBadge('OCR: ERROR', 'var(--accent-red)', 'rgba(239, 68, 68, 0.45)');
+                    });
+            };
+            reader.readAsDataURL(blob);
+        }
+
+        async function triggerClipboardOrImageOcr() {
+            try {
+                if (navigator.clipboard && typeof navigator.clipboard.read === 'function') {
+                    const items = await navigator.clipboard.read();
+                    for (const item of items) {
+                        const imgType = item.types.find(t => t.startsWith('image/'));
+                        if (imgType) {
+                            const blob = await item.getType(imgType);
+                            processOcrImageBlob(blob, 'clipboard_screenshot.png');
+                            return;
+                        }
+                    }
+                }
+                if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+                    const text = await navigator.clipboard.readText();
+                    if (text && parseChatCoordLineJs(text)) {
+                        applyRawCoordTextInput(text, 'CLIPBOARD');
+                        return;
+                    }
+                }
+            } catch (e) {}
+            const fileInput = document.getElementById('ocrImageUploadInput');
+            if (fileInput) fileInput.click();
+        }
+
+        function handleOcrImageFileSelect(event) {
+            const file = event?.target?.files?.[0];
+            if (!file) return;
+            processOcrImageBlob(file, file.name || 'upload.png');
+            event.target.value = '';
+        }
+
+        window.addEventListener('paste', (event) => {
+            const items = event.clipboardData?.items;
+            if (items) {
+                for (const item of items) {
+                    if (item.type && item.type.startsWith('image/')) {
+                        const file = item.getAsFile();
+                        if (file) {
+                            event.preventDefault();
+                            processOcrImageBlob(file, 'pasted_screenshot.png');
+                            return;
+                        }
+                    }
+                }
+            }
+            const activeTag = document.activeElement ? document.activeElement.tagName : '';
+            if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+                const text = event.clipboardData?.getData('text/plain');
+                if (text && text.trim()) {
+                    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                    const hasValidCoord = lines.some(l => parseChatCoordLineJs(l) !== null);
+                    if (hasValidCoord) {
+                        event.preventDefault();
+                        applyRawCoordTextInput(text, 'PASTE');
+                    }
+                }
+            }
+        });
 
         // Interpolation helper for any [distance_m, mils] table (supports multi-value plateau like 2629m -> 610..620 MIL)
         function interpolateTable(table, distanceM) {
@@ -4786,8 +4978,8 @@
             const wrap = document.getElementById('wardogsMapFrameWrapper');
             const btn = document.getElementById('fcExpandHeightBtn');
             if (!wrap) return;
-            const isExpanded = wrap.style.height === '920px';
-            wrap.style.height = isExpanded ? '640px' : '920px';
+            const isExpanded = wrap.style.height === '820px';
+            wrap.style.height = isExpanded ? 'clamp(340px, calc(100dvh - 305px), 540px)' : '820px';
             if (btn) btn.textContent = isExpanded ? '⛶ Expand Height' : '🗕 Standard Height';
         }
 
@@ -6486,6 +6678,7 @@
         function initAppOnce() {
             if (appInitialized) return;
             appInitialized = true;
+            initTauriDesktopBridge();
             preloadMapImages();
             setupTacticalMapEvents();
             initSpeechRecognition();

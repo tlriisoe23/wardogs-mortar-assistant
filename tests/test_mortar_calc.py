@@ -1,3 +1,4 @@
+import os
 import pytest
 from mortar_calc import (
     interpolate_table,
@@ -274,7 +275,8 @@ def test_if_name_main(monkeypatch, capsys):
     # since it's under `if __name__ == "__main__":` which doesn't get run by import.
     # To test it we can execute the script using runpy.
     import runpy
-    runpy.run_path("mortar_calc.py", run_name="__main__")
+    script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mortar_calc.py")
+    runpy.run_path(script_path, run_name="__main__")
 
     captured = capsys.readouterr()
     assert "--- Test Solution" in captured.out

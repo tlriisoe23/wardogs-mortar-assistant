@@ -14,8 +14,8 @@
         "label": "main",
         "title": "WARDOGS Mortar & Artillery Assistant HUD",
         "url": "http://127.0.0.1:8765/index.html?hud=1",
-        "width": 1440,
-        "height": 900,
+        "width": 1540,
+        "height": 940,
         "resizable": true,
         "alwaysOnTop": true,
         "decorations": true,
@@ -24,13 +24,14 @@
       {
         "label": "pip-recon",
         "title": "WARDOGS Recon Scope & Terrain DEM",
-        "url": "http://127.0.0.1:8765/index.html?pip=1",
+        "url": "http://127.0.0.1:8765/recon.html",
         "width": 520,
         "height": 380,
         "resizable": true,
         "alwaysOnTop": true,
         "decorations": false,
-        "transparent": true
+        "transparent": true,
+        "visible": false
       }
     ],
     "trayIcon": {
