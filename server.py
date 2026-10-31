@@ -32,7 +32,7 @@ MAX_TTS_TEXT_LENGTH = 1000
 TTS_TIMEOUT_SECONDS = 20.0
 
 # In-memory target cache for /api/targets
-TARGETS_CACHE = {"mtime": 0.0, "payload": b"[]"}
+TARGETS_CACHE = {"mtime_ns": 0, "size": 0, "payload": b"[]"}
 
 # Human-readable names for Windows Virtual-Key (VK) codes
 VK_NAMES = {
@@ -347,19 +347,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             targets_file = os.path.join(DIRECTORY, 'data', 'targets.json')
 
             try:
-                mtime = os.path.getmtime(targets_file)
+                st = os.stat(targets_file)
+                mtime_ns = st.st_mtime_ns
+                size = st.st_size
             except OSError:
-                mtime = 0.0
+                mtime_ns = 0
+                size = 0
 
-            if mtime == 0.0:
+            if mtime_ns == 0:
                 payload = b"[]"
-                TARGETS_CACHE["mtime"] = 0.0
+                TARGETS_CACHE["mtime_ns"] = 0
+                TARGETS_CACHE["size"] = 0
                 TARGETS_CACHE["payload"] = payload
-            elif mtime > TARGETS_CACHE["mtime"]:
+            elif mtime_ns != TARGETS_CACHE.get("mtime_ns") or size != TARGETS_CACHE.get("size"):
                 try:
                     with open(targets_file, 'rb') as f:
                         payload = f.read()
-                    TARGETS_CACHE["mtime"] = mtime
+                    TARGETS_CACHE["mtime_ns"] = mtime_ns
+                    TARGETS_CACHE["size"] = size
                     TARGETS_CACHE["payload"] = payload
                 except OSError:
                     payload = b"[]"
