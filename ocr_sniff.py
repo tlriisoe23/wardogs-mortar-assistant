@@ -281,13 +281,13 @@ def extract_text_via_winocr_bytes(image_bytes: bytes) -> Dict[str, Any]:
             "engine": "winocr",
             "entries": entries,
         }
-    except Exception as e:
+    except Exception:
         return {
             "ok": False,
             "text": "",
             "engine": "winocr",
             "entries": [],
-            "error": str(e),
+            "error": "winocr extraction failed",
         }
 
 
