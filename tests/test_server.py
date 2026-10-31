@@ -75,3 +75,50 @@ def test_desktop_hud_post_non_dict_payload(live_test_server):
         assert resp.status == 200
         data = json.loads(resp.read().decode("utf-8"))
         assert "last_action" in data
+
+def test_api_targets_endpoint(live_test_server):
+    import os, time
+    from server import DIRECTORY
+
+    targets_file = os.path.join(DIRECTORY, 'data', 'targets.json')
+
+    # Backup original content
+    with open(targets_file, 'rb') as f:
+        original_content = f.read()
+
+    try:
+        # First call
+        req = urllib.request.Request(f"{live_test_server}/api/targets")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data1 = json.loads(resp.read().decode("utf-8"))
+
+        # Second call, should use cache and return identical output
+        req = urllib.request.Request(f"{live_test_server}/api/targets")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data2 = json.loads(resp.read().decode("utf-8"))
+
+        assert data1 == data2
+
+        # Modify targets.json and assert new data is returned
+        new_data = [{"id": "test_modified", "map": "test", "name": "test", "category": "chokepoint", "x": 0, "y": 0, "notes": "", "voice_triggers": []}]
+        with open(targets_file, 'w') as f:
+            json.dump(new_data, f)
+
+        # Ensure we wait enough to let file writes settle or update mtime_ns
+        time.sleep(0.1)
+
+        req = urllib.request.Request(f"{live_test_server}/api/targets")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data3 = json.loads(resp.read().decode("utf-8"))
+
+        assert data3 == new_data
+
+    finally:
+        # Restore original content
+        with open(targets_file, 'wb') as f:
+            f.write(original_content)
+        time.sleep(0.1)
+        os.utime(targets_file, None)
