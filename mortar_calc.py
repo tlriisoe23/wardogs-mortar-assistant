@@ -75,20 +75,53 @@ def interpolate_table(table: List[Tuple[float, float]], distance_m: float) -> Op
     """Linearly interpolate elevation in mils from a [distance_m, mils] table."""
     if not table or distance_m < table[0][0] or distance_m > table[-1][0]:
         return None
-    # Check multi-value plateau at identical distance (e.g., SPH-2 High Arc 2629m -> 610..620 MIL)
-    same_dist = [m for d, m in table if abs(d - distance_m) < 1e-6]
-    if len(same_dist) > 1:
-        return sum(same_dist) / len(same_dist)
 
-    for i in range(len(table) - 1):
-        d0, m0 = table[i]
-        d1, m1 = table[i + 1]
+    lo, hi = 0, len(table) - 1
+    idx = hi
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if table[mid][0] < distance_m - 1e-6:
+            lo = mid + 1
+        else:
+            idx = mid
+            hi = mid - 1
+
+    while idx > 0 and abs(table[idx - 1][0] - distance_m) < 1e-6:
+        idx -= 1
+
+    same = []
+    i = idx
+    while i < len(table) and abs(table[i][0] - distance_m) < 1e-6:
+        same.append(table[i][1])
+        i += 1
+
+    if len(same) > 1:
+        return sum(same) / len(same)
+
+    lo, hi = 0, len(table) - 2
+    seg_idx = -1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        d0 = table[mid][0]
+        d1 = table[mid + 1][0]
         if d0 <= distance_m <= d1:
-            if abs(d1 - d0) < 1e-6:
-                return (m0 + m1) / 2.0
-            ratio = (distance_m - d0) / (d1 - d0)
-            return m0 + ratio * (m1 - m0)
-    return None
+            seg_idx = mid
+            break
+        elif d0 > distance_m:
+            hi = mid - 1
+        else:
+            lo = mid + 1
+
+    if seg_idx == -1:
+        return None
+
+    d0, m0 = table[seg_idx]
+    d1, m1 = table[seg_idx + 1]
+    if abs(d1 - d0) < 1e-6:
+        return (m0 + m1) / 2.0
+
+    ratio = (distance_m - d0) / (d1 - d0)
+    return m0 + ratio * (m1 - m0)
 
 
 def interpolate_elevation(distance_m: float, weapon: str = "mortar", arc: str = "high") -> Optional[float]:
