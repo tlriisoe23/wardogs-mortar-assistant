@@ -379,3 +379,17 @@ def test_if_name_main(monkeypatch, capsys):
 
     captured = capsys.readouterr()
     assert "--- Test Solution" in captured.out
+
+
+def test_mortar_calculator_finite_bounds():
+    from mortar_calc import MortarCalculator
+    import math
+    with pytest.raises(ValueError, match="finite"):
+        MortarCalculator(float('inf'), 0)
+    calc = MortarCalculator(0, 0)
+    with pytest.raises(ValueError, match="finite"):
+        calc.adjust_relative(float('nan'), 0)
+    with pytest.raises(ValueError, match="finite"):
+        calc.adjust_missed_shot(0, float('-inf'))
+    with pytest.raises(ValueError, match="finite"):
+        calc.adjust_impact_point(float('nan'), float('inf'))

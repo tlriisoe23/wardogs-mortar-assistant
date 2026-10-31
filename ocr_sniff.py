@@ -218,7 +218,8 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
             "entries": [],
             "error": error_msg
         }
-    except Exception:
+    except Exception as e:
+        print(f"[OCR Warning] Extraction failed: {e}")
         return {
             "ok": False,
             "text": "",
@@ -281,13 +282,13 @@ def extract_text_via_winocr_bytes(image_bytes: bytes) -> Dict[str, Any]:
             "engine": "winocr",
             "entries": entries,
         }
-    except Exception as e:
+    except Exception:
         return {
             "ok": False,
             "text": "",
             "engine": "winocr",
             "entries": [],
-            "error": str(e),
+            "error": "OCR extraction failed",
         }
 
 
