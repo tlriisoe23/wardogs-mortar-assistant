@@ -5,7 +5,96 @@ from mortar_calc import (
     interpolate_elevation,
     sph_platform_correct_aim,
     MortarCalculator,
+    get_terrain_elevation,
 )
+import mortar_calc
+
+
+def test_get_terrain_elevation_firing_range():
+    # Should always return 0.0 for firing_range map
+    assert get_terrain_elevation("firing_range", 10.0, 10.0) == 0.0
+
+
+def test_get_terrain_elevation_no_file(monkeypatch):
+    monkeypatch.setattr(mortar_calc, "_TERRAIN_DEM_CACHE", None)
+    monkeypatch.setattr(os.path, "exists", lambda x: False)
+    assert get_terrain_elevation("some_map", 10.0, 10.0) is None
+
+
+def test_get_terrain_elevation_with_data(monkeypatch):
+    monkeypatch.setattr(mortar_calc, "_TERRAIN_DEM_CACHE", None)
+    monkeypatch.setattr(os.path, "exists", lambda x: True)
+
+    mock_json_data = '''
+    {
+        "some_map": {
+            "minX": 0.0,
+            "maxX": 100.0,
+            "minY": 0.0,
+            "maxY": 100.0,
+            "gridSize": 2,
+            "heights": [[10.0, 20.0], [30.0, 40.0]]
+        },
+        "bad_map": {
+            "minX": 0.0
+        }
+    }
+    '''
+
+    import io
+    monkeypatch.setattr(
+        "builtins.open",
+        lambda *args,
+        **kwargs: io.StringIO(mock_json_data))
+
+    # 50, 50 should be right in the middle
+    # fX = 0.5 * 1 = 0.5
+    # fY = 0.5 * 1 = 0.5
+    # iX=0, iY=0 => h00=10, h10=20, h01=30, h11=40
+    # Expected bilinear:
+    # h00 * (1-0.5)*(1-0.5) = 10 * 0.25 = 2.5
+    # h10 * 0.5*(1-0.5) = 20 * 0.25 = 5.0
+    # h01 * (1-0.5)*0.5 = 30 * 0.25 = 7.5
+    # h11 * 0.5*0.5 = 40 * 0.25 = 10.0
+    # Total = 25.0
+
+    val = get_terrain_elevation("some_map", 50.0, 50.0)
+    assert abs(val - 25.0) < 0.01
+
+
+def test_get_terrain_elevation_missing_map(monkeypatch):
+    monkeypatch.setattr(
+        mortar_calc, "_TERRAIN_DEM_CACHE", {
+            "some_map": {
+                "heights": [
+                    1, 2]}})
+    assert get_terrain_elevation("missing_map", 10.0, 10.0) is None
+
+
+def test_get_terrain_elevation_no_heights(monkeypatch):
+    monkeypatch.setattr(
+        mortar_calc, "_TERRAIN_DEM_CACHE", {
+            "bad_map": {
+                "minX": 0}})
+    assert get_terrain_elevation("bad_map", 10.0, 10.0) is None
+
+
+def test_get_terrain_elevation_out_of_bounds(monkeypatch):
+    monkeypatch.setattr(mortar_calc, "_TERRAIN_DEM_CACHE", {
+        "some_map": {
+            "minX": 0.0,
+            "maxX": 100.0,
+            "minY": 0.0,
+            "maxY": 100.0,
+            "gridSize": 2,
+            "heights": [[10.0, 20.0], [30.0, 40.0]]
+        }
+    })
+
+    # Out of bounds x
+    val_x = get_terrain_elevation("some_map", 150.0, 50.0)
+    # The function explicitly checks fx/fy against bounds and returns None
+    assert val_x is None
 
 
 def test_interpolate_table():
@@ -100,7 +189,7 @@ def test_mortar_calculator_zero_length_gtl_adjust():
     calc.set_target(10.0, 10.0)  # Length 0 GTL
     # Add 100m range, 0m deflection
     calc.adjust_relative(100.0, 0.0)
-    # The default behavior for 0 length is u_along = (0, 1) and u_right = (1, 0)
+    # The default behavior for 0 length is u_along=(0, 1)
     # So range add of 100m (1 unit) should push it along +Y (North)
     assert calc.target_x == pytest.approx(10.0)
     assert calc.target_y == pytest.approx(11.0)
@@ -156,7 +245,8 @@ def test_solve_sph2_terrain_mils():
     assert elev == pytest.approx(1004.9, rel=1e-1)
 
     elev_low = solve_sph2_terrain_mils("low", 2000.0, 100.0, -50.0)
-    # The solver should return some value near 100, might not converge, we check path execution
+    # The solver should return some value near 100, might not converge, we
+    # check path execution
     if elev_low is not None:
         assert elev_low > 0
 
@@ -201,8 +291,8 @@ def test_mortar_calculator_dz_and_sph2(monkeypatch):
 
     # SPH2 with low arc and dz
     calc = MortarCalculator(0, 0, weapon="sph2", arc="low")
-    calc.delta_z_m = -10.0 # Small enough delta z for the numerical solver to converge
-    calc.set_target(0, 15.0) # 1500m
+    calc.delta_z_m = -10.0  # Small dz so solver converges
+    calc.set_target(0, 15.0)  # 1500m
     sol = calc.calculate_solution()
 
     # Depending on interpolation bounds, we check it gracefully handles it
@@ -221,10 +311,16 @@ def test_mortar_calculator_dz_and_sph2(monkeypatch):
     }
     monkeypatch.setattr(mortar_calc, "_TERRAIN_DEM_CACHE", mocked_cache)
 
-    calc2 = MortarCalculator(0, 0, weapon="sph2", arc="high", map_id="test_map")
+    calc2 = MortarCalculator(
+        0,
+        0,
+        weapon="sph2",
+        arc="high",
+        map_id="test_map")
     calc2.set_target(0, 15.0)
     sol2 = calc2.calculate_solution()
     assert sol2["elevation_mils"] is not None
+
 
 def test_interactive_cli_quit(monkeypatch, capsys):
     from mortar_calc import interactive_cli
@@ -235,6 +331,7 @@ def test_interactive_cli_quit(monkeypatch, capsys):
     interactive_cli()
     captured = capsys.readouterr()
     assert "MORTAR & ARTILLERY PYTHAGOREAN CALCULATOR" in captured.out
+
 
 def test_interactive_cli_commands(monkeypatch, capsys):
     from mortar_calc import interactive_cli
@@ -266,16 +363,18 @@ def test_interactive_cli_commands(monkeypatch, capsys):
 
 def test_if_name_main(monkeypatch, capsys):
     import sys
-    import mortar_calc
-
     # Test --test flag
     monkeypatch.setattr(sys, "argv", ["mortar_calc.py", "--test"])
 
-    # Needs to be reloaded/re-run in some way, or we can just call the code block
-    # since it's under `if __name__ == "__main__":` which doesn't get run by import.
+    # Needs to be reloaded/re-run in some way.
+    # To test the __main__ block we execute it.
     # To test it we can execute the script using runpy.
     import runpy
-    script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mortar_calc.py")
+    script_path = os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(__file__))),
+        "mortar_calc.py")
     runpy.run_path(script_path, run_name="__main__")
 
     captured = capsys.readouterr()
