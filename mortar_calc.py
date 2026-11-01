@@ -323,7 +323,13 @@ def solve_sph2_terrain_mils(arc: str, distance_m: float, flat_mils: Optional[flo
     center = flat_mils / 1000.0
     min_a = 0.0001 if arc == "low" else 0.3
     max_a = 1.0 if arc == "low" else 1.55
-    def fn0(a: float) -> Optional[float]: return _sph_height_at_distance(a, distance_m, model)
+
+    fn0_cache: Dict[float, Optional[float]] = {}
+    def fn0(a: float) -> Optional[float]:
+        if a not in fn0_cache:
+            fn0_cache[a] = _sph_height_at_distance(a, distance_m, model)
+        return fn0_cache[a]
+
     f0 = fn0(center)
     ref = None
     for span in (0.002, 0.005, 0.01, 0.02, 0.04, 0.08, 0.12, 0.2, 0.3):
@@ -357,9 +363,14 @@ def solve_sph2_terrain_mils(arc: str, distance_m: float, flat_mils: Optional[flo
         return None
     min_cmd = 20.0 if arc == "low" else 610.0
     max_cmd = 600.0 if arc == "low" else 1390.0
+
+    fn_h_cache: Dict[float, Optional[float]] = {}
     def fn_h(cmd: float) -> Optional[float]:
-        h = _sph_height_at_distance(ref + (cmd - flat_mils) / 1000.0, distance_m, model)
-        return None if h is None else h - delta_z_m
+        if cmd not in fn_h_cache:
+            h = _sph_height_at_distance(ref + (cmd - flat_mils) / 1000.0, distance_m, model)
+            fn_h_cache[cmd] = None if h is None else h - delta_z_m
+        return fn_h_cache[cmd]
+
     f_flat = fn_h(flat_mils)
     direction = (1.0 if arc == "low" else -1.0) * (1.0 if delta_z_m >= 0 else -1.0)
     if f_flat is not None:
