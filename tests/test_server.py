@@ -3,7 +3,7 @@ import urllib.request
 import urllib.error
 import threading
 import pytest
-from server import Handler, ThreadedHTTPServer, get_vk_name, GLOBAL_PTT_WATCHER
+from server import Handler, ThreadedHTTPServer, get_vk_name
 
 @pytest.fixture(scope="module")
 def live_test_server():

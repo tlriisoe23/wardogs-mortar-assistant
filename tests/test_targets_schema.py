@@ -1,6 +1,5 @@
 import json
 import os
-import pytest
 
 def test_targets_json_schema():
     targets_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'targets.json')
