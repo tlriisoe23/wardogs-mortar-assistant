@@ -1600,8 +1600,8 @@
                     </div>
 
                     <div class="voice-hud">
-                        <button type="button" class="mic-btn" id="micBtn" aria-label="Toggle voice microphone" title="Hold SPACE or click to speak">
-                            🎙️
+                        <button type="button" class="mic-btn" id="micBtn" aria-pressed="false" aria-label="Toggle voice microphone" title="Hold SPACE or click to speak">
+                            <span aria-hidden="true">🎙️</span>
                         </button>
                         <div style="display: flex; flex-direction: column; gap: 2px;">
                             <div class="voice-status" id="voiceStatus" aria-live="polite">Click mic or hold [SPACE] to talk</div>
@@ -6383,6 +6383,7 @@
 
             if (activelyTransmitting) {
                 micBtnEl.className = 'mic-btn active';
+                micBtnEl.setAttribute('aria-pressed', 'true');
                 if (globalPttEnabled && isGlobalPttDown) {
                     voiceStatusEl.textContent = '🎙️ IN-GAME PTT HELD (Listening...)';
                 } else if (openMic) {
@@ -6395,6 +6396,7 @@
                 sysBadge.style.color = 'var(--accent-red)';
             } else {
                 micBtnEl.className = 'mic-btn';
+                micBtnEl.setAttribute('aria-pressed', 'false');
                 if (globalPttEnabled) {
                     const keyBadge = document.getElementById('globalPttKeyBadge')?.textContent || 'BOUND KEY';
                     voiceStatusEl.textContent = `In-Game PTT Ready (${keyBadge} inside game)`;
