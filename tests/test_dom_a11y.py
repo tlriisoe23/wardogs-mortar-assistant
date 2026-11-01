@@ -113,6 +113,16 @@ class TestIndexHtmlA11y(unittest.TestCase):
                 f"Button {btn.get('id') or btn} is missing an accessible name"
             )
 
+    def test_recon_close_button_has_aria_label(self):
+        """Verify that the close PIP window button has an explicit aria-label."""
+        recon_html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'recon.html')
+        with open(recon_html_path, 'r', encoding='utf-8') as f:
+            recon_html = f.read()
+        recon_soup = BeautifulSoup(recon_html, 'html.parser')
+        close_btn = recon_soup.find('button', class_='btn-close')
+        self.assertIsNotNone(close_btn, "Close PIP button not found")
+        self.assertTrue(bool(close_btn.get('aria-label', '').strip()), "Close PIP button is missing aria-label")
+
     def test_empty_error_loading_states_have_aria_live(self):
         """Verify that dynamic status elements (empty, error, loading) have aria-live or role=status."""
         # Elements like range-status, aimOffsetBanner, ocrStatusText, globalPttStatusText, demHeightBadge
