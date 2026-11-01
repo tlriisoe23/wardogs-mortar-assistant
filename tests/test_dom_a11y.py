@@ -160,7 +160,7 @@ class TestIndexHtmlA11y(unittest.TestCase):
                 )
 
     def test_how_to_use_modal_accessibility_and_escape(self):
-        """Verify native <dialog> Escape & backdrop-close fallback regression test for How-To-Use modal."""
+        """Verify native <dialog> Escape regression test and accessibility for How-To-Use modal."""
         dialog = self.soup.find('dialog', id='howToUseModal')
         self.assertIsNotNone(dialog, "howToUseModal dialog not found")
 
@@ -168,17 +168,25 @@ class TestIndexHtmlA11y(unittest.TestCase):
         has_label = dialog.has_attr('aria-label')
         has_labelledby = dialog.has_attr('aria-labelledby')
         self.assertTrue(has_label or has_labelledby, "Dialog missing accessible name")
+
+        # Verify aria-labelledby references
         if has_labelledby:
-            label_id = dialog['aria-labelledby']
-            label_element = self.soup.find(id=label_id)
-            self.assertIsNotNone(label_element, f"Dialog labelledby element {label_id} not found")
-            self.assertTrue(bool(label_element.get_text(strip=True)), "Dialog label element is empty")
+            label_ids = dialog['aria-labelledby'].split()
+            for label_id in label_ids:
+                label_element = self.soup.find(id=label_id)
+                self.assertIsNotNone(label_element, f"Dialog labelledby element {label_id} not found")
+                self.assertTrue(bool(label_element.get_text(strip=True)), f"Dialog label element {label_id} is empty")
 
         # Verify close control
         close_btn = dialog.find('button', attrs={'type': 'submit'})
         self.assertIsNotNone(close_btn, "Close button not found in dialog")
         btn_label = close_btn.get('aria-label', '').strip() or close_btn.get('title', '').strip() or close_btn.get_text(strip=True)
         self.assertTrue(bool(btn_label), "Close button missing accessible name")
+
+        # Verify the close button is within a form with method="dialog"
+        form = close_btn.find_parent('form')
+        self.assertIsNotNone(form, "Close button must be inside a form")
+        self.assertEqual(form.get('method', '').lower(), 'dialog', "Form method must be 'dialog'")
 
         # Verify no custom keydown handler (regression guard for native Escape reliance)
         self.assertFalse(dialog.has_attr('onkeydown'), "Dialog should not have a custom onkeydown handler")
