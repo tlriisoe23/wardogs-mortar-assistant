@@ -240,3 +240,45 @@ def test_post_extract_image_endpoint_fallback_to_winocr(live_test_server):
             assert body["engine"] == "winocr"
             assert len(body["entries"]) == 1
             assert body["entries"][0]["x"] == 100.00
+
+def test_post_extract_image_endpoint_both_fail(live_test_server):
+    failed_res = {
+        "ok": False,
+        "engine": "unavailable",
+        "text": "",
+        "entries": [],
+        "error": "Connection refused"
+    }
+
+    mock_winocr_res = {
+        "ok": False,
+        "engine": "winocr",
+        "text": "",
+        "entries": [],
+        "error": "OCR extraction failed"
+    }
+
+    with patch("server.extract_text_via_omniconvert", return_value=failed_res), \
+         patch("server.GLOBAL_OCR_WATCHER.get_status", return_value={"has_winocr": True}), \
+         patch("server.extract_text_via_winocr_bytes", return_value=mock_winocr_res):
+
+        payload = {
+            "image_base64": base64.b64encode(b"hud_screenshot").decode("ascii"),
+            "filename": "hud.png",
+            "mode": "smart_vision"
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            f"{live_test_server}/api/ocr/extract-image",
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            body = json.loads(resp.read().decode("utf-8"))
+            # Should not crash, and should return structured error response
+            assert body["status"] == "ok"
+            assert body["engine"] == "unavailable"
+            assert body["text"] == ""
+            assert body["entries"] == []
