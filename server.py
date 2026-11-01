@@ -198,6 +198,8 @@ DESKTOP_HUD_STATE: dict[str, Any] = {
         "Alt+C": "Toggle borderless HUD click-through mode",
     },
 }
+DESKTOP_HUD_VERSION = 1
+DESKTOP_HUD_CACHE: tuple[int, bytes] = (0, b"{}")
 
 
 async def generate_neural_tts(text: str, voice: str) -> bytes:
@@ -284,7 +286,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
 
         if parsed.path == '/api/desktop-hud':
-            self._send_json(DESKTOP_HUD_STATE)
+            global DESKTOP_HUD_VERSION, DESKTOP_HUD_CACHE
+            cache_ver, cache_bytes = DESKTOP_HUD_CACHE
+            if cache_ver != DESKTOP_HUD_VERSION:
+                cache_bytes = json.dumps(DESKTOP_HUD_STATE).encode('utf-8')
+                DESKTOP_HUD_CACHE = (DESKTOP_HUD_VERSION, cache_bytes)
+
+            try:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(cache_bytes)
+            except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
+                pass
             return
 
         # Global In-Game Push-To-Talk (PTT) endpoints
@@ -435,6 +450,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             parsed = urllib.parse.urlparse(self.path)
             if parsed.path == '/api/desktop-hud':
+                global DESKTOP_HUD_VERSION
                 length = int(self.headers.get('Content-Length', '0') or 0)
                 length = min(length, 1024 * 64)  # Safe byte decoding guard against OOM
                 raw = self.rfile.read(length) if length > 0 else b'{}'
@@ -467,6 +483,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     DESKTOP_HUD_STATE['locked_grid'] = None
                 DESKTOP_HUD_STATE['last_action'] = action
                 DESKTOP_HUD_STATE['last_action_ts'] = time.time()
+                DESKTOP_HUD_VERSION += 1
                 self._send_json(DESKTOP_HUD_STATE)
                 return
             elif parsed.path == '/api/ocr/extract-image':
