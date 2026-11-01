@@ -98,12 +98,20 @@ def test_get_terrain_elevation_out_of_bounds(monkeypatch):
 
 
 def test_interpolate_table():
-    table = [(100.0, 800.0), (200.0, 700.0)]
+    table = [(100.0, 800.0), (200.0, 700.0), (300.0, 600.0)]
+
+    # Below min / Above max
     assert interpolate_table(table, 50.0) is None
-    assert interpolate_table(table, 250.0) is None
+    assert interpolate_table(table, 350.0) is None
+
+    # Exact table hits
     assert interpolate_table(table, 100.0) == 800.0
     assert interpolate_table(table, 200.0) == 700.0
+    assert interpolate_table(table, 300.0) == 600.0
+
+    # Midpoints
     assert interpolate_table(table, 150.0) == 750.0
+    assert interpolate_table(table, 250.0) == 650.0
 
 
 def test_interpolate_table_plateau():
@@ -234,21 +242,36 @@ def test_get_terrain_elevation(monkeypatch):
 
 def test_solve_sph2_terrain_mils():
     from mortar_calc import solve_sph2_terrain_mils
-    # If delta Z is very small, it should return flat_mils
-    assert solve_sph2_terrain_mils("high", 1000.0, 800.0, 0.0) == 800.0
-    assert solve_sph2_terrain_mils("low", 1000.0, 800.0, 0.0) == 800.0
+    # Normal solve branches: small delta Z returns flat_mils directly
+    assert solve_sph2_terrain_mils(
+        "high", 1000.0, 800.0, 0.0) == pytest.approx(800.0, abs=1e-5)
+    assert solve_sph2_terrain_mils(
+        "low", 1000.0, 800.0, 0.0) == pytest.approx(800.0, abs=1e-5)
 
     # Large elevation change with realistic distance/mils that can be solved
-    # distance = 1500m, flat_mils = 1000 (valid for high arc SPH2)
     elev = solve_sph2_terrain_mils("high", 1500.0, 1000.0, 50.0)
-    # The solver converges around 1004.9
     assert elev == pytest.approx(1004.9, rel=1e-1)
 
     elev_low = solve_sph2_terrain_mils("low", 2000.0, 100.0, -50.0)
-    # The solver should return some value near 100, might not converge, we
-    # check path execution
     if elev_low is not None:
         assert elev_low > 0
+
+    # No-solution / out-of-range branch
+    assert solve_sph2_terrain_mils("low", -100.0, 100.0, 10.0) is None
+    assert solve_sph2_terrain_mils("low", 100.0, None, 10.0) is None
+
+
+def test_sph_bisect():
+    from mortar_calc import _sph_bisect
+    # Normal solve
+    assert _sph_bisect(lambda x: x - 1.5, 1.0, 2.0,
+                       0.01) == pytest.approx(1.5, abs=0.01)
+
+    # Convergence / iteration-limit branch (function returns same sign)
+    assert _sph_bisect(lambda x: 1.0, 1.0, 2.0, 0.01) is None
+
+    # Out of range / None returned by function
+    assert _sph_bisect(lambda x: None, 1.0, 2.0, 0.01) is None
 
 
 def test_print_solution(capsys):
@@ -324,9 +347,18 @@ def test_mortar_calculator_dz_and_sph2(monkeypatch):
 
 def test_interactive_cli_quit(monkeypatch, capsys):
     from mortar_calc import interactive_cli
+    import io
 
-    inputs = iter(['q'])
-    monkeypatch.setattr('builtins.input', lambda prompt: next(inputs))
+    # Drive it with monkeypatch
+    stdin_content = "q\n"
+    monkeypatch.setattr("sys.stdin", io.StringIO(stdin_content))
+
+    # Using generator for input to simulate typing
+    def input_generator():
+        yield "q"
+
+    gen = input_generator()
+    monkeypatch.setattr('builtins.input', lambda prompt="": next(gen))
 
     interactive_cli()
     captured = capsys.readouterr()
@@ -336,7 +368,6 @@ def test_interactive_cli_quit(monkeypatch, capsys):
 def test_interactive_cli_commands(monkeypatch, capsys):
     from mortar_calc import interactive_cli
 
-    # We will test all interactive commands then quit
     commands = [
         'm 0 0',
         't 0 10',
@@ -353,8 +384,13 @@ def test_interactive_cli_commands(monkeypatch, capsys):
         'invalid_command',
         'q'
     ]
-    inputs = iter(commands)
-    monkeypatch.setattr('builtins.input', lambda prompt: next(inputs))
+
+    def input_generator():
+        for cmd in commands:
+            yield cmd
+
+    gen = input_generator()
+    monkeypatch.setattr('builtins.input', lambda prompt="": next(gen))
 
     interactive_cli()
     captured = capsys.readouterr()
