@@ -29,7 +29,7 @@ A tactical voice-activated fire-control assistant, interactive map suite, and ba
     * Hold **Mouse 4** (or any bound key/mouse button) directly inside WARDOGS without Alt-Tabbing to speak coordinates or FO adjustments.
   * **Global Audio Mute (`🔊 AUDIO: ON` / `🔇 MUTED`)**:
     * Top header button and voice commands (`"mute"` / `"unmute"`) silence all Neural AI TTS readouts and PRC-117 radio squelch effects while keeping the passive `⏱️ TOF` readout visible.
-* **🖥️ Tauri v3.0 Native Desktop HUD (`src-tauri/`)**:
+* **🖥️ Tauri v2.0 Native Desktop HUD (`src-tauri/`)**:
   * Native Rust/WebView2 desktop wrapper (`1540×940` default window, `0%` background GPU/VRAM polling) with pure-Rust RK4 ballistics (`src-tauri/src/mortar_calc.rs`), 20m bilinear DEM (`src-tauri/src/dem.rs`), detachable `320×110` PIP mini-HUD, and global OS hotkeys (`Alt+M` Lock Gun, `Alt+R` Reset Mission, `Alt+Up/Down` ΔZ ±5m, `Alt+A` Toggle Arc, `Alt+O` Scan OCR Now, `Alt+C` Click-Through Overlay, `Alt+S` Audio Mute).
 
 ---
@@ -79,7 +79,7 @@ python -m pytest -q
 * `server.py` — Local HTTP server, Neural Edge-TTS endpoint, Global `win32` PTT key hook, and OCR/Clipboard endpoints (`/api/ocr/status`, `/api/ocr/toggle`, `/api/ocr/scan-now`, `/api/ocr/extract-image`, `/api/desktop-hud`)
 * `mortar_calc.py` — Python ballistics engine (`L81 Mortar` & `SPH-2` High/Low Arc, RK4 drag solver, DEM lookup)
 * `ocr_sniff.py` — Multiline Windows WinRT OCR (`winocr` `res['lines']` + 2×/3× `BICUBIC` autocontrast upscaling + `recent_events` ring buffer) + In-Game `Ctrl+C` Clipboard coordinate watcher (`CL` / `TARGET` / `HIT`)
-* `src-tauri/` — Tauri v3.0 Native Rust/WebView2 Desktop HUD (`mortar_calc.rs`, `dem.rs`, global hotkeys, and PIP mini-HUD)
+* `src-tauri/` — Tauri v2.0 Native Rust/WebView2 Desktop HUD (`mortar_calc.rs`, `dem.rs`, global hotkeys, and PIP mini-HUD)
 * `targets_db.py` — 30 pre-aimed community blind-fire hotspots across Bakurani, Ozeti, Zestafona, and the Firing Range
 * `data/terrain/terrain_dem.json` — 20m hypsometric Digital Elevation Models (DEM) for Bakurani, Ozeti, and Zestafona
 * `data/map_callouts.json` — Sub-sector tactical landmark callouts

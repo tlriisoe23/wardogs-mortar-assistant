@@ -122,3 +122,16 @@ def test_api_targets_endpoint(live_test_server):
             f.write(original_content)
         time.sleep(0.1)
         os.utime(targets_file, None)
+
+def test_health_and_desktop_hud_contract(live_test_server):
+    req_health = urllib.request.Request(f"{live_test_server}/api/health")
+    with urllib.request.urlopen(req_health, timeout=5) as resp:
+        assert resp.status == 200
+        data_health = json.loads(resp.read().decode("utf-8"))
+        assert isinstance(data_health.get("tauri_v2_ready"), bool)
+
+    req_hud = urllib.request.Request(f"{live_test_server}/api/desktop-hud")
+    with urllib.request.urlopen(req_hud, timeout=5) as resp:
+        assert resp.status == 200
+        data_hud = json.loads(resp.read().decode("utf-8"))
+        assert isinstance(data_hud.get("tauri_v2_ready"), bool)
