@@ -20,7 +20,7 @@ import json
 import os
 import sys
 import base64
-from typing import Any, Dict, Optional, Tuple, Callable
+from typing import Any
 
 from ocr_sniff import (
     GLOBAL_OCR_WATCHER,

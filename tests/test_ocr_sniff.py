@@ -1,4 +1,3 @@
-import pytest
 from ocr_sniff import (
     is_valid_wardogs_coord,
     _decode_compact_grid,
