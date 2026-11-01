@@ -284,3 +284,40 @@ def test_extract_text_via_omniconvert_socket_timeout():
         assert result["engine"] == "unavailable"
         assert result["entries"] == []
         assert "OCR extraction failed" in result["error"]
+
+
+def test_extract_text_via_omniconvert_timeout():
+    with patch("urllib.request.urlopen", side_effect=TimeoutError("Request timed out")):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_omniconvert(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "unavailable"
+        assert result["entries"] == []
+        assert "OCR extraction failed" in result["error"]
+
+
+def test_extract_text_via_omniconvert_connection_reset():
+    with patch("urllib.request.urlopen", side_effect=ConnectionResetError("Connection reset by peer")):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_omniconvert(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "unavailable"
+        assert result["entries"] == []
+        assert "OCR extraction failed" in result["error"]
+
+
+def test_extract_text_via_omniconvert_malformed_json():
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = b"{ invalid json "
+    mock_resp.__enter__.return_value = mock_resp
+    mock_resp.__exit__.return_value = None
+    with patch("urllib.request.urlopen", return_value=mock_resp):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_omniconvert(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "unavailable"
+        assert result["entries"] == []
+        assert "OCR extraction failed" in result["error"]
