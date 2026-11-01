@@ -162,7 +162,8 @@ def test_post_extract_image_endpoint_validation_errors(live_test_server):
         headers={"Content-Type": "application/json"}
     )
     with pytest.raises(urllib.error.HTTPError) as exc_info:
-        urllib.request.urlopen(req, timeout=5)
+        with urllib.request.urlopen(req, timeout=5):
+            pass
     try:
         assert exc_info.value.code == 400
     finally:
@@ -175,7 +176,8 @@ def test_post_extract_image_endpoint_validation_errors(live_test_server):
         headers={"Content-Type": "application/json"}
     )
     with pytest.raises(urllib.error.HTTPError) as exc_info2:
-        urllib.request.urlopen(req2, timeout=5)
+        with urllib.request.urlopen(req2, timeout=5):
+            pass
     try:
         assert exc_info2.value.code == 400
     finally:
@@ -240,3 +242,45 @@ def test_post_extract_image_endpoint_fallback_to_winocr(live_test_server):
             assert body["engine"] == "winocr"
             assert len(body["entries"]) == 1
             assert body["entries"][0]["x"] == 100.00
+
+def test_extract_text_via_omniconvert_http_error_closes_fp():
+    import io
+    mock_fp = MagicMock(spec=io.BytesIO)
+    mock_err = urllib.error.HTTPError(
+        url="http://fake",
+        code=503,
+        msg="Service Unavailable",
+        hdrs={},
+        fp=mock_fp
+    )
+
+    with patch("urllib.request.urlopen", side_effect=mock_err):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_omniconvert(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "unavailable"
+        assert result["entries"] == []
+        assert "HTTP Error 503" in result["error"]
+        mock_fp.close.assert_called_once()
+
+def test_extract_text_via_omniconvert_url_error():
+    with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("timeout")):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_omniconvert(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "unavailable"
+        assert result["entries"] == []
+        assert "OCR extraction failed" in result["error"]
+
+def test_extract_text_via_omniconvert_socket_timeout():
+    import socket
+    with patch("urllib.request.urlopen", side_effect=socket.timeout("timed out")):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_omniconvert(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "unavailable"
+        assert result["entries"] == []
+        assert "OCR extraction failed" in result["error"]
