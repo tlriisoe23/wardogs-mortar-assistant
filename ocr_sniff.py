@@ -17,6 +17,7 @@ import ctypes
 import threading
 import urllib.request
 import urllib.error
+import socket
 from typing import Optional, Tuple, Callable, Dict, Any, List
 from PIL import Image, ImageGrab, ImageOps
 
@@ -218,7 +219,27 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
             "entries": [],
             "error": error_msg
         }
-    except Exception:
+
+    except (urllib.error.URLError, TimeoutError, socket.timeout, ConnectionError) as exc:
+        print(f"[OCR Network Error] {type(exc).__name__}: {exc}")
+        return {
+            "ok": False,
+            "text": "",
+            "engine": "unavailable",
+            "entries": [],
+            "error": "OCR extraction failed"
+        }
+    except (json.JSONDecodeError, UnicodeDecodeError, TypeError, ValueError) as exc:
+        print(f"[OCR Decode Error] {type(exc).__name__}: {exc}")
+        return {
+            "ok": False,
+            "text": "",
+            "engine": "unavailable",
+            "entries": [],
+            "error": "OCR extraction failed"
+        }
+    except Exception as exc:
+        print(f"[OCR Unexpected Error] {type(exc).__name__}: {exc}")
         return {
             "ok": False,
             "text": "",
@@ -281,6 +302,7 @@ def extract_text_via_winocr_bytes(image_bytes: bytes) -> Dict[str, Any]:
             "engine": "winocr",
             "entries": entries,
         }
+
     except Exception:
         return {
             "ok": False,
