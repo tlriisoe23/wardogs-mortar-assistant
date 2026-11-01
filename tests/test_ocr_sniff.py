@@ -90,6 +90,24 @@ def test_extract_all_coord_lines():
     assert lines[0]["x"] == 78.5
     assert lines[1]["x"] == 123.45
 
+
+def test_extract_all_coord_lines_supports_single_line_dual_gun_target_pairs():
+    # Players frequently paste or type Gun + Target on a single line
+    for sample in (
+        "78.50 69.50 82.18 71.53",
+        "78.50, 69.50 -> 82.18, 71.53",
+        "x78.50 y69.50 x82.18 y71.53",
+        "7850 6950 8218 7153",
+    ):
+        entries = extract_all_coord_lines(sample)
+        assert len(entries) == 2, f"Expected 2 entries for {sample!r}, got {entries}"
+        assert entries[0]["role"] == "cl"
+        assert entries[0]["x"] == 78.50
+        assert entries[0]["y"] == 69.50
+        assert entries[1]["role"] == "target"
+        assert entries[1]["x"] == 82.18
+        assert entries[1]["y"] == 71.53
+
 def test_flatten_markdown_table():
     md = "| CL X: | 78.50 | Y: | 69.50 |\n|---|---|---|---|\n| Target | 112.40 | 88.20 |"
     flat = _flatten_markdown_table(md)

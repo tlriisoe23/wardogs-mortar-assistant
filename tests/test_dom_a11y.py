@@ -158,3 +158,15 @@ class TestIndexHtmlA11y(unittest.TestCase):
                     has_aria_live or has_role_status or has_role_alert or has_role_log or parent_has_live,
                     f"Dynamic status element '{element_id}' is missing accessibility attributes (aria-live or role=status/alert)"
                 )
+
+    def test_simplified_single_screen_ergonomics_and_pruned_bloat(self):
+        """Verify AIS-487 feature pruning and single-screen zero-friction controls."""
+        self.assertIsNotNone(self.soup.find(id='topPttToggleBtn'))
+        self.assertIsNotNone(self.soup.find(id='topOcrToggleBtn'))
+        self.assertIsNotNone(self.soup.find(id='quickCoordInput'))
+        self.assertIsNotNone(self.soup.find(id='solutionHeroBar'))
+        self.assertIn('parseDualCoordLineJs', self.html)
+        self.assertIsNone(self.soup.find(id='tabPythBtn'))
+        self.assertIsNone(self.soup.find(id='pythagorasViewContainer'))
+        self.assertIsNone(self.soup.find(id='customRangeAdj'))
+        self.assertIsNone(self.soup.find(id='mapBarLockMortarBtn'))

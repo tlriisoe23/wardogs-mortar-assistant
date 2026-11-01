@@ -6,22 +6,27 @@ A tactical voice-activated fire-control assistant, interactive map suite, and ba
 
 ## Key Capabilities
 
-### 1. Compact Zero-Scroll 1080p 2-Page Workspace Architecture (`AIS-436`)
-* **⚡ Always-Visible Top-Bar Quick Coords & Auto-OCR Strip**:
-  * **Quick Coords Input (`#quickCoordInput`)**: Type or paste coordinates directly in the top bar without switching pages (`78.5 69.5 CL` locks Gun, `82.18 71.53` sets Target, `82.5 71.8 HIT` walks in splash offset).
-  * **1-Click `📷 Auto-OCR` (`#topOcrToggleBtn`) & `🔍 Scan Now` (`Alt+O`)**: Starts/stops the background screen OCR & clipboard watcher or triggers an immediate on-demand scan from either page, with live status and detected coordinates shown in `#topOcrStatusBadge`.
-  * **`🖼️ Paste/OCR` & Global `Ctrl+V` Screenshot/Text Paste**: Paste a raw coordinate string or a cropped screenshot (`Win+Shift+S` $\rightarrow$ `Ctrl+V`) anywhere outside text inputs to extract coordinates automatically via `POST /api/ocr/extract-image` (`qwen3-vl:2b-instruct` with local `winocr` fallback).
-* **🗺️ Page 1 — Manual Map & Adjustments (Zero-Scroll `100dvh` Fit)**:
+### 1. Single-Screen Zero-Scroll 1080p Workspace Architecture (`AIS-436` / `AIS-487`)
+* **⚡ Always-Visible Top-Bar Omni-Input, PTT & Auto-OCR Strip**:
+  * **Smart Omni-Input (`#quickCoordInput`)**: Type or paste directly in the top bar without switching pages:
+    * **Single Coordinate Pair**: `78.5 69.5 CL` locks Gun (`CL`), `82.18 71.53` sets Enemy Target, `82.5 71.8 HIT` walks in splash offset.
+    * **Single-Line Dual `Gun -> Target` Pair**: `78.5 69.5 -> 82.18 71.53` (or `78.5 69.5 82.18 71.53` / `x78.50 y69.50 x82.18 y71.53`) sets both Gun (`CL`) and Enemy Target in one action.
+    * **Direct Range Mode**: `420m`, `1450m`, or `range 420` switches to `🎯 Firing Range` mode and solves the elevation/time-of-flight for that exact distance in meters.
+  * **1-Click `📷 Auto-OCR` (`#topOcrToggleBtn`), `🔍 Scan Now` (`Alt+O`) & `🎙️ PTT` (`#topPttToggleBtn`)**: Start/stop the background screen OCR & clipboard watcher, trigger an immediate on-demand scan, or toggle In-Game Push-to-Talk (`Mouse 4` / `Space`) directly from the primary map screen with live status in `#topOcrStatusBadge`.
+  * **`🖼️ Paste/OCR` & Global `Ctrl+V` Screenshot/Text Paste**: Paste a raw coordinate string or a cropped screenshot (`Win+Shift+S` $\rightarrow$ `Ctrl+V`) anywhere outside text inputs to extract single or dual `Gun -> Target` coordinates automatically via `POST /api/ocr/extract-image` (`qwen3-vl:2b-instruct` with local `winocr` fallback).
+* **🗺️ Page 1 — Tactical Map & Fire Control (Zero-Scroll `100dvh` Fit)**:
+  * **1-Click Firing Solution Hero Copy (`#solutionHeroBar`)**: Click anywhere on the Firing Solution Hero to copy the formatted 1-line firing solution (`[WARDOGS L81 MORTAR] ELEV: 632 MIL | AZ: 060.9° (1083 MIL) | RNG: 420m | TOF: 12.1s`) to the clipboard.
   * **Interactive Tactical Map (Click-to-Correct)**: Right-click to place your Gun/Mortar (`CL`), Left-click to place Enemy Target, and **Shift+Click** where a shell landed to apply an automatic non-destructive ballistic aim offset.
   * **Classic Fire Control (8.5× Deep Building Zoom)**: Embedded 2-way synchronized `wardog-fire-control` view with 8.5× building zoom and 3× faster scroll wheel.
   * **20m Topographic DEM & Ridge Clearance**: Automatic bilinear elevation lookup (`ΔZ`) across **Bakurani**, **Ozeti**, and **Zestafona** (`data/terrain/terrain_dem.json`) plus raycast ridge-collision warnings along the trajectory.
-  * **Collapsible 3D Topographic FPV & 1m/px Spotter Scope**: Split-screen 3D wireframe terrain mesh with incoming parabolic shell arc and 1m/px satellite spotter reticle, plus pop-out multi-monitor window (`recon.html`).
-  * **Forward Observer Adjustments**: One-click `ADD`/`DROP`/`LEFT`/`RIGHT` adjustments along the Gun-Target line of fire, plus `↩ UNDO` (`Ctrl+Z`).
-* **🎙️ Page 2 — Voice, Private `CL` Chat & Auto-OCR**:
-  * **Private Coordinate Chat (`CL` Rule)**:
-    1. **Add `CL` to a coordinate line** (`78.5 69.5 CL` or `CL 7850 6950`) $\rightarrow$ Sets and locks your **Current Location** (Gun/Mortar).
-    2. **Any other coordinate line** (`82.18 71.53` or `8218 7153`) $\rightarrow$ Automatically assumed to be the **Enemy Target** until a new `CL` is entered.
-    3. **Add `HIT` / `SPLASH`** (`82.50 71.80 HIT`) $\rightarrow$ Automatically shifts your Gun Aim Offset to walk the next round onto the target.
+  * **Pop-Out 3D Topographic Recon (`recon.html`)**: Dedicated multi-monitor 3D wireframe terrain mesh with incoming parabolic shell arc and 1m/px satellite spotter reticle (`BroadcastChannel` sync).
+  * **Forward Observer 3×3 Nudge Pad**: One-click `ADD`/`DROP`/`LEFT`/`RIGHT` adjustments along the Gun-Target line of fire, centered `🎯 ZERO` reset, and `↩ UNDO` (`Ctrl+Z`).
+* **⚙️ Page 2 — Voice Setup & Activity Log**:
+  * **Private Coordinate Chat (`CL` & Dual-Pair Rules)**:
+    1. **Two pairs on one line** (`78.5 69.5 82.18 71.53` or `78.5 69.5 -> 82.18 71.53`) $\rightarrow$ First pair locks **Gun (`CL`)**, second pair sets **Enemy Target** (or **Splash (`HIT`)** if tagged).
+    2. **Add `CL` to a single coordinate line** (`78.5 69.5 CL` or `CL 7850 6950`) $\rightarrow$ Sets and locks your **Current Location** (Gun/Mortar).
+    3. **Any other coordinate line** (`82.18 71.53` or `8218 7153`) $\rightarrow$ Automatically assumed to be the **Enemy Target** until a new `CL` is entered.
+    4. **Add `HIT` / `SPLASH`** (`82.50 71.80 HIT`) $\rightarrow$ Automatically shifts your Gun Aim Offset to walk the next round onto the target.
   * **Multiline `winocr` Screen OCR, `recent_events` Ring Buffer & In-Game `Ctrl+C` Clipboard Watcher**:
     * Native Windows WinRT OCR (`winocr`) preserves true line boundaries via `res['lines']` (`_extract_text_from_winocr_result`), applies 2×/3× `BICUBIC` + `ImageOps.autocontrast` preprocessing for small HUD/chat crops, filters self-UI text via `SELF_UI_IGNORE_RE`, and queues multi-line `CL` + `TARGET` pairs in a chronological `recent_events` ring buffer so sequential events are never dropped between frontend polls (100% Easy Anti-Cheat safe).
     * Also watches the system clipboard so you can type `78.5 69.5 CL` or `82.18 71.53` in the in-game chat bar and press `Ctrl+A` $\rightarrow$ `Ctrl+C` for instant 100% accuracy.
@@ -63,7 +68,7 @@ python server.py
 ```
 Your browser will open `http://localhost:8765`.
 
-### CLI Mode & Automated Verification Suite (`76` Tests)
+### CLI Mode & Automated Verification Suite (`82` Tests)
 ```powershell
 python mortar_calc.py
 python -m pytest -q
@@ -73,14 +78,14 @@ python -m pytest -q
 
 ## 4. Repository Structure
 
-* `index.html` — Primary Compact Zero-Scroll 2-Page Tactical Web HUD (Top-Bar Quick Coords & Auto-OCR + Page 1 Manual Map & Adjustments + Page 2 Voice, Private `CL` Chat & Auto-OCR)
+* `index.html` — Primary Single-Screen Zero-Scroll Tactical Web HUD (Top-Bar Smart Omni-Input, PTT & Auto-OCR + Page 1 Tactical Map & Fire Control + Page 2 Voice Setup & Activity Log)
 * `classic-fire-control.html` & `assets/classic/` — Embedded 8.5× Deep-Zoom Classic Fire Control map with 2-way `postMessage` sync
 * `recon.html` — Dedicated multi-monitor 3D Topographic Recon & 1m/px Satellite Spotter Scope pop-out window (`BroadcastChannel` sync)
 * `server.py` — Local HTTP server, Neural Edge-TTS endpoint, Global `win32` PTT key hook, and OCR/Clipboard endpoints (`/api/ocr/status`, `/api/ocr/toggle`, `/api/ocr/scan-now`, `/api/ocr/extract-image`, `/api/desktop-hud`)
 * `mortar_calc.py` — Python ballistics engine (`L81 Mortar` & `SPH-2` High/Low Arc, RK4 drag solver, DEM lookup)
-* `ocr_sniff.py` — Multiline Windows WinRT OCR (`winocr` `res['lines']` + 2×/3× `BICUBIC` autocontrast upscaling + `recent_events` ring buffer) + In-Game `Ctrl+C` Clipboard coordinate watcher (`CL` / `TARGET` / `HIT`)
+* `ocr_sniff.py` — Multiline Windows WinRT OCR (`winocr` `res['lines']` + 2×/3× `BICUBIC` autocontrast upscaling + single-line dual `Gun -> Target` parser + `recent_events` ring buffer) + In-Game `Ctrl+C` Clipboard coordinate watcher (`CL` / `TARGET` / `HIT`)
 * `src-tauri/` — Tauri v3.0 Native Rust/WebView2 Desktop HUD (`mortar_calc.rs`, `dem.rs`, global hotkeys, and PIP mini-HUD)
 * `targets_db.py` — 30 pre-aimed community blind-fire hotspots across Bakurani, Ozeti, Zestafona, and the Firing Range
 * `data/terrain/terrain_dem.json` — 20m hypsometric Digital Elevation Models (DEM) for Bakurani, Ozeti, and Zestafona
 * `data/map_callouts.json` — Sub-sector tactical landmark callouts
-* `tests/` — 76 deterministic offline unit & integration tests (`test_dom_a11y.py`, `test_mortar_calc.py`, `test_ocr_sniff.py`, `test_omniconvert_ocr_bridge.py`, `test_server.py`, `test_server_tts.py`, `test_targets_schema.py`, `test_tauri_desktop_wrapper.py`, `test_tauri_v3_evolution.py`, `test_v3_desktop_evolution.py`)
+* `tests/` — 82 deterministic offline unit & integration tests (`test_dom_a11y.py`, `test_mortar_calc.py`, `test_ocr_sniff.py`, `test_omniconvert_ocr_bridge.py`, `test_server.py`, `test_server_tts.py`, `test_targets_schema.py`, `test_tauri_desktop_wrapper.py`, `test_tauri_v3_evolution.py`, `test_v3_desktop_evolution.py`)

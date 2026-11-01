@@ -150,18 +150,105 @@ def parse_coords_from_text(text: str) -> Optional[Tuple[float, float]]:
     return None
 
 
+DUAL_PAIR_CONNECTOR_RE = re.compile(
+    r'^\s*(?:->|=>|→|to|vs|tgt|target|hit|splash|strike|:|\||/|;|-)?\s*$',
+    re.I
+)
+
+
+def _extract_dual_pairs_from_line(clean: str, clean_no_ts: str) -> List[Dict[str, Any]]:
+    """
+    If a single line contains TWO valid WARDOGS coordinate pairs (e.g.:
+    - "78.5 69.5 82.18 71.53"
+    - "78.5 69.5 -> 82.18 71.53"
+    - "x78.50 y69.50 x82.18 y71.53"
+    - "7850 6950 8218 7153"
+    ), automatically treat the 1st pair as Gun ('cl') and the 2nd pair as Target ('target' or 'impact').
+    """
+    pairs: List[Tuple[float, float, int, int]] = []
+
+    # 1) Two explicit X/Y pairs
+    xy_matches = []
+    for m in ExplicitXYRe.finditer(clean_no_ts):
+        try:
+            cx, cy = float(m.group(1)), float(m.group(2))
+            if is_valid_wardogs_coord(cx, cy):
+                xy_matches.append((cx, cy, m.start(), m.end()))
+        except ValueError:
+            pass
+    if len(xy_matches) == 2:
+        pairs = xy_matches
+
+    # 2) Two compact 4/5-digit grid pairs
+    if not pairs:
+        comp_matches = []
+        for m in CompactGridRe.finditer(clean_no_ts):
+            cx = _decode_compact_grid(m.group(1))
+            cy = _decode_compact_grid(m.group(2))
+            if cx is not None and cy is not None and is_valid_wardogs_coord(cx, cy):
+                comp_matches.append((cx, cy, m.start(), m.end()))
+        if len(comp_matches) == 2:
+            between = clean_no_ts[comp_matches[0][3]:comp_matches[1][2]]
+            if DUAL_PAIR_CONNECTOR_RE.match(between):
+                pairs = comp_matches
+
+    # 3) Two standard coordinate pairs separated by whitespace or connector
+    if not pairs:
+        std_matches = []
+        for m in StandardPairRe.finditer(clean_no_ts):
+            try:
+                cx, cy = float(m.group(1)), float(m.group(2))
+                if is_valid_wardogs_coord(cx, cy):
+                    std_matches.append((cx, cy, m.start(), m.end()))
+            except ValueError:
+                pass
+        if len(std_matches) == 2:
+            between = clean_no_ts[std_matches[0][3]:std_matches[1][2]]
+            if DUAL_PAIR_CONNECTOR_RE.match(between):
+                pairs = std_matches
+
+    if len(pairs) != 2:
+        return []
+
+    first_x, first_y, _, first_end = pairs[0]
+    second_x, second_y, _, _ = pairs[1]
+    tail_text = clean_no_ts[first_end:]
+    second_role = "impact" if IMPACT_TAG_RE.search(tail_text) else "target"
+
+    return [
+        {"x": round(first_x, 2), "y": round(first_y, 2), "role": "cl", "raw_line": clean[:80]},
+        {"x": round(second_x, 2), "y": round(second_y, 2), "role": second_role, "raw_line": clean[:80]},
+    ]
+
+
 def extract_all_coord_lines(text: str) -> List[Dict[str, Any]]:
-    """Extract all valid coordinate lines in top-to-bottom order."""
+    """Extract all valid coordinate lines in top-to-bottom order (supporting dual Gun->Target pairs on a single line)."""
     if not text:
         return []
     results: List[Dict[str, Any]] = []
     for raw_line in text.splitlines():
+        if not raw_line or not raw_line.strip():
+            continue
+        clean = raw_line.strip()
+        if SELF_UI_IGNORE_RE.search(clean):
+            continue
+        clean_no_ts = TS_PREFIX_RE.sub('', clean)
+        dual = _extract_dual_pairs_from_line(clean, clean_no_ts)
+        if dual:
+            results.extend(dual)
+            continue
         parsed = parse_chat_coord_line(raw_line)
         if parsed:
             results.append(parsed)
     # Fallback if OCR joined lines with spaces
     if not results:
-        parsed = parse_chat_coord_line(text.replace('\n', ' '))
+        joined = text.replace('\n', ' ').strip()
+        if joined and not SELF_UI_IGNORE_RE.search(joined):
+            clean_no_ts = TS_PREFIX_RE.sub('', joined)
+            dual = _extract_dual_pairs_from_line(joined, clean_no_ts)
+            if dual:
+                return dual
+        parsed = parse_chat_coord_line(joined)
         if parsed:
             results.append(parsed)
     return results

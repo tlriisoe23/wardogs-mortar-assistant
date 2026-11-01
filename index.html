@@ -1270,9 +1270,6 @@
             <button type="button" class="action-btn" id="openHowToUseBtn" style="padding: 5px 10px; font-size: 11px; background: #0369a1; color: #ffffff;" onclick="openHowToUseModal()" title="Open Quick-Start Field Manual &amp; Voice Guide">
                 📖 HOW TO USE
             </button>
-            <button type="button" class="action-btn" style="padding: 5px 10px; font-size: 11px; background: #7c3aed;" onclick="changeTacticalMap('firing_range')" title="Switch to In-Game Firing Range Practice Mode">
-                🎯 FIRING RANGE
-            </button>
             <button type="button" class="action-btn secondary" id="headerUndoBtn" style="padding: 5px 9px; font-size: 11px;" onclick="undoLastAction()" title="Undo last coordinate or impact change (Ctrl+Z)">
                 ↩ UNDO
             </button>
@@ -1289,27 +1286,27 @@
     </header>
 
     <main class="container" id="main-content">
-        <!-- TOP MISSION DECK: 2-PAGE WORKSPACE SWITCHER + SHARED FIRING SOLUTION HERO + QUICK CL/OCR BAR -->
+        <!-- TOP MISSION DECK: UNIFIED COMMAND DECK + 1-CLICK COPY SOLUTION HERO + SMART OMNI-INPUT & PTT/OCR BAR -->
         <div class="top-mission-deck">
             <div class="workspace-switcher" role="tablist" aria-label="Primary Workspace Pages" onkeydown="handleWorkspaceTabsKeydown(event)">
                 <button type="button" role="tab" id="pageTabManual" aria-selected="true" aria-controls="pageManualWorkspace" tabindex="0" class="workspace-tab-btn active" onclick="switchWorkspacePage('manual')">
                     <div>
-                        <div>🗺️ 1. Manual Map &amp; Adjustments</div>
-                        <div class="workspace-tab-sub">Click Mortar &amp; Target · Walk In Rounds</div>
+                        <div>🗺️ 1. Tactical Map &amp; Fire Control</div>
+                        <div class="workspace-tab-sub">All-in-One Map · Omni-Input · OCR &amp; PTT</div>
                     </div>
                     <span style="font-size: 13px;">▸</span>
                 </button>
                 <button type="button" role="tab" id="pageTabVoiceChat" aria-selected="false" aria-controls="pageVoiceChatWorkspace" tabindex="-1" class="workspace-tab-btn" onclick="switchWorkspacePage('voicechat')">
                     <div>
-                        <div>🎙️ 2. Voice, CL Chat &amp; Auto-OCR</div>
-                        <div class="workspace-tab-sub">Voice PTT · Private CL Chat · Screen OCR</div>
+                        <div>⚙️ 2. Voice Setup &amp; Activity Log</div>
+                        <div class="workspace-tab-sub">PTT Keybind · AI Voice · Full Log</div>
                     </div>
                     <span style="font-size: 13px;">▸</span>
                 </button>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 5px; justify-content: center;">
-                <div class="solution-hero" aria-live="polite" aria-atomic="true" aria-relevant="text" style="padding: 5px 10px;">
+                <div class="solution-hero" id="solutionHeroBar" aria-live="polite" aria-atomic="true" aria-relevant="text" style="padding: 5px 10px; cursor: pointer;" onclick="if (!event.target.closest('button')) copyMissionToClipboard()" title="Click anywhere on Firing Solution to copy to clipboard">
                     <div class="hero-metric">
                         <span class="hero-label">Distance (Range)</span>
                         <span class="hero-val" id="solDistance">420.5m</span>
@@ -1327,7 +1324,7 @@
                         </div>
                     </div>
                     <div class="hero-metric">
-                        <span class="hero-label" id="solElevHeaderLabel">Gun Elevation</span>
+                        <span class="hero-label" id="solElevHeaderLabel">Gun Elevation (📋 Click to Copy)</span>
                         <span class="hero-val elevation" id="solElevation">559 MIL</span>
                         <div style="display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;">
                             <span class="hero-sub" id="solArcLabel">L81 MORTAR · HIGH ARC</span>
@@ -1345,19 +1342,22 @@
                         <span id="aimOffsetText">🎯 AIM OFFSET: (82.18, 71.53)</span>
                         <button type="button" class="map-tag-btn" style="color: #fde047; border-color: #f59e0b; padding: 1px 6px; min-block-size: 22px;" onclick="clearAimOffset()">Zero Offset</button>
                     </div>
-                    <form onsubmit="submitQuickCoordBar(event)" style="display: flex; gap: 4px; flex: 1; min-width: 220px; margin: 0; align-items: center;">
-                        <input type="text" id="quickCoordInput" aria-label="Quick Coordinate or CL Input" class="input-field" style="flex: 1; padding: 3px 8px; font-size: 11px; min-height: 26px;" placeholder="⚡ Quick Coords: 78.5 69.5 CL  |  82.18 71.53  |  82.5 71.8 HIT (Enter)">
-                        <button type="submit" class="map-tag-btn" style="padding: 3px 8px; border-color: #38bdf8; color: #38bdf8; font-weight: 700;" title="Apply coordinate line (CL = Gun, Unmarked = Target, HIT = Splash)">SET</button>
+                    <form onsubmit="submitQuickCoordBar(event)" style="display: flex; gap: 4px; flex: 1; min-width: 240px; margin: 0; align-items: center;">
+                        <input type="text" id="quickCoordInput" aria-label="Smart Coordinate, Dual Gun->Target, or Range Input" class="input-field" style="flex: 1; padding: 3px 8px; font-size: 11px; min-height: 26px;" placeholder="⚡ Smart Input: 78.5 69.5 CL  |  82.18 71.53  |  78.5 69.5 -> 82.18 71.53  |  420m">
+                        <button type="submit" class="map-tag-btn" style="padding: 3px 8px; border-color: #38bdf8; color: #38bdf8; font-weight: 700;" title="Apply coordinates (Single Target, CL Gun, Gun->Target pair, HIT Splash, or 420m Range)">SET</button>
                     </form>
                     <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="map-tag-btn" id="topPttToggleBtn" aria-pressed="false" onclick="toggleTopBarPtt()" title="1-Click Toggle: In-Game Global Push-To-Talk (Hold Mouse 4 or Spacebar to speak coordinates)">
+                            🎙️ PTT: OFF
+                        </button>
                         <button type="button" class="map-tag-btn" id="topOcrToggleBtn" aria-pressed="false" onclick="toggleQuickOcrFromChat()" title="1-Click Toggle: Auto-Sync Screen Chat/HUD OCR + In-Game Ctrl+C Watcher">
                             📷 Auto-OCR: OFF
                         </button>
                         <button type="button" class="map-tag-btn" id="topOcrScanNowBtn" onclick="triggerSingleOcrScan()" title="Scan screen once right now for coordinates (Alt+O)">
                             🔍 Scan Now
                         </button>
-                        <button type="button" class="map-tag-btn" id="topOcrPasteImgBtn" onclick="triggerClipboardOrImageOcr()" title="OCR a clipboard screenshot (Ctrl+V) or upload an image">
-                            🖼️ Paste/OCR
+                        <button type="button" class="map-tag-btn" id="topOcrPasteImgBtn" onclick="triggerClipboardOrImageOcr()" title="Paste coordinates or OCR a screenshot from clipboard (Ctrl+V)">
+                            📋 Paste/OCR
                         </button>
                         <input type="file" id="ocrImageUploadInput" accept="image/*" aria-label="Upload Screenshot for OCR" style="display: none;" onchange="handleOcrImageFileSelect(event)">
                         <span id="topOcrStatusBadge" role="status" aria-live="polite" style="font-size: 10px; font-family: var(--font-mono); padding: 3px 7px; border-radius: 4px; background: #090e15; border: 1px solid var(--border-dim); color: #94a3b8; white-space: nowrap;">OCR: STANDBY</span>
@@ -1373,12 +1373,11 @@
         <section id="pageManualWorkspace" class="workspace-page" role="tabpanel" aria-labelledby="pageTabManual" aria-hidden="false" tabindex="-1">
             <div class="manual-workspace-grid">
                 <!-- LEFT / MAIN COLUMN: WIDE INTERACTIVE TACTICAL MAP -->
-                <div class="card" style="gap: 10px;">
+                <div class="card" style="gap: 8px;">
                     <div class="view-tabs" role="tablist" aria-label="Tactical Display Views" onkeydown="handleViewTabsKeydown(event)">
                         <button type="button" role="tab" aria-selected="true" aria-controls="mapViewContainer" tabindex="0" class="view-tab active" id="tabMapBtn" onclick="switchView('map')">🗺️ TACTICAL MAP (CLICK-TO-CORRECT)</button>
-                        <button type="button" role="tab" aria-selected="false" aria-controls="fireControlViewContainer" tabindex="-1" class="view-tab" id="tabFireControlBtn" onclick="switchView('firecontrol')">🌐 CLASSIC FIRE CONTROL (8.5× ZOOM)</button>
-                        <button type="button" role="tab" aria-selected="false" aria-controls="targetsViewContainer" tabindex="-1" class="view-tab" id="tabTargetsBtn" onclick="switchView('targets')">🎯 PRESET HOTSPOTS</button>
-                        <button type="button" role="tab" aria-selected="false" aria-controls="pythagorasViewContainer" tabindex="-1" class="view-tab" id="tabPythBtn" onclick="switchView('pythagoras')">📐 BALLISTIC MATH</button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="fireControlViewContainer" tabindex="-1" class="view-tab" id="tabFireControlBtn" onclick="switchView('firecontrol')">🌐 8.5× DEEP ZOOM</button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="targetsViewContainer" tabindex="-1" class="view-tab" id="tabTargetsBtn" onclick="switchView('targets')">🎯 PRESET HOTSPOTS (30)</button>
                     </div>
 
                     <!-- TAB 1: NATIVE INTERACTIVE WARDOGS TACTICAL MAP -->
@@ -1387,10 +1386,10 @@
                             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                                 <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">MAP:</span>
                                 <select id="mapSelectDropdown" aria-label="Select Tactical Map" class="input-field" style="width: auto; padding: 3px 8px; font-size: 11px;" onchange="changeTacticalMap(this.value)">
-                                    <option value="firing_range">🎯 Firing Range (In-Game Practice)</option>
                                     <option value="bakurani" selected>Bakurani (Valley)</option>
                                     <option value="ozeti">Ozeti (Church &amp; River)</option>
                                     <option value="zestafona">Zestafona (Industrial)</option>
+                                    <option value="firing_range">🎯 Firing Range (Practice)</option>
                                 </select>
 
                                 <div style="display: flex; gap: 4px; align-items: center; margin-left: 4px;">
@@ -1401,18 +1400,15 @@
                                         🔵 Mortar (Right-Click)
                                     </button>
                                     <button type="button" class="map-mode-btn impact-mode" id="modeBtnImpact" onclick="setMapClickMode('impact')">
-                                        💥 Mark Splash (Shift+Click)
+                                        💥 Splash (Shift+Click)
                                     </button>
                                 </div>
                             </div>
 
                             <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap;">
-                                <button type="button" class="map-tag-btn" id="mapBarLockMortarBtn" onclick="toggleMortarLock()" title="Lock/Unlock Gun Origin on Map">🔓 Gun Unlocked</button>
                                 <button type="button" class="map-tag-btn" id="toggleContoursBtn" aria-pressed="false" onclick="toggleMapContours()" title="Toggle 20m Hypsometric Topographic Elevation Contours">⛰️ Contours: OFF</button>
                                 <button type="button" class="map-tag-btn active-filter" id="togglePoiBtn" onclick="toggleMapHotspots()" title="Show/Hide community Blind-Fire Hotspots on map">📍 Hotspots: ON</button>
                                 <button type="button" class="map-tag-btn" onclick="focusCombatZone()" title="Zoom to Mortar &amp; Target engagement zone">🎯 Fit Mission</button>
-                                <button type="button" class="map-tag-btn" aria-label="Zoom In" onclick="zoomMapBy(1.35)" title="Zoom In">➕</button>
-                                <button type="button" class="map-tag-btn" aria-label="Zoom Out" onclick="zoomMapBy(0.74)" title="Zoom Out">➖</button>
                                 <button type="button" class="map-tag-btn" onclick="resetMapCamera()" title="Fit full map">🔍 Full Map</button>
                             </div>
                         </div>
@@ -1484,38 +1480,6 @@
                         </div>
                         <div class="targets-panel" id="targetsListContainer"></div>
                     </div>
-
-                    <!-- TAB 3: PYTHAGOREAN MATH HUD -->
-                    <div id="pythagorasViewContainer" role="tabpanel" aria-labelledby="tabPythBtn" style="display: none; flex-direction: column; gap: 14px;">
-                        <div class="visualizer-box">
-                            <canvas id="triangleCanvas"></canvas>
-                        </div>
-                        <div class="math-breakdown" id="mathBreakdown"></div>
-                    </div>
-
-                    <!-- COLLAPSIBLE 3D TOPOGRAPHIC FPV & 1m/px SPOTTER RECON DRAWER -->
-                    <details class="settings-drawer" id="reconPreviewDrawer" ontoggle="if (this.open) { setTimeout(drawTargetReconPreview, 30); }">
-                        <summary>
-                            <span style="display: flex; align-items: center; gap: 8px;">
-                                <span>🎥 3D Topographic FPV &amp; 1m/px Spotter Scope</span>
-                                <span id="reconNearestCallout" style="font-size: 10px; font-family: var(--font-mono); color: #fde047; background: rgba(250, 204, 21, 0.12); border: 1px solid rgba(250, 204, 21, 0.35); padding: 1px 6px; border-radius: 4px;">📍 SCANNING SECTOR...</span>
-                            </span>
-                        </summary>
-                        <div id="targetReconBox" style="background: #090e15; border: 1px solid var(--border-dim); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-                                <span id="reconTelemetryLeft" style="font-size: 10px; color: #94a3b8; font-family: var(--font-mono);">APPROACH VECTOR: --° · PLUNGE ANGLE: --° · LETHAL RADIUS: 25m</span>
-                                <div style="display: flex; gap: 4px; align-items: center;">
-                                    <button type="button" class="map-tag-btn active-filter" id="reconMode_split" onclick="setReconMode('split')">⚡ Split (3D + Spotter)</button>
-                                    <button type="button" class="map-tag-btn" id="reconMode_fpv3d" onclick="setReconMode('fpv3d')">🎥 3D Topo FPV</button>
-                                    <button type="button" class="map-tag-btn" id="reconMode_spotter" onclick="setReconMode('spotter')">🛰️ 1m/px Spotter</button>
-                                </div>
-                            </div>
-                            <div style="width: 100%; height: 220px; border-radius: 5px; overflow: hidden; border: 1px solid #1e293b; background: #06090e; position: relative;">
-                                <canvas id="targetReconCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
-                            </div>
-                            <div id="reconTelemetryRight" style="font-size: 9px; color: #94a3b8; font-family: var(--font-mono);">1m/px SATELLITE + 20m TOPOGRAPHIC DEM ELEVATION PROFILE</div>
-                        </div>
-                    </details>
                 </div>
 
                 <!-- RIGHT SIDEBAR: MANUAL COORDINATES & FORWARD OBSERVER MISS ADJUSTMENTS -->
@@ -1590,20 +1554,16 @@
                                 </div>
                             </div>
                         </div>
-
-                        <button type="button" class="action-btn" style="padding: 6px 12px; font-size: 11px;" onclick="calculate(true)">
-                            🔊 Compute &amp; Speak Solution
-                        </button>
                     </div>
 
                     <!-- CARD 2: FORWARD OBSERVER (MISS ADJUSTMENTS) -->
                     <div class="card" style="gap: 6px;">
                         <div class="card-header">
-                            <span>🎯 Forward Observer Adjustments</span>
+                            <span>🎯 Walk In Missed Shells</span>
                         </div>
 
                         <div style="font-size: 10px; color: var(--text-muted); line-height: 1.25;">
-                            Walk missed shells along Line of Fire (or <strong>Shift+Click</strong> splash on map):
+                            Nudge along Line of Fire, or <strong>Shift+Click</strong> splash on map:
                         </div>
 
                         <div class="adj-grid">
@@ -1616,23 +1576,8 @@
                             <button type="button" class="adj-btn drop" onclick="applyAdjustment(-10, 0, 'Drop 10')">▼ DROP 10m</button>
 
                             <button type="button" class="adj-btn" onclick="applyAdjustment(0, -20, 'Left 20')">◄ LEFT 20m</button>
-                            <button type="button" class="adj-btn special" onclick="undoLastAction()" title="Undo last correction or placement (Ctrl+Z)">↩ UNDO</button>
+                            <button type="button" class="adj-btn special" onclick="clearAimOffset()" title="Reset Aim Offset to True Target">🎯 ZERO</button>
                             <button type="button" class="adj-btn" onclick="applyAdjustment(0, 20, 'Right 20')">► RIGHT 20m</button>
-                        </div>
-
-                        <div class="input-group" style="margin-top: 2px;">
-                            <label>Custom Meter Adjustment</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px;">
-                                <input type="number" id="customRangeAdj" aria-label="Range adjustment in meters" class="input-field" style="font-size: 12px; padding: 6px 8px;" placeholder="Range (+Add/-Drop)">
-                                <input type="number" id="customDeflAdj" aria-label="Deflection adjustment in meters" class="input-field" style="font-size: 12px; padding: 6px 8px;" placeholder="Defl (+Right/-Left)">
-                                <button type="button" class="action-btn secondary" style="padding: 6px 10px; font-size: 11px;" onclick="applyCustomAdjustment()">Apply</button>
-                            </div>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; padding-top: 4px; border-top: 1px dashed var(--border-dim);">
-                            <button type="button" class="nudge-btn" onclick="pasteCoordsFromClipboard('target')" title="Paste Target (X, Y) from Clipboard">📋 Paste Tgt</button>
-                            <button type="button" class="nudge-btn" style="color: #fbbf24; border-color: rgba(245, 158, 11, 0.45);" onclick="pasteCoordsFromClipboard('impact')" title="Paste Impact/Splash (X, Y) from Clipboard to auto-correct">💥 Paste Hit</button>
-                            <button type="button" class="nudge-btn" style="color: #38bdf8;" onclick="copyMissionToClipboard()" title="Copy current Solution &amp; Coords to Clipboard">📤 Copy Sol</button>
                         </div>
                         <select id="spotterStepSelect" aria-label="Spotter Nudge Step Meters" style="display: none;">
                             <option value="25" selected>25m</option>
@@ -2184,7 +2129,7 @@
             }
         }
 
-        // Switch between Views: Tactical Map, Classic Fire Control Embed, Target Database, and Pythagorean HUD
+        // Switch between Views: Tactical Map, Classic Fire Control Embed, and Target Database
         function switchView(mode, focusActiveTab = false) {
             const mapContainer = document.getElementById('mapViewContainer');
             const fcContainer = document.getElementById('fireControlViewContainer');
@@ -2197,10 +2142,10 @@
             const tabTargets = document.getElementById('tabTargetsBtn');
             const tabPyth = document.getElementById('tabPythBtn');
 
-            mapContainer.style.display = 'none';
+            if (mapContainer) mapContainer.style.display = 'none';
             if (fcContainer) fcContainer.style.display = 'none';
-            targetsContainer.style.display = 'none';
-            pythContainer.style.display = 'none';
+            if (targetsContainer) targetsContainer.style.display = 'none';
+            if (pythContainer) pythContainer.style.display = 'none';
 
             const tabs = [
                 { btn: tabMap, key: 'map' },
@@ -2218,7 +2163,7 @@
             }
 
             if (mode === 'map') {
-                mapContainer.style.display = 'flex';
+                if (mapContainer) mapContainer.style.display = 'flex';
                 if (reconBox) reconBox.style.display = 'flex';
                 drawTacticalMap();
                 drawTargetReconPreview();
@@ -2228,10 +2173,10 @@
                 syncClassicFireControlFrame();
                 drawTargetReconPreview();
             } else if (mode === 'targets') {
-                targetsContainer.style.display = 'flex';
+                if (targetsContainer) targetsContainer.style.display = 'flex';
                 if (reconBox) reconBox.style.display = 'none';
                 renderTargetsList();
-            } else {
+            } else if (pythContainer) {
                 pythContainer.style.display = 'flex';
                 if (reconBox) reconBox.style.display = 'none';
                 drawTacticalVisualizer();
@@ -2239,8 +2184,8 @@
         }
 
         function handleViewTabsKeydown(event) {
-            const order = ['map', 'firecontrol', 'targets', 'pythagoras'];
-            const btnIds = ['tabMapBtn', 'tabFireControlBtn', 'tabTargetsBtn', 'tabPythBtn'];
+            const order = ['map', 'firecontrol', 'targets'];
+            const btnIds = ['tabMapBtn', 'tabFireControlBtn', 'tabTargetsBtn'];
             const curIdx = btnIds.indexOf(document.activeElement?.id);
             if (curIdx === -1) return;
             let nextIdx = -1;
@@ -4448,9 +4393,48 @@
         }
 
         // Parse a chat/HUD line using the CL Rule:
+        // - Contains TWO coordinate pairs ("78.5 69.5 82.18 71.53" or "78.5 69.5 -> 82.18 71.53") -> sets Gun (CL) + Target in one go!
         // - Contains "CL" (or "current location" / "gun" / "mortar") -> role = 'cl' (sets Gun & locks)
         // - Contains "HIT" / "SPLASH" / "STRIKE" -> role = 'impact' (splash correction)
         // - Any other coordinate line -> role = 'target' (assumed Target until a new CL line is added!)
+        function parseDualCoordLineJs(rawLine) {
+            if (!rawLine || !rawLine.trim()) return null;
+            const clean = rawLine.trim().replace(/^\s*\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*/, '');
+            const secondRole = /\b(hit|splash|strike|imp|impact|landed)\b/i.test(clean) ? 'impact' : 'target';
+
+            // 1. Two explicit X/Y pairs: e.g. "x78.50 y69.50 x82.18 y71.53"
+            const xyMatches = [...clean.matchAll(/[xX]\s*[:=]?\s*(\d{2,3}(?:\.\d{1,2})?)[\s,;/|]+[yY]\s*[:=]?\s*(\d{2,3}(?:\.\d{1,2})?)/g)];
+            if (xyMatches.length === 2) {
+                const x1 = parseFloat(xyMatches[0][1]), y1 = parseFloat(xyMatches[0][2]);
+                const x2 = parseFloat(xyMatches[1][1]), y2 = parseFloat(xyMatches[1][2]);
+                if (x1 >= 15 && x1 <= 155 && y1 >= 15 && y1 <= 155 && x2 >= 15 && x2 <= 155 && y2 >= 15 && y2 <= 155) {
+                    return [{ x: x1, y: y1, role: 'cl' }, { x: x2, y: y2, role: secondRole }];
+                }
+            }
+
+            // 2. Two compact 4/5-digit grid pairs: e.g. "7850 6950 8218 7153"
+            const decodeComp = (t) => t.length === 4 ? parseFloat(`${t.slice(0, 2)}.${t.slice(2)}`) : parseFloat(`${t.slice(0, 3)}.${t.slice(3)}`);
+            const compMatches = [...clean.matchAll(/\b(\d{4,5})[\s,;/|xX×-]+(\d{4,5})\b/g)];
+            if (compMatches.length === 2) {
+                const x1 = decodeComp(compMatches[0][1]), y1 = decodeComp(compMatches[0][2]);
+                const x2 = decodeComp(compMatches[1][1]), y2 = decodeComp(compMatches[1][2]);
+                if (x1 >= 15 && x1 <= 155 && y1 >= 15 && y1 <= 155 && x2 >= 15 && x2 <= 155 && y2 >= 15 && y2 <= 155) {
+                    return [{ x: x1, y: y1, role: 'cl' }, { x: x2, y: y2, role: secondRole }];
+                }
+            }
+
+            // 3. Two standard decimal/integer pairs: e.g. "78.5 69.5 82.18 71.53" or "78.5, 69.5 -> 82.18, 71.53"
+            const stdMatches = [...clean.matchAll(/\b(\d{2,3}\.\d{1,2}|\d{2,3})(?:\s*(?:[,;/|xX×]|by)\s*|\s+)(\d{2,3}\.\d{1,2}|\d{2,3})\b/gi)];
+            if (stdMatches.length === 2) {
+                const x1 = parseFloat(stdMatches[0][1]), y1 = parseFloat(stdMatches[0][2]);
+                const x2 = parseFloat(stdMatches[1][1]), y2 = parseFloat(stdMatches[1][2]);
+                if (x1 >= 15 && x1 <= 155 && y1 >= 15 && y1 <= 155 && x2 >= 15 && x2 <= 155 && y2 >= 15 && y2 <= 155) {
+                    return [{ x: x1, y: y1, role: 'cl' }, { x: x2, y: y2, role: secondRole }];
+                }
+            }
+            return null;
+        }
+
         function parseChatCoordLineJs(rawLine) {
             if (!rawLine || !rawLine.trim()) return null;
             const clean = rawLine.trim().replace(/^\s*\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*/, '');
@@ -4483,9 +4467,29 @@
 
         function applyRawCoordTextInput(raw, sourceLabel = 'CHAT') {
             if (!raw || !raw.trim()) return false;
-            const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            const trimmed = raw.trim();
+
+            // Check Direct Range / Distance Mode first (e.g. "420m", "1450m", "range 420", "dist 350")
+            const distMatch = trimmed.match(/^(?:(?:range|dist|distance)\s*[:=]?\s*)?(\d{2,4}(?:\.\d+)?)\s*(?:m|meters|meter)?$/i);
+            if (distMatch) {
+                const distM = parseFloat(distMatch[1]);
+                if (distM >= 80 && distM <= 2629) {
+                    setPracticeRangeDistance(distM);
+                    setTopOcrBadge(`RNG: ${Math.round(distM)}m`, '#38bdf8', 'rgba(56, 189, 248, 0.5)');
+                    return true;
+                }
+            }
+
+            const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
             let appliedCount = 0;
             for (const line of lines) {
+                const dual = parseDualCoordLineJs(line);
+                if (dual && dual.length === 2) {
+                    applyOcrCoordinatePair(dual[0].x, dual[0].y, true, dual[0].role, line, sourceLabel);
+                    applyOcrCoordinatePair(dual[1].x, dual[1].y, true, dual[1].role, line, sourceLabel);
+                    appliedCount += 2;
+                    continue;
+                }
                 const parsed = parseChatCoordLineJs(line);
                 if (parsed) {
                     applyOcrCoordinatePair(parsed.x, parsed.y, true, parsed.role, line, sourceLabel);
@@ -4493,7 +4497,7 @@
                 }
             }
             if (appliedCount > 0) return true;
-            parseTacticalVoiceCommand(raw.trim());
+            parseTacticalVoiceCommand(trimmed);
             return true;
         }
 
@@ -5208,6 +5212,15 @@
             try {
                 await navigator.clipboard.writeText(summary);
                 playChime(880, 1320, 0.06);
+                const lbl = document.getElementById('solElevHeaderLabel');
+                if (lbl) {
+                    lbl.textContent = '✅ COPIED TO CLIPBOARD!';
+                    lbl.style.color = '#34d399';
+                    setTimeout(() => {
+                        lbl.textContent = 'Gun Elevation (📋 Click to Copy)';
+                        lbl.style.color = '';
+                    }, 1600);
+                }
                 logEvent('SYS', `📤 Copied to clipboard: ${summary}`);
             } catch (e) {
                 logEvent('ERR', 'Could not copy to clipboard.');
@@ -5568,16 +5581,19 @@
                     : `TARGET BEYOND ${activeWeapon.toUpperCase()} MAX RANGE (${distanceMeters.toFixed(0)}m > ${maxRangeM}m MAX)`;
             }
 
-            // Math breakdown
-            document.getElementById('mathBreakdown').innerHTML = `
-                <strong>Pythagorean Geometry Breakdown:</strong><br>
-                Leg A (ΔX) = (${aimX.toFixed(2)} - ${mx.toFixed(2)}) × 100m = ${dxMeters.toFixed(1)}m<br>
-                Leg B (ΔY) = (${aimY.toFixed(2)} - ${my.toFixed(2)}) × 100m = ${dyMeters.toFixed(1)}m<br>
-                Hypotenuse C = √(${dxMeters.toFixed(0)}² + ${dyMeters.toFixed(0)}²) = <span class="math-highlight">${distanceMeters.toFixed(1)}m</span><br>
-                Bearing = atan2(${dxMeters.toFixed(0)}, ${dyMeters.toFixed(0)}) = <span class="math-highlight">${bearingDeg.toFixed(1)}° (${paddedBearing}°)</span> | Elevation = <span class="math-highlight">${elevationMils !== null ? Math.round(elevationMils) + ' mils' : 'N/A'}</span>
-            `;
+            // Math breakdown (optional if container present)
+            const mathEl = document.getElementById('mathBreakdown');
+            if (mathEl) {
+                mathEl.innerHTML = `
+                    <strong>Pythagorean Geometry Breakdown:</strong><br>
+                    Leg A (ΔX) = (${aimX.toFixed(2)} - ${mx.toFixed(2)}) × 100m = ${dxMeters.toFixed(1)}m<br>
+                    Leg B (ΔY) = (${aimY.toFixed(2)} - ${my.toFixed(2)}) × 100m = ${dyMeters.toFixed(1)}m<br>
+                    Hypotenuse C = √(${dxMeters.toFixed(0)}² + ${dyMeters.toFixed(0)}²) = <span class="math-highlight">${distanceMeters.toFixed(1)}m</span><br>
+                    Bearing = atan2(${dxMeters.toFixed(0)}, ${dyMeters.toFixed(0)}) = <span class="math-highlight">${bearingDeg.toFixed(1)}° (${paddedBearing}°)</span> | Elevation = <span class="math-highlight">${elevationMils !== null ? Math.round(elevationMils) + ' mils' : 'N/A'}</span>
+                `;
+            }
 
-            // Always redraw both canvases (F-02) and push 2-way sync to Classic Fire Control iframe (U3-03)
+            // Always redraw map and push 2-way sync to Classic Fire Control iframe (U3-03)
             drawTacticalMap();
             drawTargetReconPreview();
             drawTacticalVisualizer();
@@ -6102,9 +6118,9 @@
                 return;
             }
 
-            const testRangeMatch = clean.match(/(?:test|calibrate|practice)\s+(\d{2,4})(?:\s*m|\s*meters)?/);
+            const testRangeMatch = clean.match(/(?:range|distance|dist|test|calibrate|practice)\s+(\d{2,4})(?:\s*m|\s*meters|\s*meter)?|\b(\d{2,4})\s*(?:meters|meter)\b/);
             if (testRangeMatch) {
-                const distM = parseFloat(testRangeMatch[1]);
+                const distM = parseFloat(testRangeMatch[1] || testRangeMatch[2]);
                 if (distM >= 80 && distM <= 2629) {
                     setPracticeRangeDistance(distM);
                     return;
@@ -6381,8 +6397,21 @@
             }
         }
 
+        function toggleTopBarPtt() {
+            const chk = document.getElementById('globalPttToggle');
+            const nextState = !(chk && chk.checked);
+            if (chk) chk.checked = nextState;
+            toggleGlobalPtt(nextState);
+        }
+
         function toggleGlobalPtt(enable) {
             globalPttEnabled = enable;
+            const topPttBtn = document.getElementById('topPttToggleBtn');
+            if (topPttBtn) {
+                topPttBtn.className = enable ? 'map-tag-btn active-filter' : 'map-tag-btn';
+                topPttBtn.setAttribute('aria-pressed', String(enable));
+                topPttBtn.textContent = enable ? '🎙️ PTT: ON (M4)' : '🎙️ PTT: OFF';
+            }
             const vk = document.getElementById('globalPttKeySelect')?.value || '5';
             fetch(`/api/ptt/config?enabled=${enable}&vk=${vk}`)
                 .then(r => r.json())

@@ -6,11 +6,11 @@
 
 ## Architecture & Key Files
 - `mortar_calc.py`: Pure Python in-game ballistics & coordinate solver (`L81 Mortar` & `SPH-2` High/Low Arc, RK4 aerodynamic drag solver, 20m DEM height compensation).
-- `ocr_sniff.py`: Multiline Windows WinRT OCR (`winocr` `res['lines']` + 2x/3x `BICUBIC` autocontrast upscaling + `recent_events` ring buffer) and In-Game `Ctrl+C` clipboard coordinate parser (`CL` / `TARGET` / `HIT`).
+- `ocr_sniff.py`: Multiline Windows WinRT OCR (`winocr` `res['lines']` + 2x/3x `BICUBIC` autocontrast upscaling + single-line dual `Gun -> Target` parser + `recent_events` ring buffer) and In-Game `Ctrl+C` clipboard coordinate parser (`CL` / `TARGET` / `HIT`).
 - `server.py`: HTTP API server (`:8765` / `:8099`) serving static UI, ballistics endpoints, `/api/tts`, `/api/ocr/*` (`qwen3-vl:2b-instruct` with local `winocr` fallback), and `/api/desktop-hud`.
-- `index.html`, `classic-fire-control.html`, `classic-fire-control.js`, `recon.html`: Compact zero-scroll 1080p 2-Page frontend minimap, Top-Bar Quick Coords & Auto-OCR strip, 8.5x Classic Fire Control, and 3D Recon pop-out UI (North-Up minimap orientation).
+- `index.html`, `classic-fire-control.html`, `classic-fire-control.js`, `recon.html`: Single-screen zero-scroll 1080p 2-Page frontend minimap, Top-Bar Smart Omni-Input (`CL`, dual `Gun -> Target`, direct `420m` range) + `🎙️ PTT` & `📷 Auto-OCR` strip, 1-click Solution Hero copy, 8.5x Classic Fire Control, and 3D Recon pop-out UI (North-Up minimap orientation).
 - `src-tauri/`: Tauri v3.0 native desktop wrapper (`mortar_calc.rs`, `dem.rs`, global hotkeys, `1540x940` zero-scroll window, `0%` background GPU polling).
-- `tests/`: 10-file deterministic unit test suite (`76` tests across `test_dom_a11y.py`, `test_mortar_calc.py`, `test_ocr_sniff.py`, `test_omniconvert_ocr_bridge.py`, `test_server.py`, `test_server_tts.py`, `test_targets_schema.py`, `test_tauri_desktop_wrapper.py`, `test_tauri_v3_evolution.py`, and `test_v3_desktop_evolution.py`).
+- `tests/`: 10-file deterministic unit test suite (`82` tests across `test_dom_a11y.py`, `test_mortar_calc.py`, `test_ocr_sniff.py`, `test_omniconvert_ocr_bridge.py`, `test_server.py`, `test_server_tts.py`, `test_targets_schema.py`, `test_tauri_desktop_wrapper.py`, `test_tauri_v3_evolution.py`, and `test_v3_desktop_evolution.py`).
 
 ## Build, Lint & Test Commands (Google Jules Cloud VM)
 - Run unit tests: `python3 -m pytest -q`
