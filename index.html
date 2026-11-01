@@ -2312,7 +2312,8 @@
                 imagePath: 'maps/bakurani.webp',
                 fpvPath: 'maps/fpv_bakurani.webp',
                 fpvLabel: 'Bakurani North HQ & Range Sector',
-                tileBase: null
+                tileBase: 'https://cdn.wardogshub.gg/bakurani/v2',
+                fallbackTileMapId: 'bakurani'
             },
             bakurani: {
                 id: 'bakurani',
@@ -2327,7 +2328,8 @@
                 imagePath: 'maps/bakurani.webp',
                 fpvPath: 'maps/fpv_bakurani.webp',
                 fpvLabel: 'Bakurani Valley — Sunflower Church & Ridge',
-                tileBase: null
+                tileBase: 'https://cdn.wardogshub.gg/bakurani/v2',
+                fallbackTileMapId: 'bakurani'
             },
             ozeti: {
                 id: 'ozeti',
@@ -2342,7 +2344,8 @@
                 imagePath: 'maps/ozeti.webp',
                 fpvPath: 'maps/fpv_ozeti.webp',
                 fpvLabel: 'Ozeti Sector — Dinamo Ozeti Stadium & River',
-                tileBase: null
+                tileBase: 'https://cdn.wardogshub.gg/europe/v1',
+                fallbackTileMapId: 'ozeti'
             },
             zestafona: {
                 id: 'zestafona',
@@ -2357,7 +2360,8 @@
                 imagePath: 'maps/zestafona.webp',
                 fpvPath: 'maps/fpv_zestafona.webp',
                 fpvLabel: 'Zestafona Industrial — Kazisteel Plant',
-                tileBase: null
+                tileBase: 'https://cdn.wardogshub.gg/north-america/v1',
+                fallbackTileMapId: 'zestafona'
             }
         };
 
@@ -2454,7 +2458,21 @@
             });
         }
 
-        function getStreamingTile(tileBase, z, row, col) {
+        const GRID_COLS_16 = 'ABCDEFGHIJKLMNOP';
+
+        function buildFallbackMirrorTileUrl(fallbackMapId, z, row, col) {
+            const mId = fallbackMapId || 'bakurani';
+            if (z === 5) {
+                const colLetter = GRID_COLS_16[Math.floor(col / 2)] || 'A';
+                const rowNum = Math.floor(row / 2) + 1;
+                const ns = (row % 2 === 0) ? 'north' : 'south';
+                const we = (col % 2 === 0) ? 'west' : 'east';
+                return `https://wardog-fire-control.pages.dev/maps/${mId}/grids/${colLetter}${rowNum}/${ns}${we}.webp`;
+            }
+            return `https://wardog-fire-control.pages.dev/maps/${mId}/zoom-levels/${z}/${row}/${col}.webp`;
+        }
+
+        function getStreamingTile(tileBase, z, row, col, fallbackMapId = null) {
             if (!tileBase || row < 0 || col < 0 || row >= (1 << z) || col >= (1 << z)) return null;
             const key = `${tileBase}/${z}/${row}/${col}.webp`;
             let img = dynamicTileCache.get(key);
@@ -2462,8 +2480,15 @@
                 img = new Image();
                 img.crossOrigin = 'anonymous';
                 img.decoding = 'async';
-                img.src = key;
                 img.onload = () => scheduleReconRedraw();
+                img.onerror = () => {
+                    if (!img.dataset.triedFallback) {
+                        img.dataset.triedFallback = '1';
+                        const mId = fallbackMapId || MAP_CONFIGS[currentMapId]?.fallbackTileMapId || MAP_CONFIGS[currentMapId]?.baseMapId || 'bakurani';
+                        img.src = buildFallbackMirrorTileUrl(mId, z, row, col);
+                    }
+                };
+                img.src = key;
                 dynamicTileCache.set(key, img);
             }
             return (img.complete && img.naturalWidth > 0) ? img : null;
@@ -2510,7 +2535,7 @@
         function preloadMapImages() {
             for (const [id, cfg] of Object.entries(MAP_CONFIGS)) {
                 const img = new Image();
-                img.src = cfg.imagePath + '?v=topdown2';
+                img.src = cfg.imagePath + '?v=4k_v2';
                 img.onload = () => {
                     if (id === currentMapId) {
                         drawTacticalMap();
@@ -2801,8 +2826,10 @@
             // Clear background
             ctx.fillStyle = '#070b10';
             ctx.fillRect(0, 0, w, h);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
-            // Draw stitched 2048x2048 local top-down tactical map base layer (1:1 metric aspect ratio)
+            // Draw stitched 4096x4096 (Level 3, 4m/px) local top-down tactical map base layer
             const img = mapImagesCache[currentMapId];
             if (img && img.complete && img.naturalWidth > 0) {
                 ctx.drawImage(img, vp.drawX, vp.drawY, vp.effW, vp.effH);
@@ -2811,9 +2838,10 @@
                 ctx.fillRect(vp.drawX, vp.drawY, vp.effW, vp.effH);
             }
 
-            // Stream high-resolution Level 3 / 4 / 5 tiles (up to 1m/px) when zoomed in
-            if (mapCamera.zoom >= 2.1 && vp.cfg.tileBase) {
-                const targetZ = mapCamera.zoom >= 5.2 ? 5 : (mapCamera.zoom >= 3.4 ? 4 : 3);
+            // Stream high-resolution Level 4 (8192x8192, 2m/px) & Level 5 (16384x16384, 1m/px) quadtree tiles when zoomed in
+            const physicalMapPx = vp.effW * dpr;
+            if (vp.cfg.tileBase && (mapCamera.zoom >= 1.5 || physicalMapPx > 2400)) {
+                const targetZ = Math.min(5, Math.max(3, Math.ceil(Math.log2(physicalMapPx / 512))));
                 const gridCount = 1 << targetZ;
                 const tileW = vp.effW / gridCount;
                 const tileH = vp.effH / gridCount;
@@ -2821,12 +2849,13 @@
                 const maxCol = Math.min(gridCount - 1, Math.floor((w - vp.drawX) / tileW));
                 const minRow = Math.max(0, Math.floor((-vp.drawY) / tileH));
                 const maxRow = Math.min(gridCount - 1, Math.floor((h - vp.drawY) / tileH));
+                const fallbackId = vp.cfg.fallbackTileMapId || vp.cfg.baseMapId;
 
                 ctx.save();
                 ctx.filter = 'brightness(1.18) contrast(1.22)';
                 for (let r = minRow; r <= maxRow; r++) {
                     for (let c = minCol; c <= maxCol; c++) {
-                        const tileImg = getStreamingTile(vp.cfg.tileBase, targetZ, r, c);
+                        const tileImg = getStreamingTile(vp.cfg.tileBase, targetZ, r, c, fallbackId);
                         if (tileImg) {
                             ctx.drawImage(
                                 tileImg,
@@ -2835,6 +2864,20 @@
                                 tileW + 0.6,
                                 tileH + 0.6
                             );
+                        } else if (targetZ === 5) {
+                            // Progressive parent fallback: draw cached Level 4 quadrant while Level 5 (1m/px) tile downloads
+                            const pRow = r >> 1;
+                            const pCol = c >> 1;
+                            const parentTile = dynamicTileCache.get(`${vp.cfg.tileBase}/4/${pRow}/${pCol}.webp`);
+                            if (parentTile && parentTile.complete && parentTile.naturalWidth > 0) {
+                                const sx = (c & 1) * (parentTile.naturalWidth / 2);
+                                const sy = (r & 1) * (parentTile.naturalHeight / 2);
+                                ctx.drawImage(
+                                    parentTile,
+                                    sx, sy, parentTile.naturalWidth / 2, parentTile.naturalHeight / 2,
+                                    vp.drawX + c * tileW, vp.drawY + r * tileH, tileW + 0.6, tileH + 0.6
+                                );
+                            }
                         }
                     }
                 }

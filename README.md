@@ -16,6 +16,7 @@ A tactical voice-activated fire-control assistant, interactive map suite, and ba
   * **`🖼️ Paste/OCR` & Global `Ctrl+V` Screenshot/Text Paste**: Paste a raw coordinate string or a cropped screenshot (`Win+Shift+S` $\rightarrow$ `Ctrl+V`) anywhere outside text inputs to extract single or dual `Gun -> Target` coordinates automatically via `POST /api/ocr/extract-image` (`qwen3-vl:2b-instruct` with local `winocr` fallback).
 * **🗺️ Page 1 — Tactical Map & Fire Control (Zero-Scroll `100dvh` Fit)**:
   * **1-Click Firing Solution Hero Copy (`#solutionHeroBar`)**: Click anywhere on the Firing Solution Hero to copy the formatted 1-line firing solution (`[WARDOGS L81 MORTAR] ELEV: 632 MIL | AZ: 060.9° (1083 MIL) | RNG: 420m | TOF: 12.1s`) to the clipboard.
+  * **4K Offline Base Maps (`4,096 × 4,096 px`) + 16K (`16,384 × 16,384 px`, `1m/px`) Quadtree Tile Pyramid Streaming**: Local `maps/*.webp` base layers are stitched at `4,096 × 4,096 px` (`Level 3`, `4m/px`) and automatically stream `Level 4` (`8,192 × 8,192 px`, `2m/px`) and `Level 5` (`16,384 × 16,384 px`, `1m/px` — 64× higher pixel density than `2,048 × 2,048`) tiles from `cdn.wardogshub.gg` with automatic `wardog-fire-control.pages.dev` mirror failover and progressive parent-tile fallback.
   * **Interactive Tactical Map (Click-to-Correct)**: Right-click to place your Gun/Mortar (`CL`), Left-click to place Enemy Target, and **Shift+Click** where a shell landed to apply an automatic non-destructive ballistic aim offset.
   * **Classic Fire Control (8.5× Deep Building Zoom)**: Embedded 2-way synchronized `wardog-fire-control` view with 8.5× building zoom and 3× faster scroll wheel.
   * **20m Topographic DEM & Ridge Clearance**: Automatic bilinear elevation lookup (`ΔZ`) across **Bakurani**, **Ozeti**, and **Zestafona** (`data/terrain/terrain_dem.json`) plus raycast ridge-collision warnings along the trajectory.
@@ -68,7 +69,7 @@ python server.py
 ```
 Your browser will open `http://localhost:8765`.
 
-### CLI Mode & Automated Verification Suite (`82` Tests)
+### CLI Mode & Automated Verification Suite (`83` Tests)
 ```powershell
 python mortar_calc.py
 python -m pytest -q
@@ -88,4 +89,4 @@ python -m pytest -q
 * `targets_db.py` — 30 pre-aimed community blind-fire hotspots across Bakurani, Ozeti, Zestafona, and the Firing Range
 * `data/terrain/terrain_dem.json` — 20m hypsometric Digital Elevation Models (DEM) for Bakurani, Ozeti, and Zestafona
 * `data/map_callouts.json` — Sub-sector tactical landmark callouts
-* `tests/` — 82 deterministic offline unit & integration tests (`test_dom_a11y.py`, `test_mortar_calc.py`, `test_ocr_sniff.py`, `test_omniconvert_ocr_bridge.py`, `test_server.py`, `test_server_tts.py`, `test_targets_schema.py`, `test_tauri_desktop_wrapper.py`, `test_tauri_v3_evolution.py`, `test_v3_desktop_evolution.py`)
+* `tests/` — 83 deterministic offline unit & integration tests (`test_dom_a11y.py`, `test_mortar_calc.py`, `test_ocr_sniff.py`, `test_omniconvert_ocr_bridge.py`, `test_server.py`, `test_server_tts.py`, `test_targets_schema.py`, `test_tauri_desktop_wrapper.py`, `test_tauri_v3_evolution.py`, `test_v3_desktop_evolution.py`)

@@ -170,3 +170,18 @@ class TestIndexHtmlA11y(unittest.TestCase):
         self.assertIsNone(self.soup.find(id='pythagorasViewContainer'))
         self.assertIsNone(self.soup.find(id='customRangeAdj'))
         self.assertIsNone(self.soup.find(id='mapBarLockMortarBtn'))
+
+    def test_high_resolution_4k_base_maps_and_16k_tile_pyramid_streaming(self):
+        """Verify 4096x4096 base maps and Level 3/4/5 (up to 16384x16384, 1m/px) tile pyramid streaming."""
+        from PIL import Image
+        self.assertIn("https://cdn.wardogshub.gg/bakurani/v2", self.html)
+        self.assertIn("https://cdn.wardogshub.gg/europe/v1", self.html)
+        self.assertIn("https://cdn.wardogshub.gg/north-america/v1", self.html)
+        self.assertIn("buildFallbackMirrorTileUrl", self.html)
+        self.assertIn("ctx.imageSmoothingQuality = 'high'", self.html)
+
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        for map_file in ("bakurani.webp", "ozeti.webp", "zestafona.webp"):
+            p = os.path.join(repo_root, "maps", map_file)
+            with Image.open(p) as im:
+                self.assertEqual(im.size, (4096, 4096), f"{map_file} should be 4096x4096 (Level 3)")
