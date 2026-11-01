@@ -44,12 +44,14 @@ def test_desktop_hud_get_endpoint(live_test_server):
         data = json.loads(raw1.decode("utf-8"))
         assert data["ok"] is True
         assert "tauri_v2_ready" in data
+        assert resp.getheader("Content-Length") == str(len(raw1))
 
     # Test cache: unchanged response
     with urllib.request.urlopen(req, timeout=5) as resp:
         assert resp.status == 200
         raw2 = resp.read()
         assert raw1 == raw2
+        assert resp.getheader("Content-Length") == str(len(raw2))
 
     # Mutate state to bump version
     payload = {"action": "elev_up", "step_mils": 5}

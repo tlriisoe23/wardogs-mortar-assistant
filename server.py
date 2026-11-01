@@ -200,6 +200,7 @@ DESKTOP_HUD_STATE: dict[str, Any] = {
 }
 DESKTOP_HUD_VERSION = 1
 DESKTOP_HUD_CACHE: tuple[int, bytes] = (0, b"{}")
+DESKTOP_HUD_LOCK = threading.Lock()
 
 
 async def generate_neural_tts(text: str, voice: str) -> bytes:
@@ -256,13 +257,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
         super().log_message(format, *args)
 
-    def _send_json(self, data: dict[str, Any], status_code: int = 200) -> None:
-        payload = json.dumps(data).encode('utf-8')
+    def _send_json_bytes(self, payload: bytes, status_code: int = 200) -> None:
         self.send_response(status_code)
         self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(payload)))
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(payload)
+
+    def _send_json(self, data: dict[str, Any], status_code: int = 200) -> None:
+        payload = json.dumps(data).encode('utf-8')
+        self._send_json_bytes(payload, status_code)
 
     def do_GET(self) -> None:
         try:
@@ -286,18 +291,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
 
         if parsed.path == '/api/desktop-hud':
-            global DESKTOP_HUD_VERSION, DESKTOP_HUD_CACHE
+            global DESKTOP_HUD_VERSION, DESKTOP_HUD_CACHE, DESKTOP_HUD_LOCK
             cache_ver, cache_bytes = DESKTOP_HUD_CACHE
-            if cache_ver != DESKTOP_HUD_VERSION:
-                cache_bytes = json.dumps(DESKTOP_HUD_STATE).encode('utf-8')
-                DESKTOP_HUD_CACHE = (DESKTOP_HUD_VERSION, cache_bytes)
+            ver = DESKTOP_HUD_VERSION
+            if cache_ver != ver:
+                with DESKTOP_HUD_LOCK:
+                    # Double-checked locking
+                    if DESKTOP_HUD_CACHE[0] != DESKTOP_HUD_VERSION:
+                        cache_bytes = json.dumps(DESKTOP_HUD_STATE).encode('utf-8')
+                        DESKTOP_HUD_CACHE = (DESKTOP_HUD_VERSION, cache_bytes)
+                    else:
+                        cache_bytes = DESKTOP_HUD_CACHE[1]
 
             try:
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(cache_bytes)
+                self._send_json_bytes(cache_bytes)
             except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
                 pass
             return
@@ -466,25 +473,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     step = max(-6400, min(6400, step))
                 except (ValueError, TypeError, OverflowError):
                     step = 5
-                if action == 'elev_up':
-                    current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) + step))
-                elif action == 'elev_down':
-                    current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) - step))
-                elif action == 'toggle_arc':
-                    DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
-                elif action == 'toggle_click_through':
-                    DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
-                elif action == 'lock_target':
-                    DESKTOP_HUD_STATE['locked_grid'] = str(body.get('grid') or 'LOCKED')[:100]
-                elif action == 'reset_target':
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
-                    DESKTOP_HUD_STATE['locked_grid'] = None
-                DESKTOP_HUD_STATE['last_action'] = action
-                DESKTOP_HUD_STATE['last_action_ts'] = time.time()
-                DESKTOP_HUD_VERSION += 1
-                self._send_json(DESKTOP_HUD_STATE)
+
+                with DESKTOP_HUD_LOCK:
+                    if action == 'elev_up':
+                        current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
+                        DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) + step))
+                    elif action == 'elev_down':
+                        current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
+                        DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) - step))
+                    elif action == 'toggle_arc':
+                        DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
+                    elif action == 'toggle_click_through':
+                        DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
+                    elif action == 'lock_target':
+                        DESKTOP_HUD_STATE['locked_grid'] = str(body.get('grid') or 'LOCKED')[:100]
+                    elif action == 'reset_target':
+                        DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
+                        DESKTOP_HUD_STATE['locked_grid'] = None
+                    DESKTOP_HUD_STATE['last_action'] = action
+                    DESKTOP_HUD_STATE['last_action_ts'] = time.time()
+                    DESKTOP_HUD_VERSION += 1
+                    current_state = dict(DESKTOP_HUD_STATE)
+
+                self._send_json(current_state)
                 return
             elif parsed.path == '/api/ocr/extract-image':
                 length = int(self.headers.get('Content-Length', '0') or 0)
