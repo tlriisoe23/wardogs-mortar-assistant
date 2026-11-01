@@ -158,3 +158,27 @@ class TestIndexHtmlA11y(unittest.TestCase):
                     has_aria_live or has_role_status or has_role_alert or has_role_log or parent_has_live,
                     f"Dynamic status element '{element_id}' is missing accessibility attributes (aria-live or role=status/alert)"
                 )
+
+    def test_how_to_use_modal_accessibility_and_escape(self):
+        """Verify native <dialog> Escape & backdrop-close fallback regression test for How-To-Use modal."""
+        dialog = self.soup.find('dialog', id='howToUseModal')
+        self.assertIsNotNone(dialog, "howToUseModal dialog not found")
+
+        # Verify accessible name
+        has_label = dialog.has_attr('aria-label')
+        has_labelledby = dialog.has_attr('aria-labelledby')
+        self.assertTrue(has_label or has_labelledby, "Dialog missing accessible name")
+        if has_labelledby:
+            label_id = dialog['aria-labelledby']
+            label_element = self.soup.find(id=label_id)
+            self.assertIsNotNone(label_element, f"Dialog labelledby element {label_id} not found")
+            self.assertTrue(bool(label_element.get_text(strip=True)), "Dialog label element is empty")
+
+        # Verify close control
+        close_btn = dialog.find('button', attrs={'type': 'submit'})
+        self.assertIsNotNone(close_btn, "Close button not found in dialog")
+        btn_label = close_btn.get('aria-label', '').strip() or close_btn.get('title', '').strip() or close_btn.get_text(strip=True)
+        self.assertTrue(bool(btn_label), "Close button missing accessible name")
+
+        # Verify no custom keydown handler (regression guard for native Escape reliance)
+        self.assertFalse(dialog.has_attr('onkeydown'), "Dialog should not have a custom onkeydown handler")
