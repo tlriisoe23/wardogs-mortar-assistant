@@ -19,7 +19,7 @@ import urllib.request
 import urllib.error
 import socket
 from typing import Optional, Tuple, Callable, Dict, Any, List
-from PIL import Image, ImageGrab, ImageOps
+from PIL import Image, ImageGrab, ImageOps  # type: ignore
 
 OMNICONVERT_URL = os.environ.get("OMNICONVERT_URL", "http://127.0.0.1:8100").rstrip("/")
 # qwen3-vl:2b-instruct smart_vision on ai-ctl-nuc observed at 12-18s per image; 15s caused intermittent timeouts.
@@ -112,10 +112,10 @@ def parse_chat_coord_line(line: str) -> Optional[Dict[str, Any]]:
     if x_val is None:
         m_comp = CompactGridRe.search(clean_no_ts)
         if m_comp:
-            cx = _decode_compact_grid(m_comp.group(1))
-            cy = _decode_compact_grid(m_comp.group(2))
-            if cx is not None and cy is not None and is_valid_wardogs_coord(cx, cy):
-                x_val, y_val = cx, cy
+            comp_cx = _decode_compact_grid(m_comp.group(1))
+            comp_cy = _decode_compact_grid(m_comp.group(2))
+            if comp_cx is not None and comp_cy is not None and is_valid_wardogs_coord(comp_cx, comp_cy):
+                x_val, y_val = comp_cx, comp_cy
 
     if x_val is None:
         for m_std in StandardPairRe.finditer(clean_no_ts):
@@ -186,10 +186,10 @@ def _extract_dual_pairs_from_line(clean: str, clean_no_ts: str) -> List[Dict[str
     if not pairs:
         comp_matches = []
         for m in CompactGridRe.finditer(clean_no_ts):
-            cx = _decode_compact_grid(m.group(1))
-            cy = _decode_compact_grid(m.group(2))
-            if cx is not None and cy is not None and is_valid_wardogs_coord(cx, cy):
-                comp_matches.append((cx, cy, m.start(), m.end()))
+            comp_cx = _decode_compact_grid(m.group(1))
+            comp_cy = _decode_compact_grid(m.group(2))
+            if comp_cx is not None and comp_cy is not None and is_valid_wardogs_coord(comp_cx, comp_cy):
+                comp_matches.append((comp_cx, comp_cy, m.start(), m.end()))
         if len(comp_matches) == 2:
             between = clean_no_ts[comp_matches[0][3]:comp_matches[1][2]]
             if DUAL_PAIR_CONNECTOR_RE.match(between):
