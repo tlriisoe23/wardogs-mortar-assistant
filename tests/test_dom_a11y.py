@@ -1,4 +1,5 @@
 import os
+import re
 import unittest
 from bs4 import BeautifulSoup
 
@@ -27,18 +28,23 @@ class TestIndexHtmlA11y(unittest.TestCase):
 
     def test_native_dialog_escape_key_handling(self):
         """Verify that native HTML <dialog> elements rely on built-in Escape key handling."""
-        # Search the HTML file for redundant keydown event listeners explicitly targeting Escape for dialogs
-        import re
-
         # Instead of generic regex, ensure the specific fallback dialog script doesn't bind a redundant keydown listener.
         dialog_scripts = self.soup.find_all('script')
         has_keydown_listener = False
+        found_fallback_script = False
         for script in dialog_scripts:
             content = script.string
             if content and 'initHowToUseDialogFallback' in content:
-                # Check that inside this specific fallback init function, we don't redundantly bind Escape
-                if re.search(r"addEventListener\(['\"]keydown['\"].*?Escape", content, re.IGNORECASE | re.DOTALL):
-                    has_keydown_listener = True
+                found_fallback_script = True
+
+                # Extract the function body roughly
+                func_match = re.search(r'function initHowToUseDialogFallback.*?}\)\(\);', content, re.IGNORECASE | re.DOTALL)
+                if func_match:
+                    func_body = func_match.group(0)
+                    if re.search(r"addEventListener\(\s*['\"]keydown['\"][^;]{0,400}?Escape", func_body, re.IGNORECASE | re.DOTALL):
+                        has_keydown_listener = True
+
+        self.assertTrue(found_fallback_script, 'initHowToUseDialogFallback script not found')
 
         self.assertFalse(
             has_keydown_listener,
