@@ -17,6 +17,7 @@ def live_test_server():
     finally:
         server.shutdown()
         server.server_close()
+        thread.join(timeout=2.0)
 
 def test_get_vk_name():
     assert get_vk_name(0x04) == "Middle Mouse (MMB)"

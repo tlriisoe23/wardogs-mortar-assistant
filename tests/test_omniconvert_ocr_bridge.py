@@ -116,6 +116,7 @@ def live_test_server():
     finally:
         server.shutdown()
         server.server_close()
+        thread.join(timeout=2.0)
 
 
 def test_post_extract_image_endpoint_success(live_test_server):
