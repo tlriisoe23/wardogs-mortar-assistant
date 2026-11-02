@@ -25,6 +25,30 @@ class TestIndexHtmlA11y(unittest.TestCase):
                 label_element = self.soup.find(id=label_id)
                 self.assertIsNotNone(label_element, f"Dialog labelledby element {label_id} not found")
 
+    def test_native_dialog_escape_key_handling(self):
+        """Verify that native HTML <dialog> elements rely on built-in Escape key handling."""
+        # Search the HTML file for redundant keydown event listeners explicitly targeting Escape for dialogs
+        import re
+
+        # Instead of generic regex, ensure the specific fallback dialog script doesn't bind a redundant keydown listener.
+        dialog_scripts = self.soup.find_all('script')
+        has_keydown_listener = False
+        for script in dialog_scripts:
+            content = script.string
+            if content and 'initHowToUseDialogFallback' in content:
+                # Check that inside this specific fallback init function, we don't redundantly bind Escape
+                if re.search(r"addEventListener\(['\"]keydown['\"].*?Escape", content, re.IGNORECASE | re.DOTALL):
+                    has_keydown_listener = True
+
+        self.assertFalse(
+            has_keydown_listener,
+            "Redundant keydown listener for Escape found in dialog fallback initialization script. "
+            "Native <dialog> elements should rely on built-in Escape handling."
+        )
+
+        # Verify that the dialog elements exist to be tested
+        self.assertTrue(len(self.soup.find_all('dialog')) > 0, "No dialogs found to verify")
+
     def test_tab_accessibility(self):
         """Verify that all tabs have the correct ARIA attributes."""
         tabs = self.soup.find_all(role='tab')
