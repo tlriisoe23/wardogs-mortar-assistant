@@ -63,5 +63,5 @@ def test_generate_neural_tts_upstream_timeout_recovery(capsys):
 
             captured = capsys.readouterr()
             assert "[TTS Warning] edge_tts failed" in captured.out
-            assert "timeout" in captured.out
+            # Removed assert "timeout" in captured.out because we no longer leak the raw exception message
             assert "[TTS Warning] gTTS failed" in captured.out

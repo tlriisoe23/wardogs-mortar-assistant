@@ -292,8 +292,14 @@ def extract_text_via_rapidocr(image_bytes: bytes, filename: str = "hud.png") -> 
             text = (data.get("text") or data.get("markdown") or "") if isinstance(data, dict) else ""
             entries = extract_all_coord_lines(_flatten_markdown_table(text))
             return {"ok": bool(text or entries), "text": text, "engine": "rapidocr", "entries": entries}
-    except Exception as exc:
-        return {"ok": False, "text": "", "engine": "rapidocr", "entries": [], "error": str(exc)}
+    except urllib.error.HTTPError as e:
+        try:
+            error_msg = f"HTTP Error {e.code}"
+        finally:
+            e.close()
+        return {"ok": False, "text": "", "engine": "rapidocr", "entries": [], "error": error_msg}
+    except Exception:
+        return {"ok": False, "text": "", "engine": "rapidocr", "entries": [], "error": "OCR extraction failed"}
 
 
 def extract_text_via_ollama_vlm(image_bytes: bytes) -> Dict[str, Any]:
@@ -317,8 +323,14 @@ def extract_text_via_ollama_vlm(image_bytes: bytes) -> Dict[str, Any]:
             text = (data.get("response") or data.get("text") or "") if isinstance(data, dict) else ""
             entries = extract_all_coord_lines(_flatten_markdown_table(text))
             return {"ok": bool(text or entries), "text": text, "engine": "qwen3-vl:2b-instruct", "entries": entries}
-    except Exception as exc:
-        return {"ok": False, "text": "", "engine": "qwen3-vl:2b-instruct", "entries": [], "error": str(exc)}
+    except urllib.error.HTTPError as e:
+        try:
+            error_msg = f"HTTP Error {e.code}"
+        finally:
+            e.close()
+        return {"ok": False, "text": "", "engine": "qwen3-vl:2b-instruct", "entries": [], "error": error_msg}
+    except Exception:
+        return {"ok": False, "text": "", "engine": "qwen3-vl:2b-instruct", "entries": [], "error": "OCR extraction failed"}
 
 
 def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", mode: str = "smart_vision") -> Dict[str, Any]:
@@ -386,8 +398,8 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
             "entries": [],
             "error": "OCR extraction failed"
         }
-    except Exception as exc:
-        print(f"[OCR Unexpected Error] {type(exc).__name__}: {exc}")
+    except Exception:
+        print(f"[OCR Unexpected Error] OCR extraction failed")
         return {
             "ok": False,
             "text": "",

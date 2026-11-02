@@ -220,8 +220,8 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
         audio_data = await asyncio.wait_for(_consume_edge_tts(), timeout=12.0)
         if len(audio_data) > 256:
             return audio_data
-    except Exception as e:
-        print(f"[TTS Warning] edge_tts failed: {e}. Falling back to gTTS.")
+    except Exception:
+        print(f"[TTS Warning] edge_tts failed. Falling back to gTTS.")
     try:
         import io
         from gtts import gTTS  # type: ignore
@@ -232,8 +232,8 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
         data = buf.getvalue()
         if len(data) > 256:
             return data
-    except Exception as e:
-        print(f"[TTS Warning] gTTS failed: {e}. Falling back to generated beep.")
+    except Exception:
+        print(f"[TTS Warning] gTTS failed. Falling back to generated beep.")
     import io, math, struct, wave
     buf = io.BytesIO()
     sample_rate = 22050
@@ -428,8 +428,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     print("[TTS Error] Upstream timed out")
                     self._send_json({"error": "TTS upstream timed out"}, status_code=504)
                     return
-                except Exception as e:
-                    print(f"[TTS Error] {e}")
+                except Exception:
+                    print(f"[TTS Error] TTS generation failed")
                     self._send_json({"error": "TTS generation failed"}, status_code=500)
                     return
 
