@@ -90,3 +90,11 @@ python -m pytest -q
 * `data/terrain/terrain_dem.json` — 20m hypsometric Digital Elevation Models (DEM) for Bakurani, Ozeti, and Zestafona
 * `data/map_callouts.json` — Sub-sector tactical landmark callouts
 * `tests/` — 83 deterministic offline unit & integration tests (`test_dom_a11y.py`, `test_mortar_calc.py`, `test_ocr_sniff.py`, `test_omniconvert_ocr_bridge.py`, `test_server.py`, `test_server_tts.py`, `test_targets_schema.py`, `test_tauri_desktop_wrapper.py`, `test_tauri_v3_evolution.py`, `test_v3_desktop_evolution.py`)
+
+---
+
+<!-- AUTO-REPO-INVENTORY:START -->
+## Automated Repository Inventory (Auto-Synced)
+
+- **Verification Suite (`pytest`):** `pytest -q` (`>= 11` test modules discovered)
+<!-- AUTO-REPO-INVENTORY:END -->

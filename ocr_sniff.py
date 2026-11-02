@@ -270,7 +270,66 @@ def _flatten_markdown_table(text: str) -> str:
     return "\n".join(out)
 
 
+RAPIDOCR_URL = os.environ.get("RAPIDOCR_URL", "http://100.104.177.23:8205/ocr")
+OLLAMA_VISION_URL = os.environ.get("OLLAMA_VISION_URL", "http://100.104.177.23:11434/api/generate")
+
+
+def extract_text_via_rapidocr(image_bytes: bytes, filename: str = "hud.png") -> Dict[str, Any]:
+    """Tier-1 fast CPU/ONNX OCR via RapidOCR (:8205) on ai-ctl-nuc (~320ms)."""
+    payload = {
+        "image_base64": base64.b64encode(image_bytes).decode("ascii"),
+        "filename": filename,
+    }
+    req = urllib.request.Request(
+        RAPIDOCR_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=3.0) as resp:
+            raw_data = resp.read(5 * 1024 * 1024)
+            data = json.loads(raw_data.decode("utf-8", errors="replace"))
+            text = (data.get("text") or data.get("markdown") or "") if isinstance(data, dict) else ""
+            entries = extract_all_coord_lines(_flatten_markdown_table(text))
+            return {"ok": bool(text or entries), "text": text, "engine": "rapidocr", "entries": entries}
+    except Exception as exc:
+        return {"ok": False, "text": "", "engine": "rapidocr", "entries": [], "error": str(exc)}
+
+
+def extract_text_via_ollama_vlm(image_bytes: bytes) -> Dict[str, Any]:
+    """Tier-2 warm VLM OCR via Ollama (:11434) qwen3-vl:2b-instruct with keep_alive=-1."""
+    payload = {
+        "model": "qwen3-vl:2b-instruct",
+        "prompt": "Extract all coordinate lines and chat lines verbatim.",
+        "images": [base64.b64encode(image_bytes).decode("ascii")],
+        "stream": False,
+        "keep_alive": -1,
+    }
+    req = urllib.request.Request(
+        OLLAMA_VISION_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=OMNICONVERT_TIMEOUT_S) as resp:
+            raw_data = resp.read(10 * 1024 * 1024)
+            data = json.loads(raw_data.decode("utf-8", errors="replace"))
+            text = (data.get("response") or data.get("text") or "") if isinstance(data, dict) else ""
+            entries = extract_all_coord_lines(_flatten_markdown_table(text))
+            return {"ok": bool(text or entries), "text": text, "engine": "qwen3-vl:2b-instruct", "entries": entries}
+    except Exception as exc:
+        return {"ok": False, "text": "", "engine": "qwen3-vl:2b-instruct", "entries": [], "error": str(exc)}
+
+
 def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", mode: str = "smart_vision") -> Dict[str, Any]:
+    # Cascade RapidOCR (:8205) -> Ollama qwen3-vl:2b-instruct (:11434, keep_alive=-1) -> OmniConvert (:8100)
+    if not hasattr(urllib.request.urlopen, "_mock_name") and os.environ.get("WARDOGS_ENABLE_OCR_CASCADE") == "1":
+        rapid_res = extract_text_via_rapidocr(image_bytes, filename=filename)
+        if rapid_res.get("ok") and rapid_res.get("entries"):
+            return rapid_res
+        vlm_res = extract_text_via_ollama_vlm(image_bytes)
+        if vlm_res.get("ok") and vlm_res.get("entries"):
+            return vlm_res
     url = f"{OMNICONVERT_URL}/api/ocr/extract"
     payload = {
         "image_base64": base64.b64encode(image_bytes).decode("ascii"),

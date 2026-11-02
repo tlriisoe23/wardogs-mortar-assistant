@@ -206,9 +206,41 @@
             z-index: 20;
             pointer-events: none;
         }
+    
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 8px;
+            background: #38bdf8;
+            color: #090d16;
+            padding: 6px 12px;
+            z-index: 10000;
+            border-radius: 4px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .skip-link:focus,
+        .skip-link:focus-visible {
+            top: 8px;
+        }
+        :focus-visible {
+            outline: 2px solid #38bdf8;
+            outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
     </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <main id="main-content" role="main">
 
     <!-- DRAGGABLE TITLEBAR -->
     <div class="pip-header" data-tauri-drag-region>
@@ -250,6 +282,7 @@
         </div>
     </div>
 
+        </main>
     <script>
         let currentMode = 'split'; // 'split', 'fpv3d', 'spotter'
         let currentTelemetry = {

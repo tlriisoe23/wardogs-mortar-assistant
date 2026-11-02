@@ -5,7 +5,7 @@
   "identifier": "net.tail0908d2.wardogs-mortar-assistant",
   "build": {
     "frontendDist": "../",
-    "devUrl": "http://127.0.0.1:8765"
+    "devUrl": "http://127.0.0.1:8099"
   },
   "app": {
     "withGlobalTauri": true,
@@ -13,7 +13,7 @@
       {
         "label": "main",
         "title": "WARDOGS Mortar & Artillery Assistant HUD",
-        "url": "http://127.0.0.1:8765/index.html?hud=1",
+        "url": "http://127.0.0.1:8099/index.html?hud=1",
         "width": 1540,
         "height": 940,
         "resizable": true,
@@ -24,7 +24,7 @@
       {
         "label": "pip-recon",
         "title": "WARDOGS Recon Scope & Terrain DEM",
-        "url": "http://127.0.0.1:8765/recon.html",
+        "url": "http://127.0.0.1:8099/recon.html",
         "width": 520,
         "height": 380,
         "resizable": true,
