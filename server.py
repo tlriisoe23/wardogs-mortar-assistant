@@ -452,7 +452,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             parsed = urllib.parse.urlparse(self.path)
             if parsed.path == '/api/desktop-hud':
-                length = int(self.headers.get('Content-Length', '0') or 0)
+                try:
+                    length = int(self.headers.get('Content-Length', '0') or 0)
+                except ValueError:
+                    length = 0
                 length = min(length, 1024 * 64)  # Safe byte decoding guard against OOM
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
@@ -494,7 +497,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._send_raw(payload)
                 return
             elif parsed.path == '/api/ocr/extract-image':
-                length = int(self.headers.get('Content-Length', '0') or 0)
+                try:
+                    length = int(self.headers.get('Content-Length', '0') or 0)
+                except ValueError:
+                    length = 0
                 if length > 10 * 1024 * 1024:
                     self._send_json({"error": "Payload exceeds 10 MiB cap"}, status_code=413)
                     return
@@ -520,7 +526,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json({"error": "Base64 decode failed"}, status_code=400)
                     return
 
-                filename = str(body.get('filename') or 'hud.png')[:200]
+                raw_filename = str(body.get('filename') or 'hud.png')[:200]
+                filename = os.path.basename(raw_filename.replace('\\', '/'))
                 mode = str(body.get('mode') or 'smart_vision')[:100]
 
                 res = extract_text_via_omniconvert(image_bytes, filename=filename, mode=mode)
