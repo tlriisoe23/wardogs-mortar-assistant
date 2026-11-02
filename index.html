@@ -1253,13 +1253,13 @@
                 WARDOGS // BALLISTIC ASSISTANT
             </h1>
             <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; background: #090e15; padding: 3px; border-radius: 6px; border: 1px solid var(--border-dim);">
-                <button type="button" class="map-mode-btn active" id="wpnBtn_mortar" onclick="selectWeaponSystem('mortar', 'high')" style="padding: 4px 8px; font-size: 11px;">
+                <button type="button" class="map-mode-btn active" id="wpnBtn_mortar" aria-pressed="true" onclick="selectWeaponSystem('mortar', 'high')" style="padding: 4px 8px; font-size: 11px;">
                     🟢 L81 MORTAR (132–684m)
                 </button>
-                <button type="button" class="map-mode-btn" id="wpnBtn_sph2_high" onclick="selectWeaponSystem('sph2', 'high')" style="padding: 4px 8px; font-size: 11px;">
+                <button type="button" class="map-mode-btn" id="wpnBtn_sph2_high" aria-pressed="false" onclick="selectWeaponSystem('sph2', 'high')" style="padding: 4px 8px; font-size: 11px;">
                     🟠 SPH-2 HIGH ARC (780–2629m)
                 </button>
-                <button type="button" class="map-mode-btn" id="wpnBtn_sph2_low" onclick="selectWeaponSystem('sph2', 'low')" style="padding: 4px 8px; font-size: 11px;">
+                <button type="button" class="map-mode-btn" id="wpnBtn_sph2_low" aria-pressed="false" onclick="selectWeaponSystem('sph2', 'low')" style="padding: 4px 8px; font-size: 11px;">
                     🔵 SPH-2 LOW ARC (1181–2629m)
                 </button>
             </div>
@@ -1393,13 +1393,13 @@
                                 </select>
 
                                 <div style="display: flex; gap: 4px; align-items: center; margin-left: 4px;">
-                                    <button type="button" class="map-mode-btn active" id="modeBtnTarget" onclick="setMapClickMode('target')">
+                                    <button type="button" class="map-mode-btn active" id="modeBtnTarget" aria-pressed="true" onclick="setMapClickMode('target')">
                                         🔴 Target (Left-Click)
                                     </button>
-                                    <button type="button" class="map-mode-btn" id="modeBtnMortar" onclick="setMapClickMode('mortar')">
+                                    <button type="button" class="map-mode-btn" id="modeBtnMortar" aria-pressed="false" onclick="setMapClickMode('mortar')">
                                         🔵 Mortar (Right-Click)
                                     </button>
-                                    <button type="button" class="map-mode-btn impact-mode" id="modeBtnImpact" onclick="setMapClickMode('impact')">
+                                    <button type="button" class="map-mode-btn impact-mode" id="modeBtnImpact" aria-pressed="false" onclick="setMapClickMode('impact')">
                                         💥 Splash (Shift+Click)
                                     </button>
                                 </div>
@@ -2585,9 +2585,16 @@
 
         function setMapClickMode(mode) {
             mapClickMode = mode;
-            document.getElementById('modeBtnTarget').className = (mode === 'target') ? 'map-mode-btn active' : 'map-mode-btn';
-            document.getElementById('modeBtnMortar').className = (mode === 'mortar') ? 'map-mode-btn active' : 'map-mode-btn';
-            document.getElementById('modeBtnImpact').className = (mode === 'impact') ? 'map-mode-btn impact-mode active' : 'map-mode-btn impact-mode';
+            const setBtn = (id, active, baseClass) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.className = active ? baseClass + ' active' : baseClass;
+                    el.setAttribute('aria-pressed', String(active));
+                }
+            };
+            setBtn('modeBtnTarget', mode === 'target', 'map-mode-btn');
+            setBtn('modeBtnMortar', mode === 'mortar', 'map-mode-btn');
+            setBtn('modeBtnImpact', mode === 'impact', 'map-mode-btn impact-mode');
 
             const ind = document.getElementById('mapModeIndicator');
             if (mode === 'target') {
@@ -5283,7 +5290,10 @@
 
             const setBtn = (id, active) => {
                 const el = document.getElementById(id);
-                if (el) el.className = active ? 'map-mode-btn active' : 'map-mode-btn';
+                if (el) {
+                    el.className = active ? 'map-mode-btn active' : 'map-mode-btn';
+                    el.setAttribute('aria-pressed', String(active));
+                }
             };
             setBtn('wpnBtn_mortar', isMortar);
             setBtn('wpnBtn_sph2_high', isSphHigh);
