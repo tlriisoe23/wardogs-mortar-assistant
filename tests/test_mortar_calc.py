@@ -415,3 +415,32 @@ def test_if_name_main(monkeypatch, capsys):
 
     captured = capsys.readouterr()
     assert "--- Test Solution" in captured.out
+
+def test_cli_help_contract(monkeypatch, capsys):
+    import sys
+    import runpy
+    # Test --help flag
+    monkeypatch.setattr(sys, "argv", ["mortar_calc.py", "--help"])
+
+    script_path = os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(__file__))),
+        "mortar_calc.py")
+
+    try:
+        runpy.run_path(script_path, run_name="__main__")
+    except SystemExit as e:
+        assert e.code == 0
+
+    captured = capsys.readouterr()
+    assert "Usage: python mortar_calc.py [--test | -h | --help]" in captured.out
+
+    # Assert interactive commands are present
+    expected_commands = [
+        "m <x> <y>", "t <x> <y>", "wpn <m|sph_h|sph_l>",
+        "add <m>", "drop <m>", "right <m>", "left <m>",
+        "miss <long> <right>", "impact <x> <y>", "calc", "q"
+    ]
+    for cmd in expected_commands:
+        assert cmd in captured.out

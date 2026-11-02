@@ -69,7 +69,7 @@ python server.py
 ```
 Your browser will open `http://localhost:8765`.
 
-### CLI Mode & Automated Verification Suite (`83` Tests)
+### CLI Mode & Automated Verification Suite (`181` Tests)
 ```powershell
 python mortar_calc.py
 python -m pytest -q
@@ -89,7 +89,7 @@ python -m pytest -q
 * `targets_db.py` — 30 pre-aimed community blind-fire hotspots across Bakurani, Ozeti, Zestafona, and the Firing Range
 * `data/terrain/terrain_dem.json` — 20m hypsometric Digital Elevation Models (DEM) for Bakurani, Ozeti, and Zestafona
 * `data/map_callouts.json` — Sub-sector tactical landmark callouts
-* `tests/` — 83 deterministic offline unit & integration tests (`test_dom_a11y.py`, `test_mortar_calc.py`, `test_ocr_sniff.py`, `test_omniconvert_ocr_bridge.py`, `test_server.py`, `test_server_tts.py`, `test_targets_schema.py`, `test_tauri_desktop_wrapper.py`, `test_tauri_v3_evolution.py`, `test_v3_desktop_evolution.py`)
+* `tests/` — 181 deterministic offline unit & integration tests (`test_dom_a11y.py`, `test_mortar_calc.py`, `test_ocr_sniff.py`, `test_omniconvert_ocr_bridge.py`, `test_server.py`, `test_server_tts.py`, `test_solver_hardening.py`, `test_targets_schema.py`, `test_tauri_desktop_wrapper.py`, `test_tauri_v3_evolution.py`, `test_v3_desktop_evolution.py`)
 
 ---
 
