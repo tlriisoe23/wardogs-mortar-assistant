@@ -39,6 +39,7 @@ TTS_TIMEOUT_SECONDS = 20.0
 
 # In-memory target cache for /api/targets
 TARGETS_CACHE: dict[str, Any] = {"mtime_ns": 0, "size": 0, "payload": b"[]"}
+TARGETS_CACHE_LOCK = threading.Lock()
 
 # Human-readable names for Windows Virtual-Key (VK) codes
 VK_NAMES = {
@@ -176,6 +177,10 @@ class GlobalPTTWatcher:
 
 GLOBAL_PTT_WATCHER = GlobalPTTWatcher()
 
+DESKTOP_HUD_LOCK = threading.Lock()
+DESKTOP_HUD_VERSION = 1
+DESKTOP_HUD_CACHE: dict[str, Any] = {"version": 0, "payload": b"{}"}
+
 DESKTOP_HUD_STATE: dict[str, Any] = {
     "ok": True,
     "tauri_v2_ready": True,
@@ -259,13 +264,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
         super().log_message(format, *args)
 
-    def _send_json(self, data: dict[str, Any], status_code: int = 200) -> None:
-        payload = json.dumps(data).encode('utf-8')
+    def _send_raw(self, payload: bytes, status_code: int = 200) -> None:
         self.send_response(status_code)
         self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(payload)))
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(payload)
+
+    def _send_json(self, data: dict[str, Any], status_code: int = 200) -> None:
+        self._send_raw(json.dumps(data).encode('utf-8'), status_code)
 
     def do_GET(self) -> None:
         try:
@@ -289,7 +297,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
 
         if parsed.path == '/api/desktop-hud':
-            self._send_json(DESKTOP_HUD_STATE)
+            with DESKTOP_HUD_LOCK:
+                if DESKTOP_HUD_CACHE["version"] != DESKTOP_HUD_VERSION:
+                    DESKTOP_HUD_CACHE["payload"] = json.dumps(
+                        DESKTOP_HUD_STATE).encode('utf-8')
+                    DESKTOP_HUD_CACHE["version"] = DESKTOP_HUD_VERSION
+                payload = DESKTOP_HUD_CACHE["payload"]
+            self._send_raw(payload)
             return
 
         # Global In-Game Push-To-Talk (PTT) endpoints
@@ -357,36 +371,34 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/targets':
             targets_file = os.path.join(DIRECTORY, 'data', 'targets.json')
 
-            try:
-                st = os.stat(targets_file)
-                mtime_ns = st.st_mtime_ns
-                size = st.st_size
-            except OSError:
-                mtime_ns = 0
-                size = 0
-
-            if mtime_ns == 0:
-                payload = b"[]"
-                TARGETS_CACHE["mtime_ns"] = 0
-                TARGETS_CACHE["size"] = 0
-                TARGETS_CACHE["payload"] = payload
-            elif mtime_ns != TARGETS_CACHE.get("mtime_ns") or size != TARGETS_CACHE.get("size"):
+            with TARGETS_CACHE_LOCK:
                 try:
-                    with open(targets_file, 'rb') as f:
-                        payload = f.read()
-                    TARGETS_CACHE["mtime_ns"] = mtime_ns
-                    TARGETS_CACHE["size"] = size
-                    TARGETS_CACHE["payload"] = payload
+                    st = os.stat(targets_file)
+                    mtime_ns = st.st_mtime_ns
+                    size = st.st_size
                 except OSError:
+                    mtime_ns = 0
+                    size = 0
+
+                if mtime_ns == 0:
                     payload = b"[]"
-            else:
-                payload = TARGETS_CACHE["payload"]
+                    TARGETS_CACHE["mtime_ns"] = 0
+                    TARGETS_CACHE["size"] = 0
+                    TARGETS_CACHE["payload"] = payload
+                elif mtime_ns != TARGETS_CACHE.get("mtime_ns") or size != TARGETS_CACHE.get("size"):
+                    try:
+                        with open(targets_file, 'rb') as f:
+                            payload = f.read()
+                        TARGETS_CACHE["mtime_ns"] = mtime_ns
+                        TARGETS_CACHE["size"] = size
+                        TARGETS_CACHE["payload"] = payload
+                    except OSError:
+                        payload = b"[]"
+                else:
+                    payload = TARGETS_CACHE["payload"]
 
             try:
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(payload)
+                self._send_raw(payload)
             except (ConnectionResetError, BrokenPipeError, ConnectionAbortedError):
                 pass
             return
@@ -470,9 +482,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 elif action == 'reset_target':
                     DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
                     DESKTOP_HUD_STATE['locked_grid'] = None
-                DESKTOP_HUD_STATE['last_action'] = action
-                DESKTOP_HUD_STATE['last_action_ts'] = time.time()
-                self._send_json(DESKTOP_HUD_STATE)
+                with DESKTOP_HUD_LOCK:
+                    DESKTOP_HUD_STATE['last_action'] = action
+                    DESKTOP_HUD_STATE['last_action_ts'] = time.time()
+                    global DESKTOP_HUD_VERSION
+                    DESKTOP_HUD_VERSION += 1
+                    DESKTOP_HUD_CACHE["payload"] = json.dumps(
+                        DESKTOP_HUD_STATE).encode('utf-8')
+                    DESKTOP_HUD_CACHE["version"] = DESKTOP_HUD_VERSION
+                    payload = DESKTOP_HUD_CACHE["payload"]
+                self._send_raw(payload)
                 return
             elif parsed.path == '/api/ocr/extract-image':
                 length = int(self.headers.get('Content-Length', '0') or 0)

@@ -122,3 +122,57 @@ def test_api_targets_endpoint(live_test_server):
             f.write(original_content)
         time.sleep(0.1)
         os.utime(targets_file, None)
+
+def test_targets_invalidate(live_test_server):
+    import urllib.request, json, os, time
+    from server import DIRECTORY
+
+    targets_file = os.path.join(DIRECTORY, 'data', 'targets.json')
+    with open(targets_file, 'rb') as f:
+        original_content = f.read()
+
+    try:
+        # Initial fetch to populate cache
+        req = urllib.request.Request(f"{live_test_server}/api/targets")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            assert resp.status == 200
+            data1 = json.loads(resp.read().decode("utf-8"))
+
+        # Write new data to invalidate cache
+        new_data = [{"id": "cache_test", "map": "test", "name": "cache test", "category": "test", "x": 10, "y": 20, "notes": "", "voice_triggers": []}]
+        with open(targets_file, 'w') as f:
+            json.dump(new_data, f)
+
+        # Give OS a tiny moment
+        time.sleep(0.05)
+
+        req2 = urllib.request.Request(f"{live_test_server}/api/targets")
+        with urllib.request.urlopen(req2, timeout=5) as resp:
+            assert resp.status == 200
+            data2 = json.loads(resp.read().decode("utf-8"))
+
+
+        assert data1 != data2
+        assert data2 == new_data
+
+        # Post to HUD and check invalidation
+        payload = {"action": "elev_up", "step_mils": 5}
+        req_post = urllib.request.Request(
+            f"{live_test_server}/api/desktop-hud",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req_post, timeout=5) as resp:
+            assert resp.status == 200
+
+        req_hud = urllib.request.Request(f"{live_test_server}/api/desktop-hud")
+        with urllib.request.urlopen(req_hud, timeout=5) as resp:
+            assert resp.status == 200
+            data_hud = json.loads(resp.read().decode("utf-8"))
+            assert data_hud["last_action"] == "elev_up"
+
+    finally:
+        with open(targets_file, 'wb') as f:
+            f.write(original_content)
+        time.sleep(0.05)
+        os.utime(targets_file, None)
