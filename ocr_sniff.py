@@ -18,6 +18,7 @@ import threading
 import urllib.request
 import urllib.error
 import socket
+import logging
 from typing import Optional, Tuple, Callable, Dict, Any, List
 from PIL import Image, ImageGrab, ImageOps  # type: ignore
 
@@ -293,6 +294,7 @@ def extract_text_via_rapidocr(image_bytes: bytes, filename: str = "hud.png") -> 
             entries = extract_all_coord_lines(_flatten_markdown_table(text))
             return {"ok": bool(text or entries), "text": text, "engine": "rapidocr", "entries": entries}
     except Exception as exc:
+        logging.getLogger(__name__).warning('OCR extraction failed (%s): %s', "rapidocr", exc)
         return {"ok": False, "text": "", "engine": "rapidocr", "entries": [], "error": "OCR extraction failed"}
 
 
@@ -318,6 +320,7 @@ def extract_text_via_ollama_vlm(image_bytes: bytes) -> Dict[str, Any]:
             entries = extract_all_coord_lines(_flatten_markdown_table(text))
             return {"ok": bool(text or entries), "text": text, "engine": "qwen3-vl:2b-instruct", "entries": entries}
     except Exception as exc:
+        logging.getLogger(__name__).warning('OCR extraction failed (%s): %s', "qwen3-vl:2b-instruct", exc)
         return {"ok": False, "text": "", "engine": "qwen3-vl:2b-instruct", "entries": [], "error": "OCR extraction failed"}
 
 

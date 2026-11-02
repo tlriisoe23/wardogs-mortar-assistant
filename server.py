@@ -456,6 +456,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     length = int(self.headers.get('Content-Length', '0') or 0)
                 except ValueError:
                     length = 0
+                length = max(0, length)
                 length = min(length, 1024 * 64)  # Safe byte decoding guard against OOM
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
@@ -501,6 +502,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     length = int(self.headers.get('Content-Length', '0') or 0)
                 except ValueError:
                     length = 0
+                length = max(0, length)
                 if length > 10 * 1024 * 1024:
                     self._send_json({"error": "Payload exceeds 10 MiB cap"}, status_code=413)
                     return
@@ -527,7 +529,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 raw_filename = str(body.get('filename') or 'hud.png')[:200]
-                filename = os.path.basename(raw_filename.replace('\\', '/'))
+                filename = os.path.basename(raw_filename.replace('\\', '/')) or 'hud.png'
                 mode = str(body.get('mode') or 'smart_vision')[:100]
 
                 res = extract_text_via_omniconvert(image_bytes, filename=filename, mode=mode)
