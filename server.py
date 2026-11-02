@@ -204,10 +204,15 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
     try:
         import edge_tts  # type: ignore
         communicate = edge_tts.Communicate(text, voice, rate="+8%")
-        audio_data = b""
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_data += chunk["data"]
+
+        async def _consume_edge_tts() -> bytes:
+            audio_data = b""
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    audio_data += chunk["data"]
+            return audio_data
+
+        audio_data = await asyncio.wait_for(_consume_edge_tts(), timeout=12.0)
         if len(audio_data) > 256:
             return audio_data
     except Exception as e:
@@ -218,7 +223,7 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
         buf = io.BytesIO()
         def _gtts_sync() -> None:
             gTTS(text=text, lang="en", tld="us").write_to_fp(buf)
-        await asyncio.to_thread(_gtts_sync)
+        await asyncio.wait_for(asyncio.to_thread(_gtts_sync), timeout=6.0)
         data = buf.getvalue()
         if len(data) > 256:
             return data
