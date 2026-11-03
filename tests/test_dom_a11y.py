@@ -25,6 +25,30 @@ class TestIndexHtmlA11y(unittest.TestCase):
                 label_element = self.soup.find(id=label_id)
                 self.assertIsNotNone(label_element, f"Dialog labelledby element {label_id} not found")
 
+    def test_dialog_relies_on_native_escape_handling(self):
+        """Verify that native HTML <dialog> elements rely on the browser's built-in Escape key handling."""
+        # Find all script elements and target them directly rather than searching the entire HTML string
+        script_tags = self.soup.find_all('script')
+        for script in script_tags:
+            if not script.string:
+                continue
+
+            content = script.string.lower()
+
+            # If the script interacts with dialog.close(), ensure it doesn't do so inside an Escape key listener
+            # as native dialogs automatically close on Escape.
+            if 'escape' in content and '.close()' in content:
+                lines = content.splitlines()
+                for line in lines:
+                    if ('escape' in line or 'esc' in line) and '.close()' in line:
+                        self.fail(f"Found redundant Escape keydown listener calling .close() in script block. Native <dialog> handles Escape natively.")
+
+        # Ensure no inline onkeydown handler handles escape
+        dialogs = self.soup.find_all('dialog')
+        for dialog in dialogs:
+            if dialog.has_attr('onkeydown'):
+                self.assertNotIn('Escape', dialog['onkeydown'], f"Dialog {dialog.get('id')} has a redundant inline onkeydown handler for Escape.")
+
     def test_tab_accessibility(self):
         """Verify that all tabs have the correct ARIA attributes."""
         tabs = self.soup.find_all(role='tab')
