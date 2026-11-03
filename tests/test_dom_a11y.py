@@ -27,27 +27,40 @@ class TestIndexHtmlA11y(unittest.TestCase):
 
     def test_dialog_relies_on_native_escape_handling(self):
         """Verify that native HTML <dialog> elements rely on the browser's built-in Escape key handling."""
+        import re
+        import os
+
+        script_contents = []
+
         # Find all script elements and target them directly rather than searching the entire HTML string
         script_tags = self.soup.find_all('script')
         for script in script_tags:
-            if not script.string:
-                continue
+            if script.has_attr('src'):
+                src = script['src']
+                # Try to load local JS files referenced by <script src=...>
+                # Only if they resolve inside the repo
+                if not src.startswith('http://') and not src.startswith('https://'):
+                    repo_root = os.path.dirname(os.path.dirname(__file__))
+                    local_js_path = os.path.join(repo_root, src.split('?')[0].lstrip('/'))
+                    if os.path.isfile(local_js_path):
+                        with open(local_js_path, 'r', encoding='utf-8') as f:
+                            script_contents.append((src, f.read().lower()))
+            if script.string:
+                script_contents.append(('inline_script', script.string.lower()))
 
-            content = script.string.lower()
+        pattern = re.compile(r"(key\s*===?\s*['\"](escape|esc)['\"]|keycode\s*===?\s*27)[\s\S]{0,300}?\.close\(\)")
 
-            # If the script interacts with dialog.close(), ensure it doesn't do so inside an Escape key listener
-            # as native dialogs automatically close on Escape.
-            if 'escape' in content and '.close()' in content:
-                lines = content.splitlines()
-                for line in lines:
-                    if ('escape' in line or 'esc' in line) and '.close()' in line:
-                        self.fail(f"Found redundant Escape keydown listener calling .close() in script block. Native <dialog> handles Escape natively.")
+        for src, content in script_contents:
+            if pattern.search(content):
+                self.fail(f"Found redundant Escape keydown listener calling .close() in {src}. Native <dialog> handles Escape natively.")
 
         # Ensure no inline onkeydown handler handles escape
         dialogs = self.soup.find_all('dialog')
         for dialog in dialogs:
             if dialog.has_attr('onkeydown'):
-                self.assertNotIn('Escape', dialog['onkeydown'], f"Dialog {dialog.get('id')} has a redundant inline onkeydown handler for Escape.")
+                onkeydown_lower = dialog['onkeydown'].lower()
+                if pattern.search(onkeydown_lower) or 'escape' in onkeydown_lower or 'keycode == 27' in onkeydown_lower:
+                    self.fail(f"Dialog {dialog.get('id')} has a redundant inline onkeydown handler for Escape.")
 
     def test_tab_accessibility(self):
         """Verify that all tabs have the correct ARIA attributes."""
