@@ -8,6 +8,7 @@ and Forward Observer (FO) fire adjustments.
 """
 
 import math
+import bisect
 from typing import Dict, List, Optional, Tuple, Any, Callable
 
 # Official WARDOGS L81 Mortar Ballistics Table [distance_m, elevation_mils]
@@ -256,13 +257,9 @@ def _sph_drag_coeff(speed: float) -> float:
         return SPH_GC_Y[0]
     if speed >= SPH_GC_X[-1]:
         return SPH_GC_Y[-1]
-    lo, hi = 0, len(SPH_GC_X) - 1
-    while lo + 1 < hi:
-        mid = (lo + hi) // 2
-        if SPH_GC_X[mid] <= speed:
-            lo = mid
-        else:
-            hi = mid
+    idx = bisect.bisect_right(SPH_GC_X, speed)
+    lo = idx - 1
+    hi = idx
     frac = (speed - SPH_GC_X[lo]) / (SPH_GC_X[hi] - SPH_GC_X[lo])
     return SPH_GC_Y[lo] + (SPH_GC_Y[hi] - SPH_GC_Y[lo]) * frac
 
