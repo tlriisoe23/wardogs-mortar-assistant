@@ -222,3 +222,36 @@ class TestIndexHtmlA11y(unittest.TestCase):
             p = os.path.join(repo_root, "maps", map_file)
             with Image.open(p) as im:
                 self.assertEqual(im.size, (4096, 4096), f"{map_file} should be 4096x4096 (Level 3)")
+
+    def test_selector_buttons_hide_emoji_from_screen_readers(self):
+        """Verify that primary selector buttons hide their emojis using aria-hidden='true' but retain accessible text."""
+        button_ids = ['wpnBtn_mortar', 'wpnBtn_sph2_high', 'wpnBtn_sph2_low', 'modeBtnTarget', 'modeBtnMortar', 'modeBtnImpact']
+        for btn_id in button_ids:
+            btn = self.soup.find(id=btn_id)
+            self.assertIsNotNone(btn, f"Button {btn_id} not found in index.html")
+
+            # Find the aria-hidden span containing the emoji
+            hidden_span = btn.find('span', attrs={'aria-hidden': 'true'})
+            self.assertIsNotNone(hidden_span, f"Button {btn_id} is missing an aria-hidden span for its emoji")
+
+            emoji_text = hidden_span.get_text(strip=True)
+            self.assertTrue(bool(emoji_text), f"Button {btn_id} aria-hidden span is empty (should contain emoji)")
+            self.assertIn(emoji_text, ['🟢', '🟠', '🔵', '🔴', '💥'], f"Button {btn_id} aria-hidden span contains unexpected emoji: {emoji_text}")
+
+            # Extract accessible text by removing the aria-hidden span's text
+            full_text = btn.get_text(separator=' ', strip=True)
+            accessible_text = full_text.replace(emoji_text, '').strip()
+
+            self.assertTrue(bool(accessible_text), f"Button {btn_id} has no accessible text remaining after hiding the emoji")
+
+        # Check JS rendered dual-arc-pill buttons
+        import re
+        import os
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        index_path = os.path.join(repo_root, 'index.html')
+        with open(index_path, 'r', encoding='utf-8') as f:
+            html = f.read()
+
+        self.assertIn('<span aria-hidden="true">🟠</span> HIGH', html)
+        self.assertIn('<span aria-hidden="true">🔵</span> LOW', html)
+        self.assertIn('<span aria-hidden="true">🎯</span> Lock & Aim', html)
