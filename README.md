@@ -82,7 +82,7 @@ python -m pytest -q
 * `index.html` — Primary Single-Screen Zero-Scroll Tactical Web HUD (Top-Bar Smart Omni-Input, PTT & Auto-OCR + Page 1 Tactical Map & Fire Control + Page 2 Voice Setup & Activity Log)
 * `classic-fire-control.html` & `assets/classic/` — Embedded 8.5× Deep-Zoom Classic Fire Control map with 2-way `postMessage` sync
 * `recon.html` — Dedicated multi-monitor 3D Topographic Recon & 1m/px Satellite Spotter Scope pop-out window (`BroadcastChannel` sync)
-* `server.py` — Local HTTP server, Neural Edge-TTS endpoint, Global `win32` PTT key hook, and OCR/Clipboard endpoints (`/api/ocr/status`, `/api/ocr/toggle`, `/api/ocr/scan-now`, `/api/ocr/extract-image`, `/api/desktop-hud`)
+* `server.py` — Local HTTP server, Neural Edge-TTS endpoint, Global `win32` PTT key hook, and OCR/Clipboard endpoints (`/api/ocr/status`, `/api/ocr/toggle`, `/api/ocr/scan_once`, `/api/ocr/extract-image`, `/api/desktop-hud`)
 * `mortar_calc.py` — Python ballistics engine (`L81 Mortar` & `SPH-2` High/Low Arc, RK4 drag solver, DEM lookup)
 * `ocr_sniff.py` — Multiline Windows WinRT OCR (`winocr` `res['lines']` + 2×/3× `BICUBIC` autocontrast upscaling + single-line dual `Gun -> Target` parser + `recent_events` ring buffer) + In-Game `Ctrl+C` Clipboard coordinate watcher (`CL` / `TARGET` / `HIT`)
 * `src-tauri/` — Tauri v3.0 Native Rust/WebView2 Desktop HUD (`mortar_calc.rs`, `dem.rs`, global hotkeys, and PIP mini-HUD)
