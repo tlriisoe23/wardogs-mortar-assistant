@@ -19,6 +19,8 @@ from mortar_calc import (
 )
 from ocr_sniff import parse_chat_coord_line
 
+import random
+
 NAN = float("nan")
 INF = float("inf")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -78,6 +80,43 @@ def test_interpolate_table_empty_and_just_outside_bounds():
     assert interpolate_elevation(1180.9, "sph2", "low") is None
     assert interpolate_elevation(2629.1, "sph2", "low") is None
 
+
+# --- Drag Coefficient Hot-path Equivalence -------------------------------------
+
+def test_sph_drag_coeff_bisect_equivalence():
+    """Ensure the bisect optimization returns exact bit-for-bit results."""
+    def old_drag(speed: float) -> float:
+        if speed <= mortar_calc.SPH_GC_X[0]:
+            return mortar_calc.SPH_GC_Y[0]
+        if speed >= mortar_calc.SPH_GC_X[-1]:
+            return mortar_calc.SPH_GC_Y[-1]
+        lo, hi = 0, len(mortar_calc.SPH_GC_X) - 1
+        while lo + 1 < hi:
+            mid = (lo + hi) // 2
+            if mortar_calc.SPH_GC_X[mid] <= speed:
+                lo = mid
+            else:
+                hi = mid
+        frac = (speed - mortar_calc.SPH_GC_X[lo]) / (mortar_calc.SPH_GC_X[hi] - mortar_calc.SPH_GC_X[lo])
+        return mortar_calc.SPH_GC_Y[lo] + (mortar_calc.SPH_GC_Y[hi] - mortar_calc.SPH_GC_Y[lo]) * frac
+
+    test_vals = []
+    test_vals.extend(mortar_calc.SPH_GC_X)
+    for i in range(len(mortar_calc.SPH_GC_X) - 1):
+        test_vals.append((mortar_calc.SPH_GC_X[i] + mortar_calc.SPH_GC_X[i+1]) / 2.0)
+    test_vals.extend([-10.0, -0.1, 600.1, 1000.0])
+
+    random.seed(42)
+    for _ in range(500):
+        test_vals.append(random.uniform(-100.0, 700.0))
+
+    for v in test_vals:
+        assert old_drag(v) == mortar_calc._sph_drag_coeff(v)
+
+    # Also verify that solve_sph2_terrain_mils matches expected baseline
+    # for a few representative inputs to ensure the outer solver is unharmed.
+    assert solve_sph2_terrain_mils("high", 2000.0, 1000.0, 50.0) == pytest.approx(997.2, abs=0.5)
+    assert solve_sph2_terrain_mils("low", 1500.0, 450.0, -25.0) == pytest.approx(433.0, abs=0.5)
 
 # --- Range boundaries ----------------------------------------------------------
 
