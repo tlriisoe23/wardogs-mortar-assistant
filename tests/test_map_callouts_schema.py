@@ -1,6 +1,9 @@
 import json
 import os
 
+def _is_numeric(val):
+    return isinstance(val, (int, float)) and not isinstance(val, bool)
+
 def test_map_callouts_json_schema():
     callouts_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'map_callouts.json')
     assert os.path.exists(callouts_file), "data/map_callouts.json must exist"
@@ -15,14 +18,20 @@ def test_map_callouts_json_schema():
         assert isinstance(map_data, dict), f"Data for map '{map_name}' should be a dictionary"
 
         assert "locations" in map_data, f"Map '{map_name}' must have a 'locations' array"
-        assert isinstance(map_data["locations"], list), f"'locations' in map '{map_name}' should be a list"
+        locations = map_data["locations"]
+        assert isinstance(locations, list), f"'locations' in map '{map_name}' should be a list"
 
-        for idx, item in enumerate(map_data["locations"]):
+        for idx, item in enumerate(locations):
             assert isinstance(item, dict), f"Item at index {idx} in map '{map_name}' should be a dictionary"
 
             # Required keys and their types
             assert "name" in item and isinstance(item["name"], str), f"Missing or invalid 'name' in map '{map_name}' at index {idx}"
-            assert "x" in item and isinstance(item["x"], (int, float)), f"Missing or invalid 'x' in map '{map_name}' at index {idx}"
-            assert "y" in item and isinstance(item["y"], (int, float)), f"Missing or invalid 'y' in map '{map_name}' at index {idx}"
-            assert "normX" in item and isinstance(item["normX"], (int, float)), f"Missing or invalid 'normX' in map '{map_name}' at index {idx}"
-            assert "normY" in item and isinstance(item["normY"], (int, float)), f"Missing or invalid 'normY' in map '{map_name}' at index {idx}"
+
+            assert "x" in item and _is_numeric(item["x"]), f"Missing or invalid 'x' in map '{map_name}' at index {idx}"
+            assert "y" in item and _is_numeric(item["y"]), f"Missing or invalid 'y' in map '{map_name}' at index {idx}"
+
+            assert "normX" in item and _is_numeric(item["normX"]), f"Missing or invalid 'normX' in map '{map_name}' at index {idx}"
+            assert 0.0 <= item["normX"] <= 1.0, f"'normX' out of bounds [0, 1] in map '{map_name}' at index {idx}"
+
+            assert "normY" in item and _is_numeric(item["normY"]), f"Missing or invalid 'normY' in map '{map_name}' at index {idx}"
+            assert 0.0 <= item["normY"] <= 1.0, f"'normY' out of bounds [0, 1] in map '{map_name}' at index {idx}"
