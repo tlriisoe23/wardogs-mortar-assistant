@@ -293,6 +293,12 @@ def extract_text_via_rapidocr(image_bytes: bytes, filename: str = "hud.png") -> 
             text = (data.get("text") or data.get("markdown") or "") if isinstance(data, dict) else ""
             entries = extract_all_coord_lines(_flatten_markdown_table(text))
             return {"ok": bool(text or entries), "text": text, "engine": "rapidocr", "entries": entries}
+    except urllib.error.HTTPError as e:
+        try:
+            logging.getLogger(__name__).warning('OCR extraction failed (%s): HTTP %s', "rapidocr", e.code)
+        finally:
+            e.close()
+        return {"ok": False, "text": "", "engine": "rapidocr", "entries": [], "error": "OCR extraction failed"}
     except Exception as exc:
         logging.getLogger(__name__).warning('OCR extraction failed (%s): %s', "rapidocr", exc)
         return {"ok": False, "text": "", "engine": "rapidocr", "entries": [], "error": "OCR extraction failed"}
@@ -319,6 +325,12 @@ def extract_text_via_ollama_vlm(image_bytes: bytes) -> Dict[str, Any]:
             text = (data.get("response") or data.get("text") or "") if isinstance(data, dict) else ""
             entries = extract_all_coord_lines(_flatten_markdown_table(text))
             return {"ok": bool(text or entries), "text": text, "engine": "qwen3-vl:2b-instruct", "entries": entries}
+    except urllib.error.HTTPError as e:
+        try:
+            logging.getLogger(__name__).warning('OCR extraction failed (%s): HTTP %s', "qwen3-vl:2b-instruct", e.code)
+        finally:
+            e.close()
+        return {"ok": False, "text": "", "engine": "qwen3-vl:2b-instruct", "entries": [], "error": "OCR extraction failed"}
     except Exception as exc:
         logging.getLogger(__name__).warning('OCR extraction failed (%s): %s', "qwen3-vl:2b-instruct", exc)
         return {"ok": False, "text": "", "engine": "qwen3-vl:2b-instruct", "entries": [], "error": "OCR extraction failed"}
