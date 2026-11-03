@@ -1254,13 +1254,13 @@
             </h1>
             <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; background: #090e15; padding: 3px; border-radius: 6px; border: 1px solid var(--border-dim);">
                 <button type="button" class="map-mode-btn active" id="wpnBtn_mortar" aria-pressed="true" onclick="selectWeaponSystem('mortar', 'high')" style="padding: 4px 8px; font-size: 11px;">
-                    🟢 L81 MORTAR (132–684m)
+                    <span aria-hidden="true">🟢</span> L81 MORTAR (132–684m)
                 </button>
                 <button type="button" class="map-mode-btn" id="wpnBtn_sph2_high" aria-pressed="false" onclick="selectWeaponSystem('sph2', 'high')" style="padding: 4px 8px; font-size: 11px;">
-                    🟠 SPH-2 HIGH ARC (780–2629m)
+                    <span aria-hidden="true">🟠</span> SPH-2 HIGH ARC (780–2629m)
                 </button>
                 <button type="button" class="map-mode-btn" id="wpnBtn_sph2_low" aria-pressed="false" onclick="selectWeaponSystem('sph2', 'low')" style="padding: 4px 8px; font-size: 11px;">
-                    🔵 SPH-2 LOW ARC (1181–2629m)
+                    <span aria-hidden="true">🔵</span> SPH-2 LOW ARC (1181–2629m)
                 </button>
             </div>
             <span class="badge-live" id="sysStatusBadge" role="status" aria-live="polite" aria-atomic="true">SYSTEM READY</span>
@@ -1394,13 +1394,13 @@
 
                                 <div style="display: flex; gap: 4px; align-items: center; margin-left: 4px;">
                                     <button type="button" class="map-mode-btn active" id="modeBtnTarget" aria-pressed="true" onclick="setMapClickMode('target')">
-                                        🔴 Target (Left-Click)
+                                        <span aria-hidden="true">🔴</span> Target (Left-Click)
                                     </button>
                                     <button type="button" class="map-mode-btn" id="modeBtnMortar" aria-pressed="false" onclick="setMapClickMode('mortar')">
-                                        🔵 Mortar (Right-Click)
+                                        <span aria-hidden="true">🔵</span> Mortar (Right-Click)
                                     </button>
                                     <button type="button" class="map-mode-btn impact-mode" id="modeBtnImpact" aria-pressed="false" onclick="setMapClickMode('impact')">
-                                        💥 Splash (Shift+Click)
+                                        <span aria-hidden="true">💥</span> Splash (Shift+Click)
                                     </button>
                                 </div>
                             </div>
@@ -4365,7 +4365,7 @@
                         <div class="target-action-box">
                             <span class="target-coords">${t.x.toFixed(2)}, ${t.y.toFixed(2)}</span>
                             <button class="target-fire-btn" onclick="lockTargetById('${t.id}')">
-                                🎯 Lock & Aim
+                                <span aria-hidden="true">🎯</span> Lock & Aim
                             </button>
                         </div>
                     </div>
@@ -5601,8 +5601,8 @@
                         const hStr = highVal !== null ? `${Math.round(highVal)} MIL` : 'N/A';
                         const lStr = lowVal !== null ? `${Math.round(lowVal)} MIL` : '<1181m';
                         dualArcPillsEl.innerHTML = `
-                            <button type="button" class="dual-arc-pill ${effectiveArc === 'high' ? 'active' : ''}" onclick="selectWeaponSystem('sph2', 'high')" title="Switch to SPH-2 High Arc">🟠 HIGH: ${hStr}</button>
-                            <button type="button" class="dual-arc-pill ${effectiveArc === 'low' ? 'active' : ''}" onclick="selectWeaponSystem('sph2', 'low')" title="Switch to SPH-2 Low Arc">🔵 LOW: ${lStr}</button>
+                            <button type="button" class="dual-arc-pill ${effectiveArc === 'high' ? 'active' : ''}" onclick="selectWeaponSystem('sph2', 'high')" title="Switch to SPH-2 High Arc"><span aria-hidden="true">🟠</span> HIGH: ${hStr}</button>
+                            <button type="button" class="dual-arc-pill ${effectiveArc === 'low' ? 'active' : ''}" onclick="selectWeaponSystem('sph2', 'low')" title="Switch to SPH-2 Low Arc"><span aria-hidden="true">🔵</span> LOW: ${lStr}</button>
                         `;
                     }
                 }
