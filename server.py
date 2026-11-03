@@ -36,6 +36,7 @@ DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 TTS_CACHE: dict[str, bytes] = {}
 MAX_TTS_TEXT_LENGTH = 1000
 TTS_TIMEOUT_SECONDS = 20.0
+EDGE_TTS_STREAM_TIMEOUT_S = 12.0
 
 # In-memory target cache for /api/targets
 TARGETS_CACHE: dict[str, Any] = {"mtime_ns": 0, "size": 0, "payload": b"[]"}
@@ -217,9 +218,11 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
                     audio_data += chunk["data"]
             return audio_data
 
-        audio_data = await asyncio.wait_for(_consume_edge_tts(), timeout=12.0)
+        audio_data = await asyncio.wait_for(_consume_edge_tts(), timeout=EDGE_TTS_STREAM_TIMEOUT_S)
         if len(audio_data) > 256:
             return audio_data
+    except asyncio.TimeoutError:
+        print("[TTS Timeout] edge-tts stream exceeded timeout")
     except Exception as e:
         print(f"[TTS Warning] edge_tts failed: {e}. Falling back to gTTS.")
     try:
