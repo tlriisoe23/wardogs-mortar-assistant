@@ -74,7 +74,57 @@ def test_desktop_hud_post_non_dict_payload(live_test_server):
     with urllib.request.urlopen(req, timeout=5) as resp:
         assert resp.status == 200
         data = json.loads(resp.read().decode("utf-8"))
-        assert "last_action" in data
+        # Invalid payload results in empty action, which should not mutate state
+        assert data.get("last_action") != ""
+
+def test_desktop_hud_post_unknown_action(live_test_server):
+    payload = {"action": "some_unknown_action", "step_mils": 10}
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"}
+    )
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        assert resp.status == 200
+        data = json.loads(resp.read().decode("utf-8"))
+        # Unknown action should not update last_action
+        assert data.get("last_action") != "some_unknown_action"
+
+def test_desktop_hud_post_concurrent_atomic(live_test_server):
+    import server
+    # Reset offset for this test
+    with server.DESKTOP_HUD_LOCK:
+        server.DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
+        server.DESKTOP_HUD_VERSION += 1
+        server.DESKTOP_HUD_CACHE["payload"] = json.dumps(server.DESKTOP_HUD_STATE).encode('utf-8')
+        server.DESKTOP_HUD_CACHE["version"] = server.DESKTOP_HUD_VERSION
+
+    payload = {"action": "elev_up", "step_mils": 1}
+    data_bytes = json.dumps(payload).encode("utf-8")
+
+    def _post():
+        req = urllib.request.Request(
+            f"{live_test_server}/api/desktop-hud",
+            data=data_bytes,
+            headers={"Content-Type": "application/json"}
+        )
+        urllib.request.urlopen(req, timeout=5)
+
+    threads = []
+    for _ in range(50):
+        t = threading.Thread(target=_post)
+        threads.append(t)
+
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    req = urllib.request.Request(f"{live_test_server}/api/desktop-hud")
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        assert resp.status == 200
+        data = json.loads(resp.read().decode("utf-8"))
+        assert data["elevation_mils_offset"] == 50
 
 def test_api_targets_endpoint(live_test_server):
     import os, time
