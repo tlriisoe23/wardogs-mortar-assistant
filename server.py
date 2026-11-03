@@ -205,6 +205,15 @@ DESKTOP_HUD_STATE: dict[str, Any] = {
 }
 
 
+def _update_desktop_hud_state(updates: dict[str, Any]) -> None:
+    global DESKTOP_HUD_VERSION
+    with DESKTOP_HUD_LOCK:
+        DESKTOP_HUD_STATE.update(updates)
+        DESKTOP_HUD_VERSION += 1
+        DESKTOP_HUD_CACHE["payload"] = json.dumps(DESKTOP_HUD_STATE).encode('utf-8')
+        DESKTOP_HUD_CACHE["version"] = DESKTOP_HUD_VERSION
+
+
 async def generate_neural_tts(text: str, voice: str) -> bytes:
     try:
         import edge_tts  # type: ignore
@@ -471,29 +480,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     step = max(-6400, min(6400, step))
                 except (ValueError, TypeError, OverflowError):
                     step = 5
+                updates: dict[str, Any] = {}
                 if action == 'elev_up':
                     current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) + step))
+                    updates['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) + step))
                 elif action == 'elev_down':
                     current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) - step))
+                    updates['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) - step))
                 elif action == 'toggle_arc':
-                    DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
+                    updates['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
                 elif action == 'toggle_click_through':
-                    DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
+                    updates['click_through'] = not DESKTOP_HUD_STATE['click_through']
                 elif action == 'lock_target':
-                    DESKTOP_HUD_STATE['locked_grid'] = str(body.get('grid') or 'LOCKED')[:100]
+                    updates['locked_grid'] = str(body.get('grid') or 'LOCKED')[:100]
                 elif action == 'reset_target':
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
-                    DESKTOP_HUD_STATE['locked_grid'] = None
+                    updates['elevation_mils_offset'] = 0
+                    updates['locked_grid'] = None
+
+                if updates:
+                    updates['last_action'] = action
+                    updates['last_action_ts'] = time.time()
+                    _update_desktop_hud_state(updates)
+
                 with DESKTOP_HUD_LOCK:
-                    DESKTOP_HUD_STATE['last_action'] = action
-                    DESKTOP_HUD_STATE['last_action_ts'] = time.time()
-                    global DESKTOP_HUD_VERSION
-                    DESKTOP_HUD_VERSION += 1
-                    DESKTOP_HUD_CACHE["payload"] = json.dumps(
-                        DESKTOP_HUD_STATE).encode('utf-8')
-                    DESKTOP_HUD_CACHE["version"] = DESKTOP_HUD_VERSION
+                    if DESKTOP_HUD_CACHE["version"] == 0:
+                        DESKTOP_HUD_CACHE["payload"] = json.dumps(DESKTOP_HUD_STATE).encode('utf-8')
                     payload = DESKTOP_HUD_CACHE["payload"]
                 self._send_raw(payload)
                 return
