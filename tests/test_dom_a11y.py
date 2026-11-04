@@ -196,6 +196,24 @@ class TestIndexHtmlA11y(unittest.TestCase):
                     f"Dynamic status element '{element_id}' is missing accessibility attributes (aria-live or role=status/alert)"
                 )
 
+
+    def test_recon_live_regions(self):
+        """Verify that recon callout and hazard banner have aria-live='polite' and aria-atomic='true'."""
+        recon_html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'recon.html')
+        with open(recon_html_path, 'r', encoding='utf-8') as f:
+            recon_html = f.read()
+        recon_soup = BeautifulSoup(recon_html, 'html.parser')
+
+        callout = recon_soup.find(id='pipCalloutText')
+        self.assertIsNotNone(callout)
+        self.assertEqual(callout.get('aria-live'), 'polite')
+        self.assertEqual(callout.get('aria-atomic'), 'true')
+
+        hazard = recon_soup.find(id='ridgeHazardBanner')
+        self.assertIsNotNone(hazard)
+        self.assertEqual(hazard.get('aria-live'), 'polite')
+        self.assertEqual(hazard.get('aria-atomic'), 'true')
+
     def test_simplified_single_screen_ergonomics_and_pruned_bloat(self):
         """Verify AIS-487 feature pruning and single-screen zero-friction controls."""
         self.assertIsNotNone(self.soup.find(id='topPttToggleBtn'))
