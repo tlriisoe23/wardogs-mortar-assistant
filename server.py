@@ -278,7 +278,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def _send_json(self, data: dict[str, Any], status_code: int = 200) -> None:
         self._send_raw(json.dumps(data).encode('utf-8'), status_code)
 
-    def _read_json_body(self, max_bytes: int) -> dict[str, Any] | None:
+    def _read_json_body(self, max_bytes: int, too_large_msg: str = "Payload exceeds max size", not_object_msg: str = "JSON body must be an object") -> dict[str, Any] | None:
         try:
             length = int(self.headers.get('Content-Length', '0') or 0)
             if length < 0:
@@ -287,7 +287,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._send_json({"error": "Invalid Content-Length"}, status_code=400)
             return None
         if length > max_bytes:
-            self._send_json({"error": "Payload exceeds max size"}, status_code=413)
+            self._send_json({"error": too_large_msg}, status_code=413)
             return None
         raw = self.rfile.read(length) if length > 0 else b'{}'
         try:
@@ -296,7 +296,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._send_json({"error": "Invalid JSON body"}, status_code=400)
             return None
         if not isinstance(body, dict):
-            self._send_json({"error": "JSON body must be an object"}, status_code=400)
+            self._send_json({"error": not_object_msg}, status_code=400)
             return None
         return body
 
@@ -479,13 +479,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if parsed.path == '/api/desktop-hud':
                 body = self._read_json_body(1024 * 64)
                 if body is None:
-                    # In previous behavior, failure would fall back to an empty dictionary, allowing 200 OK.
-                    # As requested, we now enforce validation via the helper (which returns 400).
-                    # If we should strictly preserve the "invalid JSON still gives 200 OK with empty body"
-                    # for backwards compatibility, wait, the user prompt says:
-                    # "Replace the existing ad-hoc json.loads try/except blocks with this helper.
-                    # Preserve the exact behavior and response shape for valid inputs."
-                    # Returning 400 is specified in step 6 and 7.
                     return
                 action = str(body.get('action') or '').strip()
                 try:
@@ -520,7 +513,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._send_raw(payload)
                 return
             elif parsed.path == '/api/ocr/extract-image':
-                body = self._read_json_body(10 * 1024 * 1024)
+                body = self._read_json_body(
+                    10 * 1024 * 1024,
+                    too_large_msg="Payload exceeds 10 MiB cap",
+                    not_object_msg="Body must be a JSON object"
+                )
                 if body is None:
                     return
                 image_b64 = body.get('image_base64')
