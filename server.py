@@ -38,6 +38,8 @@ MAX_TTS_TEXT_LENGTH = 1000
 TTS_TIMEOUT_SECONDS = 20.0
 EDGE_TTS_STREAM_TIMEOUT_S = 12.0
 
+MAX_BODY_BYTES = 10 * 1024 * 1024
+
 # In-memory target cache for /api/targets
 TARGETS_CACHE: dict[str, Any] = {"mtime_ns": 0, "size": 0, "payload": b"[]"}
 TARGETS_CACHE_LOCK = threading.Lock()
@@ -278,6 +280,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def _send_json(self, data: dict[str, Any], status_code: int = 200) -> None:
         self._send_raw(json.dumps(data).encode('utf-8'), status_code)
 
+    def _read_body_length(self, max_bytes: int = MAX_BODY_BYTES) -> int | None:
+        try:
+            length = int(self.headers.get('Content-Length', '0') or 0)
+        except ValueError:
+            length = 0
+
+        if length < 0:
+            self._send_json({"error": "invalid Content-Length"}, status_code=400)
+            return None
+        if length > max_bytes:
+            self._send_json({"error": "payload too large"}, status_code=413)
+            return None
+        return length
+
     def do_GET(self) -> None:
         try:
             self._do_GET_inner()
@@ -455,12 +471,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             parsed = urllib.parse.urlparse(self.path)
             if parsed.path == '/api/desktop-hud':
-                try:
-                    length = int(self.headers.get('Content-Length', '0') or 0)
-                except ValueError:
-                    length = 0
-                length = max(0, length)
-                length = min(length, 1024 * 64)  # Safe byte decoding guard against OOM
+                length = self._read_body_length(1024 * 64)
+                if length is None:
+                    return
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
                     body = json.loads(raw.decode('utf-8', errors='replace'))
@@ -501,13 +514,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._send_raw(payload)
                 return
             elif parsed.path == '/api/ocr/extract-image':
-                try:
-                    length = int(self.headers.get('Content-Length', '0') or 0)
-                except ValueError:
-                    length = 0
-                length = max(0, length)
-                if length > 10 * 1024 * 1024:
-                    self._send_json({"error": "Payload exceeds 10 MiB cap"}, status_code=413)
+                length = self._read_body_length()
+                if length is None:
                     return
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
