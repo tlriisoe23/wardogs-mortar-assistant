@@ -143,6 +143,10 @@ def test_api_targets_endpoint(live_test_server):
                      "voice_triggers": []}]
         with open(targets_file, 'w') as f:
             json.dump(new_data, f)
+        st = os.stat(targets_file)
+        os.utime(
+            targets_file,
+            ns=(st.st_atime_ns, st.st_mtime_ns + 1_000_000_000))
 
         req = urllib.request.Request(f"{live_test_server}/api/targets")
         with urllib.request.urlopen(req, timeout=5) as resp:
@@ -154,7 +158,10 @@ def test_api_targets_endpoint(live_test_server):
     finally:
         with open(targets_file, 'wb') as f:
             f.write(original_content)
-        os.utime(targets_file, None)
+        st = os.stat(targets_file)
+        os.utime(
+            targets_file,
+            ns=(st.st_atime_ns, st.st_mtime_ns + 1_000_000_000))
 
 
 def test_targets_invalidate(live_test_server):
@@ -175,6 +182,10 @@ def test_targets_invalidate(live_test_server):
                      "voice_triggers": []}]
         with open(targets_file, 'w') as f:
             json.dump(new_data, f)
+        st = os.stat(targets_file)
+        os.utime(
+            targets_file,
+            ns=(st.st_atime_ns, st.st_mtime_ns + 1_000_000_000))
 
         req2 = urllib.request.Request(f"{live_test_server}/api/targets")
         with urllib.request.urlopen(req2, timeout=5) as resp:
@@ -202,7 +213,10 @@ def test_targets_invalidate(live_test_server):
     finally:
         with open(targets_file, 'wb') as f:
             f.write(original_content)
-        os.utime(targets_file, None)
+        st = os.stat(targets_file)
+        os.utime(
+            targets_file,
+            ns=(st.st_atime_ns, st.st_mtime_ns + 1_000_000_000))
 
 
 def test_ptt_config_endpoint(live_test_server):
@@ -257,27 +271,28 @@ def test_ocr_status_endpoint(live_test_server):
 
 
 def test_api_tts_endpoint_missing_text(live_test_server):
-    try:
-        req = urllib.request.Request(f"{live_test_server}/api/tts")
+    req = urllib.request.Request(f"{live_test_server}/api/tts")
+    with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError) as e:
-        assert getattr(e, "code", None) == 400
+    assert exc.value.code == 400
+    exc.value.close()
 
 
 def test_api_tts_endpoint_text_too_long(live_test_server):
-    try:
-        long_text = "a" * 1001
-        req = urllib.request.Request(
-            f"{live_test_server}/api/tts?text={long_text}")
+    long_text = "a" * 1001
+    req = urllib.request.Request(
+        f"{live_test_server}/api/tts?text={long_text}")
+    with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError) as e:
-        assert getattr(e, "code", None) == 413
+    assert exc.value.code == 413
+    exc.value.close()
 
 
 def test_api_tts_endpoint_success(live_test_server):
-    text = urllib.parse.quote("Hello")
+    import time
+    text = urllib.parse.quote(f"Hello_Timeout_{time.time()}")
     req = urllib.request.Request(f"{live_test_server}/api/tts?text={text}")
     with urllib.request.urlopen(req, timeout=5) as resp:
         assert resp.status == 200
@@ -317,15 +332,19 @@ def test_ocr_scan_once_endpoint(live_test_server):
 
 
 def test_ocr_extract_image_endpoint_large_payload(live_test_server):
+    req = urllib.request.Request(
+        f"{live_test_server}/api/ocr/extract-image",
+        data=b"a" * (11 * 1024 * 1024),
+        headers={"Content-Type": "application/json"}
+    )
     try:
-        req = urllib.request.Request(
-            f"{live_test_server}/api/ocr/extract-image",
-            data=b"a" * (11 * 1024 * 1024),
-            headers={"Content-Type": "application/json"}
-        )
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError):
+        pytest.fail("Expected HTTPError or Connection error for large payload")
+    except urllib.error.HTTPError as exc:
+        assert exc.code == 413
+        exc.close()
+    except (ConnectionResetError, BrokenPipeError, urllib.error.URLError):
         pass
 
 
@@ -337,16 +356,16 @@ def test_ocr_extract_image_endpoint_invalid_payloads(live_test_server):
         (json.dumps({"image_base64": ""}).encode('utf-8'), 400),
     ]
     for data, expected_code in invalid_payloads:
-        try:
-            req = urllib.request.Request(
-                f"{live_test_server}/api/ocr/extract-image",
-                data=data,
-                headers={"Content-Type": "application/json"}
-            )
+        req = urllib.request.Request(
+            f"{live_test_server}/api/ocr/extract-image",
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        with pytest.raises(urllib.error.HTTPError) as exc:
             with urllib.request.urlopen(req, timeout=5):
                 pass
-        except (urllib.error.HTTPError, urllib.error.URLError) as e:
-            assert getattr(e, "code", None) == expected_code
+        assert exc.value.code == expected_code
+        exc.value.close()
 
 
 def test_ocr_extract_image_endpoint_valid(live_test_server, monkeypatch):
@@ -359,6 +378,7 @@ def test_ocr_extract_image_endpoint_valid(live_test_server, monkeypatch):
     mock_extract = mock.MagicMock(return_value={"ok": True, "entries": [
                                   {"x": 1, "y": 2, "role": "test",
                                    "raw_line": "test"}]})
+
     monkeypatch.setattr('server.extract_text_via_omniconvert', mock_extract)
     req = urllib.request.Request(
         f"{live_test_server}/api/ocr/extract-image",
@@ -382,44 +402,45 @@ def test_server_do_head(live_test_server):
 
 
 def test_do_post_not_found(live_test_server):
-    try:
-        req = urllib.request.Request(
-            f"{live_test_server}/api/missing",
-            data=b"{}",
-            headers={"Content-Type": "application/json"}
-        )
+    req = urllib.request.Request(
+        f"{live_test_server}/api/missing",
+        data=b"{}",
+        headers={"Content-Type": "application/json"}
+    )
+    with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError) as e:
-        assert getattr(e, "code", None) == 404
+    assert exc.value.code == 404
+    exc.value.close()
 
 
 def test_api_tts_endpoint_timeout(live_test_server, monkeypatch):
     import asyncio
-    monkeypatch.setattr(
-        'server.generate_neural_tts',
-        mock.AsyncMock(
-            side_effect=asyncio.TimeoutError))
-    text = urllib.parse.quote("Hello")
+    import server
+    server.generate_neural_tts = mock.MagicMock(
+        side_effect=asyncio.TimeoutError)
+    import time
+    text = urllib.parse.quote(f"Hello_Timeout_{time.time()}")
     req = urllib.request.Request(f"{live_test_server}/api/tts?text={text}")
-    try:
+    with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError) as e:
-        assert getattr(e, "code", None) == 504
+    assert exc.value.code == 504
+    exc.value.close()
 
 
 def test_api_tts_endpoint_exception(live_test_server, monkeypatch):
-    monkeypatch.setattr(
-        'server.generate_neural_tts', mock.AsyncMock(
-            side_effect=Exception("Test TTS Error")))
-    text = urllib.parse.quote("Hello")
+    import server
+    server.generate_neural_tts = mock.MagicMock(
+        side_effect=Exception("Test TTS Error"))
+    import time
+    text = urllib.parse.quote(f"Hello_Exception_{time.time()}")
     req = urllib.request.Request(f"{live_test_server}/api/tts?text={text}")
-    try:
+    with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError) as e:
-        assert getattr(e, "code", None) == 500
+    assert exc.value.code == 500
+    exc.value.close()
 
 
 def test_do_post_invalid_json(live_test_server):
@@ -452,21 +473,26 @@ def test_server_do_get_internal_error(live_test_server, monkeypatch):
     monkeypatch.setattr('server.Handler._do_GET_inner',
                         mock.MagicMock(side_effect=Exception("Test Error")))
     req = urllib.request.Request(f"{live_test_server}/api/health")
-    try:
+    with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError) as e:
-        assert getattr(e, "code", None) == 500
+    assert exc.value.code == 500
+    exc.value.close()
 
 
 def test_server_do_post_internal_error(live_test_server, monkeypatch):
-    monkeypatch.setattr('server.urllib.parse.urlparse',
-                        mock.MagicMock(side_effect=Exception("Test Error")))
+    monkeypatch.setattr('server.json.dumps',
+                        mock.MagicMock(
+                            side_effect=[Exception("Test Error"),
+                                         '{"error": "error"}']))
     req = urllib.request.Request(
         f"{live_test_server}/api/desktop-hud",
-        method="POST")
-    try:
+        data=b"{}",
+        headers={"Content-Type": "application/json"},
+        method="POST"
+    )
+    with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError) as e:
-        assert getattr(e, "code", None) == 500
+    assert exc.value.code == 500
+    exc.value.close()
