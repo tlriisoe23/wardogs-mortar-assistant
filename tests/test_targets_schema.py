@@ -23,8 +23,8 @@ def test_targets_json_schema():
         assert "category" in item, "Missing 'category'"
         assert item["category"] in valid_categories, f"Invalid category: {item['category']}"
 
-        assert "x" in item and isinstance(item["x"], (int, float))
-        assert "y" in item and isinstance(item["y"], (int, float))
+        assert "x" in item and isinstance(item["x"], (int, float)) and not isinstance(item["x"], bool)
+        assert "y" in item and isinstance(item["y"], (int, float)) and not isinstance(item["y"], bool)
 
         assert "notes" in item and isinstance(item["notes"], str)
 
