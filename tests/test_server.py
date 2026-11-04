@@ -275,8 +275,10 @@ def test_api_tts_endpoint_missing_text(live_test_server):
     with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    assert exc.value.code == 400
-    exc.value.close()
+    try:
+        assert exc.value.code == 400
+    finally:
+        exc.value.close()
 
 
 def test_api_tts_endpoint_text_too_long(live_test_server):
@@ -286,8 +288,10 @@ def test_api_tts_endpoint_text_too_long(live_test_server):
     with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    assert exc.value.code == 413
-    exc.value.close()
+    try:
+        assert exc.value.code == 413
+    finally:
+        exc.value.close()
 
 
 def test_api_tts_endpoint_success(live_test_server):
@@ -342,8 +346,10 @@ def test_ocr_extract_image_endpoint_large_payload(live_test_server):
             pass
         pytest.fail("Expected HTTPError or Connection error for large payload")
     except urllib.error.HTTPError as exc:
-        assert exc.code == 413
-        exc.close()
+        try:
+            assert exc.code == 413
+        finally:
+            exc.close()
     except (ConnectionResetError, BrokenPipeError, urllib.error.URLError):
         pass
 
@@ -364,8 +370,10 @@ def test_ocr_extract_image_endpoint_invalid_payloads(live_test_server):
         with pytest.raises(urllib.error.HTTPError) as exc:
             with urllib.request.urlopen(req, timeout=5):
                 pass
-        assert exc.value.code == expected_code
-        exc.value.close()
+        try:
+            assert exc.value.code == expected_code
+        finally:
+            exc.value.close()
 
 
 def test_ocr_extract_image_endpoint_valid(live_test_server, monkeypatch):
@@ -410,8 +418,10 @@ def test_do_post_not_found(live_test_server):
     with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    assert exc.value.code == 404
-    exc.value.close()
+    try:
+        assert exc.value.code == 404
+    finally:
+        exc.value.close()
 
 
 def test_api_tts_endpoint_timeout(live_test_server, monkeypatch):
@@ -425,8 +435,10 @@ def test_api_tts_endpoint_timeout(live_test_server, monkeypatch):
     with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    assert exc.value.code == 504
-    exc.value.close()
+    try:
+        assert exc.value.code == 504
+    finally:
+        exc.value.close()
 
 
 def test_api_tts_endpoint_exception(live_test_server, monkeypatch):
@@ -439,8 +451,10 @@ def test_api_tts_endpoint_exception(live_test_server, monkeypatch):
     with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    assert exc.value.code == 500
-    exc.value.close()
+    try:
+        assert exc.value.code == 500
+    finally:
+        exc.value.close()
 
 
 def test_do_post_invalid_json(live_test_server):
@@ -476,8 +490,10 @@ def test_server_do_get_internal_error(live_test_server, monkeypatch):
     with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    assert exc.value.code == 500
-    exc.value.close()
+    try:
+        assert exc.value.code == 500
+    finally:
+        exc.value.close()
 
 
 def test_server_do_post_internal_error(live_test_server, monkeypatch):
@@ -494,5 +510,7 @@ def test_server_do_post_internal_error(live_test_server, monkeypatch):
     with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    assert exc.value.code == 500
-    exc.value.close()
+    try:
+        assert exc.value.code == 500
+    finally:
+        exc.value.close()
