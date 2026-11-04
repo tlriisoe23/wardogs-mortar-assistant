@@ -217,20 +217,37 @@ def get_terrain_elevation(map_id: str, x: float, y: float) -> Optional[float]:
         if os.path.exists(dem_path):
             with open(dem_path, "r", encoding="utf-8") as f:
                 _TERRAIN_DEM_CACHE = json.load(f)
+                for map_key, m_dem in _TERRAIN_DEM_CACHE.items():
+                    if "heights" in m_dem:
+                        m_n = m_dem.get("gridSize", len(m_dem["heights"]))
+                        s_x = m_dem["maxX"] - m_dem["minX"]
+                        s_y = m_dem["maxY"] - m_dem["minY"]
+                        if m_n < 2 or s_x <= 0 or s_y <= 0:
+                            m_dem["_precomp"] = (m_n, 0.0, 0.0)
+                        else:
+                            m_dem["_precomp"] = (m_n, (m_n - 1) / s_x, (m_n - 1) / s_y)
         else:
             _TERRAIN_DEM_CACHE = {}
     dem = _TERRAIN_DEM_CACHE.get(map_id)
     if not dem or "heights" not in dem:
         return None
     heights = dem["heights"]
-    n = dem.get("gridSize", len(heights))
-    span_x = dem["maxX"] - dem["minX"]
-    span_y = dem["maxY"] - dem["minY"]
-    if n < 2 or span_x <= 0 or span_y <= 0:
+
+    # Retrieve precomputed tuple from dem, fallback to computing it (for mock tests bypassing load)
+    precomp = dem.get("_precomp")
+    if precomp is None:
+        m_n = dem.get("gridSize", len(heights))
+        s_x = dem["maxX"] - dem["minX"]
+        s_y = dem["maxY"] - dem["minY"]
+        precomp = (m_n, 0.0, 0.0) if (m_n < 2 or s_x <= 0 or s_y <= 0) else (m_n, (m_n - 1) / s_x, (m_n - 1) / s_y)
+        dem["_precomp"] = precomp
+
+    n, scale_x, scale_y = precomp
+    if scale_x == 0.0 or scale_y == 0.0:
         # Degenerate DEM (single sample or zero-width bounds) cannot be interpolated
         return None
-    fx = ((x - dem["minX"]) / span_x) * (n - 1)
-    fy = ((y - dem["minY"]) / span_y) * (n - 1)
+    fx = (x - dem["minX"]) * scale_x
+    fy = (y - dem["minY"]) * scale_y
     if fx < 0 or fx > n - 1 or fy < 0 or fy > n - 1:
         return None
     x0 = max(0, min(n - 1, int(math.floor(fx))))

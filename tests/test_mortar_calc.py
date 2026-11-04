@@ -444,3 +444,77 @@ def test_cli_help_contract(monkeypatch, capsys):
     ]
     for cmd in expected_commands:
         assert cmd in captured.out
+
+def test_get_terrain_elevation_identical_outputs(monkeypatch):
+    import math
+    from typing import Optional
+
+    # Old implementation as reference
+    def old_get_terrain_elevation(map_id: str, x: float, y: float, cache) -> Optional[float]:
+        if map_id == "firing_range":
+            return 0.0
+        if not (math.isfinite(x) and math.isfinite(y)):
+            return None
+        dem = cache.get(map_id)
+        if not dem or "heights" not in dem:
+            return None
+        heights = dem["heights"]
+        n = dem.get("gridSize", len(heights))
+        span_x = dem["maxX"] - dem["minX"]
+        span_y = dem["maxY"] - dem["minY"]
+        if n < 2 or span_x <= 0 or span_y <= 0:
+            return None
+        fx = ((x - dem["minX"]) / span_x) * (n - 1)
+        fy = ((y - dem["minY"]) / span_y) * (n - 1)
+        if fx < 0 or fx > n - 1 or fy < 0 or fy > n - 1:
+            return None
+        x0 = max(0, min(n - 1, int(math.floor(fx))))
+        y0 = max(0, min(n - 1, int(math.floor(fy))))
+        x1 = min(n - 1, x0 + 1)
+        y1 = min(n - 1, y0 + 1)
+        tx = fx - x0
+        ty = fy - y0
+        top = heights[y0][x0] + (heights[y0][x1] - heights[y0][x0]) * tx
+        bot = heights[y1][x0] + (heights[y1][x1] - heights[y1][x0]) * tx
+        return float(top + (bot - top) * ty)
+
+    mocked_cache = {
+        "test_map": {
+            "minX": 0, "maxX": 100,
+            "minY": 0, "maxY": 100,
+            "heights": [
+                [10.0, 20.0, 30.0],
+                [40.0, 50.0, 60.0],
+                [70.0, 80.0, 90.0]
+            ],
+            "gridSize": 3
+        },
+        "bad_map": {
+            "minX": 0.0, "maxX": 100.0,
+            "minY": 0.0, "maxY": 100.0,
+            "heights": [[10.0]], # n=1
+            "gridSize": 1
+        }
+    }
+
+    monkeypatch.setattr(mortar_calc, "_TERRAIN_DEM_CACHE", mocked_cache)
+
+    samples = [
+        # edge cases
+        ("firing_range", 10.0, 10.0),
+        ("test_map", 0.0, 0.0),
+        ("test_map", 100.0, 100.0),
+        ("test_map", 50.0, 50.0),
+        ("test_map", 25.0, 75.0),
+        ("test_map", 100.1, 50.0), # out of bounds right
+        ("test_map", -0.1, 50.0),  # out of bounds left
+        ("test_map", 50.0, 100.1), # out of bounds bottom
+        ("test_map", 50.0, -0.1),  # out of bounds top
+        ("missing_map", 50.0, 50.0),
+        ("bad_map", 50.0, 50.0),
+    ]
+
+    for map_id, x, y in samples:
+        old_val = old_get_terrain_elevation(map_id, x, y, mocked_cache)
+        new_val = get_terrain_elevation(map_id, x, y)
+        assert old_val == new_val, f"Mismatch for map={map_id}, x={x}, y={y}: old={old_val}, new={new_val}"
