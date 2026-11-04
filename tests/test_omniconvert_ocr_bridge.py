@@ -321,3 +321,110 @@ def test_extract_text_via_omniconvert_malformed_json():
         assert result["engine"] == "unavailable"
         assert result["entries"] == []
         assert "OCR extraction failed" in result["error"]
+
+
+def test_extract_text_via_rapidocr_success():
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps({"text": "CL X: 78.50 Y: 69.50"}).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+    mock_resp.__exit__.return_value = None
+
+    with patch("urllib.request.urlopen", return_value=mock_resp):
+        from ocr_sniff import extract_text_via_rapidocr
+        result = extract_text_via_rapidocr(b"dummy")
+
+        assert result["ok"] is True
+        assert result["engine"] == "rapidocr"
+        assert result["text"] == "CL X: 78.50 Y: 69.50"
+        assert len(result["entries"]) == 1
+        assert result["entries"][0]["x"] == 78.50
+
+def test_extract_text_via_rapidocr_http_error_fallback():
+    import io
+    mock_fp = MagicMock(spec=io.BytesIO)
+    mock_err = urllib.error.HTTPError(
+        url="http://fake",
+        code=500,
+        msg="Internal Server Error",
+        hdrs={},
+        fp=mock_fp
+    )
+
+    with patch("urllib.request.urlopen", side_effect=mock_err):
+        from ocr_sniff import extract_text_via_rapidocr
+        result = extract_text_via_rapidocr(b"dummy")
+
+        assert result["ok"] is False
+        assert result["engine"] == "rapidocr"
+        assert result["entries"] == []
+        assert result["text"] == ""
+        assert result["error"] == "OCR extraction failed"
+        mock_fp.close.assert_called_once()
+
+@pytest.mark.parametrize("exc", [
+    urllib.error.URLError("Connection refused"),
+    TimeoutError("Request timed out")
+])
+def test_extract_text_via_rapidocr_upstream_failure(exc):
+    with patch("urllib.request.urlopen", side_effect=exc):
+        from ocr_sniff import extract_text_via_rapidocr
+        result = extract_text_via_rapidocr(b"dummy")
+
+        assert result["ok"] is False
+        assert result["engine"] == "rapidocr"
+        assert result["entries"] == []
+        assert result["text"] == ""
+        assert result["error"] == "OCR extraction failed"
+
+def test_extract_text_via_ollama_vlm_success():
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps({"response": "CL X: 78.50 Y: 69.50"}).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+    mock_resp.__exit__.return_value = None
+
+    with patch("urllib.request.urlopen", return_value=mock_resp):
+        from ocr_sniff import extract_text_via_ollama_vlm
+        result = extract_text_via_ollama_vlm(b"dummy")
+
+        assert result["ok"] is True
+        assert result["engine"] == "qwen3-vl:2b-instruct"
+        assert result["text"] == "CL X: 78.50 Y: 69.50"
+        assert len(result["entries"]) == 1
+        assert result["entries"][0]["x"] == 78.50
+
+def test_extract_text_via_ollama_vlm_http_error_fallback():
+    import io
+    mock_fp = MagicMock(spec=io.BytesIO)
+    mock_err = urllib.error.HTTPError(
+        url="http://fake",
+        code=500,
+        msg="Internal Server Error",
+        hdrs={},
+        fp=mock_fp
+    )
+
+    with patch("urllib.request.urlopen", side_effect=mock_err):
+        from ocr_sniff import extract_text_via_ollama_vlm
+        result = extract_text_via_ollama_vlm(b"dummy")
+
+        assert result["ok"] is False
+        assert result["engine"] == "qwen3-vl:2b-instruct"
+        assert result["entries"] == []
+        assert result["text"] == ""
+        assert result["error"] == "OCR extraction failed"
+        mock_fp.close.assert_called_once()
+
+@pytest.mark.parametrize("exc", [
+    urllib.error.URLError("Connection refused"),
+    TimeoutError("Request timed out")
+])
+def test_extract_text_via_ollama_vlm_upstream_failure(exc):
+    with patch("urllib.request.urlopen", side_effect=exc):
+        from ocr_sniff import extract_text_via_ollama_vlm
+        result = extract_text_via_ollama_vlm(b"dummy")
+
+        assert result["ok"] is False
+        assert result["engine"] == "qwen3-vl:2b-instruct"
+        assert result["entries"] == []
+        assert result["text"] == ""
+        assert result["error"] == "OCR extraction failed"
