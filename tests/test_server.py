@@ -467,6 +467,55 @@ def test_api_tts_endpoint_exception(live_test_server, monkeypatch):
         exc.value.close()
 
 
+def test_do_post_negative_content_length(live_test_server):
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=b"{}",
+        headers={"Content-Type": "application/json", "Content-Length": "-1"},
+        method="POST"
+    )
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        with urllib.request.urlopen(req, timeout=5):
+            pass
+    try:
+        assert exc.value.code == 400
+        error_data = json.loads(exc.value.read().decode("utf-8"))
+        assert error_data.get("error") == "invalid Content-Length"
+    finally:
+        exc.value.close()
+
+
+def test_do_post_oversized_content_length(live_test_server):
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=b"{}",
+        headers={"Content-Type": "application/json", "Content-Length": str(10 * 1024 * 1024 + 1)},
+        method="POST"
+    )
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        with urllib.request.urlopen(req, timeout=5):
+            pass
+    try:
+        assert exc.value.code == 413
+        error_data = json.loads(exc.value.read().decode("utf-8"))
+        assert error_data.get("error") == "payload too large"
+    finally:
+        exc.value.close()
+
+
+def test_do_post_malformed_content_length(live_test_server):
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=b"{}",
+        headers={"Content-Type": "application/json", "Content-Length": "not_an_int"},
+        method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        assert resp.status == 200
+        data = json.loads(resp.read().decode("utf-8"))
+        assert "ok" in data or "version" in data
+
+
 def test_do_post_invalid_json(live_test_server):
     try:
         req = urllib.request.Request(
