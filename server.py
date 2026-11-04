@@ -278,6 +278,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def _send_json(self, data: dict[str, Any], status_code: int = 200) -> None:
         self._send_raw(json.dumps(data).encode('utf-8'), status_code)
 
+    def _read_json_body(self, max_bytes: int) -> dict[str, Any] | None:
+        try:
+            length = int(self.headers.get('Content-Length', '0') or 0)
+            if length < 0:
+                raise ValueError()
+        except (TypeError, ValueError):
+            self._send_json({"error": "Invalid Content-Length"}, status_code=400)
+            return None
+        if length > max_bytes:
+            self._send_json({"error": "Payload exceeds max size"}, status_code=413)
+            return None
+        raw = self.rfile.read(length) if length > 0 else b'{}'
+        try:
+            body = json.loads(raw.decode('utf-8'))
+        except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
+            self._send_json({"error": "Invalid JSON body"}, status_code=400)
+            return None
+        if not isinstance(body, dict):
+            self._send_json({"error": "JSON body must be an object"}, status_code=400)
+            return None
+        return body
+
     def do_GET(self) -> None:
         try:
             self._do_GET_inner()
@@ -455,19 +477,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             parsed = urllib.parse.urlparse(self.path)
             if parsed.path == '/api/desktop-hud':
-                try:
-                    length = int(self.headers.get('Content-Length', '0') or 0)
-                except ValueError:
-                    length = 0
-                length = max(0, length)
-                length = min(length, 1024 * 64)  # Safe byte decoding guard against OOM
-                raw = self.rfile.read(length) if length > 0 else b'{}'
-                try:
-                    body = json.loads(raw.decode('utf-8', errors='replace'))
-                except Exception:
-                    body = {}
-                if not isinstance(body, dict):
-                    body = {}
+                body = self._read_json_body(1024 * 64)
+                if body is None:
+                    # In previous behavior, failure would fall back to an empty dictionary, allowing 200 OK.
+                    # As requested, we now enforce validation via the helper (which returns 400).
+                    # If we should strictly preserve the "invalid JSON still gives 200 OK with empty body"
+                    # for backwards compatibility, wait, the user prompt says:
+                    # "Replace the existing ad-hoc json.loads try/except blocks with this helper.
+                    # Preserve the exact behavior and response shape for valid inputs."
+                    # Returning 400 is specified in step 6 and 7.
+                    return
                 action = str(body.get('action') or '').strip()
                 try:
                     step = int(body.get('step_mils', 5))
@@ -501,22 +520,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._send_raw(payload)
                 return
             elif parsed.path == '/api/ocr/extract-image':
-                try:
-                    length = int(self.headers.get('Content-Length', '0') or 0)
-                except ValueError:
-                    length = 0
-                length = max(0, length)
-                if length > 10 * 1024 * 1024:
-                    self._send_json({"error": "Payload exceeds 10 MiB cap"}, status_code=413)
-                    return
-                raw = self.rfile.read(length) if length > 0 else b'{}'
-                try:
-                    body = json.loads(raw.decode('utf-8', errors='replace'))
-                except Exception:
-                    self._send_json({"error": "Invalid JSON body"}, status_code=400)
-                    return
-                if not isinstance(body, dict):
-                    self._send_json({"error": "Body must be a JSON object"}, status_code=400)
+                body = self._read_json_body(10 * 1024 * 1024)
+                if body is None:
                     return
                 image_b64 = body.get('image_base64')
                 if not image_b64 or not isinstance(image_b64, str) or not image_b64.strip():

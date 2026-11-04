@@ -121,10 +121,43 @@ def test_desktop_hud_post_non_dict_payload(live_test_server):
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json"}
     )
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        assert resp.status == 200
-        data = json.loads(resp.read().decode("utf-8"))
-        assert "last_action" in data
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        with urllib.request.urlopen(req, timeout=5):
+            pass
+    try:
+        assert exc.value.code == 400
+    finally:
+        exc.value.close()
+
+
+def test_do_post_non_numeric_content_length(live_test_server):
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=b'{"action": "elev_up"}',
+        headers={"Content-Type": "application/json", "Content-Length": "invalid"}
+    )
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        with urllib.request.urlopen(req, timeout=5):
+            pass
+    try:
+        assert exc.value.code == 400
+    finally:
+        exc.value.close()
+
+
+def test_do_post_invalid_utf8(live_test_server):
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=b'\xff\xfe\xff',
+        headers={"Content-Type": "application/json"}
+    )
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        with urllib.request.urlopen(req, timeout=5):
+            pass
+    try:
+        assert exc.value.code == 400
+    finally:
+        exc.value.close()
 
 
 def test_api_targets_endpoint(live_test_server):
@@ -468,16 +501,18 @@ def test_api_tts_endpoint_exception(live_test_server, monkeypatch):
 
 
 def test_do_post_invalid_json(live_test_server):
-    try:
-        req = urllib.request.Request(
-            f"{live_test_server}/api/desktop-hud",
-            data=b"invalid json",
-            headers={"Content-Type": "application/json"}
-        )
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=b"invalid json",
+        headers={"Content-Type": "application/json"}
+    )
+    with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError):
-        assert False, "Should fallback to empty dict, not raise HTTP error"
+    try:
+        assert exc.value.code == 400
+    finally:
+        exc.value.close()
 
 
 def test_do_post_desktop_hud_step_value_error(live_test_server):
