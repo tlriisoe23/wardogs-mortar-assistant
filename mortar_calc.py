@@ -252,14 +252,16 @@ SPH_PRIMARY_MODELS = {
 }
 
 
+assert SPH_GC_X[0] == 0.0 and all(float(x).is_integer() for x in SPH_GC_X)
+SPH_GC_LOOKUP = tuple(bisect.bisect_right(SPH_GC_X, float(i)) - 1 for i in range(int(SPH_GC_X[-1]) + 1))
+
 def _sph_drag_coeff(speed: float) -> float:
     if speed <= SPH_GC_X[0]:
         return SPH_GC_Y[0]
     if speed >= SPH_GC_X[-1]:
         return SPH_GC_Y[-1]
-    idx = bisect.bisect_right(SPH_GC_X, speed)
-    lo = idx - 1
-    hi = idx
+    lo = SPH_GC_LOOKUP[int(speed)]
+    hi = lo + 1
     frac = (speed - SPH_GC_X[lo]) / (SPH_GC_X[hi] - SPH_GC_X[lo])
     return SPH_GC_Y[lo] + (SPH_GC_Y[hi] - SPH_GC_Y[lo]) * frac
 
@@ -272,16 +274,17 @@ def _sph_height_at_distance(angle: float, distance: float, model: Dict[str, Any]
     vz = model["speed"] * math.sin(angle)
     g = model["gravity"]
     drag = model["drag"]
+    dt_half = dt * 0.5
     max_steps = int(math.ceil(120.0 / dt))
     for _ in range(max_steps):
         s1 = math.hypot(vx, vz)
         q1 = drag * _sph_drag_coeff(s1) * s1
         a1x, a1z = -q1 * vx, -g - q1 * vz
-        v2x, v2z = vx + a1x * dt * 0.5, vz + a1z * dt * 0.5
+        v2x, v2z = vx + a1x * dt_half, vz + a1z * dt_half
         s2 = math.hypot(v2x, v2z)
         q2 = drag * _sph_drag_coeff(s2) * s2
         a2x, a2z = -q2 * v2x, -g - q2 * v2z
-        v3x, v3z = vx + a2x * dt * 0.5, vz + a2z * dt * 0.5
+        v3x, v3z = vx + a2x * dt_half, vz + a2z * dt_half
         s3 = math.hypot(v3x, v3z)
         q3 = drag * _sph_drag_coeff(s3) * s3
         a3x, a3z = -q3 * v3x, -g - q3 * v3z
