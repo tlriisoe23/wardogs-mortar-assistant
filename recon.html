@@ -246,7 +246,7 @@
     <div class="pip-header" data-tauri-drag-region>
         <div class="pip-title-box">
             <span class="pip-badge">🎥 3D FPV SCOPE</span>
-            <span class="pip-callout" id="pipCalloutText">BAKURANI SECTOR · SCANNING</span>
+            <span class="pip-callout" id="pipCalloutText" aria-live="polite" aria-atomic="true">BAKURANI SECTOR · SCANNING</span>
         </div>
         <div class="pip-controls">
             <button class="btn-ctrl active" id="btnModeSplit" onclick="setReconMode('split')">⚡ Split</button>
@@ -259,7 +259,7 @@
     <!-- MAIN RECON CANVAS -->
     <div class="pip-canvas-container">
         <canvas id="reconCanvas" role="img" aria-label="Recon picture-in-picture view of the trajectory and terrain profile."></canvas>
-        <div class="ridge-hazard" id="ridgeHazardBanner">⚠️ TERRAIN COLLISION: RIDGE CREST INTERSECTS TRAJECTORY</div>
+        <div class="ridge-hazard" id="ridgeHazardBanner" aria-live="polite" aria-atomic="true">⚠️ TERRAIN COLLISION: RIDGE CREST INTERSECTS TRAJECTORY</div>
 
         <!-- BOTTOM TELEMETRY OVERLAY -->
         <div class="pip-telemetry-hud">
