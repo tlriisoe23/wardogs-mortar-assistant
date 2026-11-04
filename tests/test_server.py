@@ -82,6 +82,16 @@ def test_desktop_hud_get_endpoint(live_test_server):
         assert "tauri_v2_ready" in data
 
 
+def test_desktop_hud_state_contract():
+    from server import DESKTOP_HUD_STATE
+    expected_keys = {
+        "ok", "tauri_v2_ready", "identifier", "zero_background_polling",
+        "always_on_top", "click_through", "arc_mode", "elevation_mils_offset",
+        "locked_grid", "last_action", "last_action_ts", "hotkeys"
+    }
+    assert set(DESKTOP_HUD_STATE.keys()) == expected_keys
+
+
 def test_ptt_status_endpoint(live_test_server):
     req = urllib.request.Request(f"{live_test_server}/api/ptt/status")
     with urllib.request.urlopen(req, timeout=5) as resp:

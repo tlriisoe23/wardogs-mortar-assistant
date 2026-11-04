@@ -37,6 +37,19 @@ A tactical voice-activated fire-control assistant, interactive map suite, and ba
     * Top header button and voice commands (`"mute"` / `"unmute"`) silence all Neural AI TTS readouts and PRC-117 radio squelch effects while keeping the passive `⏱️ TOF` readout visible.
 * **🖥️ Tauri v3.0 Native Desktop HUD (`src-tauri/`)**:
   * Native Rust/WebView2 desktop wrapper (`1540×940` default window, `0%` background GPU/VRAM polling) with pure-Rust RK4 ballistics (`src-tauri/src/mortar_calc.rs`), 20m bilinear DEM (`src-tauri/src/dem.rs`), detachable `320×110` PIP mini-HUD, and global OS hotkeys (`Alt+M` Lock Gun, `Alt+R` Reset Mission, `Alt+Up/Down` ΔZ ±5m, `Alt+A` Toggle Arc, `Alt+O` Scan OCR Now, `Alt+C` Click-Through Overlay, `Alt+S` Audio Mute).
+  * **HUD State Fields (`DESKTOP_HUD_STATE`)**:
+    * `ok` (bool): API status flag
+    * `tauri_v2_ready` (bool): Strict client contract flag
+    * `identifier` (str): Unique app identifier
+    * `zero_background_polling` (bool): Zero-polling status
+    * `always_on_top` (bool): Window always-on-top status
+    * `click_through` (bool): Borderless HUD click-through status
+    * `arc_mode` (str): High/low ballistic arc mode
+    * `elevation_mils_offset` (int): Active elevation offset in mils
+    * `locked_grid` (str | None): Currently locked target grid
+    * `last_action` (str | None): Last performed action
+    * `last_action_ts` (float): Timestamp of the last action
+    * `hotkeys` (dict): Dictionary mapping hotkeys to descriptions
 
 ---
 
