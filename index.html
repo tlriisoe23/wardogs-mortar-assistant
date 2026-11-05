@@ -1335,10 +1335,10 @@
                 </div>
 
                 <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                    <div id="rangeStatus" class="range-status in-range" role="status" aria-live="polite" style="flex: 0 1 auto; padding: 3px 9px; white-space: nowrap;">
+                    <div id="rangeStatus" class="range-status in-range" role="status" aria-live="polite" aria-atomic="true" style="flex: 0 1 auto; padding: 3px 9px; white-space: nowrap;">
                         TARGET WITHIN EFFECTIVE ENVELOPE (132m - 684m)
                     </div>
-                    <div id="aimOffsetBanner" aria-live="polite" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px; padding: 2px 8px; font-family: var(--font-mono); font-size: 10px; color: #fbbf24; gap: 6px; align-items: center;">
+                    <div id="aimOffsetBanner" aria-live="polite" aria-atomic="true" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px; padding: 2px 8px; font-family: var(--font-mono); font-size: 10px; color: #fbbf24; gap: 6px; align-items: center;">
                         <span id="aimOffsetText">🎯 AIM OFFSET: (82.18, 71.53)</span>
                         <button type="button" class="map-tag-btn" style="color: #fde047; border-color: #f59e0b; padding: 1px 6px; min-block-size: 22px;" onclick="clearAimOffset()">Zero Offset</button>
                     </div>
@@ -1360,7 +1360,7 @@
                             📋 Paste/OCR
                         </button>
                         <input type="file" id="ocrImageUploadInput" accept="image/*" aria-label="Upload Screenshot for OCR" style="display: none;" onchange="handleOcrImageFileSelect(event)">
-                        <span id="topOcrStatusBadge" role="status" aria-live="polite" style="font-size: 10px; font-family: var(--font-mono); padding: 3px 7px; border-radius: 4px; background: #090e15; border: 1px solid var(--border-dim); color: #94a3b8; white-space: nowrap;">OCR: STANDBY</span>
+                        <span id="topOcrStatusBadge" role="status" aria-live="polite" aria-atomic="true" style="font-size: 10px; font-family: var(--font-mono); padding: 3px 7px; border-radius: 4px; background: #090e15; border: 1px solid var(--border-dim); color: #94a3b8; white-space: nowrap;">OCR: STANDBY</span>
                     </div>
                     <span id="solutionTime" style="display: none;">LIVE COMPUTED</span>
                 </div>
@@ -1537,7 +1537,7 @@
                                     <button type="button" class="nudge-btn" onclick="setTargetDeltaZ(0)" title="Reset ΔZ to 0m">0m</button>
                                 </div>
                             </div>
-                            <div id="demHeightBadge" aria-live="polite" style="font-size: 9px; font-family: var(--font-mono); color: #38bdf8; display: flex; justify-content: space-between; gap: 6px;">
+                            <div id="demHeightBadge" aria-live="polite" aria-atomic="true" style="font-size: 9px; font-family: var(--font-mono); color: #38bdf8; display: flex; justify-content: space-between; gap: 6px;">
                                 <span id="demHeightText">⛰️ TOPO DEM: LOADING...</span>
                                 <span id="demRidgeStatus" style="color: #10b981;">RIDGE: CLEAR</span>
                             </div>
@@ -1604,7 +1604,7 @@
                             <span aria-hidden="true">🎙️</span>
                         </button>
                         <div style="display: flex; flex-direction: column; gap: 2px;">
-                            <div class="voice-status" id="voiceStatus" aria-live="polite">Click mic or hold [SPACE] to talk</div>
+                            <div class="voice-status" id="voiceStatus" aria-live="polite" aria-atomic="true">Click mic or hold [SPACE] to talk</div>
                             <div class="ptt-hint">Speaks Bearing (°), Range (m) &amp; Elevation (MIL)</div>
                         </div>
                     </div>
@@ -1643,7 +1643,7 @@
                             </button>
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: #94a3b8;">
-                            <span id="globalPttStatusText" aria-live="polite">GLOBAL HOOK: STANDBY</span>
+                            <span id="globalPttStatusText" aria-live="polite" aria-atomic="true">GLOBAL HOOK: STANDBY</span>
                             <span id="globalPttKeyBadge" style="color: #38bdf8;">BOUND: MOUSE 4</span>
                         </div>
                     </div>
@@ -1739,7 +1739,7 @@
                     </div>
 
                     <!-- SPACIOUS COORDINATE CHAT FEED -->
-                    <div id="coordChatFeed" role="log" aria-live="polite" style="background: #070c12; border: 1px solid #1e293b; border-radius: 6px; padding: 8px 10px; height: clamp(135px, calc(100dvh - 490px), 210px); overflow-y: auto; display: flex; flex-direction: column; gap: 5px; font-family: var(--font-mono); font-size: 11px;">
+                    <div id="coordChatFeed" role="log" aria-live="polite" aria-atomic="false" style="background: #070c12; border: 1px solid #1e293b; border-radius: 6px; padding: 8px 10px; height: clamp(135px, calc(100dvh - 490px), 210px); overflow-y: auto; display: flex; flex-direction: column; gap: 5px; font-family: var(--font-mono); font-size: 11px;">
                         <div style="color: #34d399;">🟢 [CL] (78.50, 69.50) — Current Location active</div>
                         <div style="color: #f87171;">🔴 [TGT] (82.18, 71.53) — Default Target ready</div>
                     </div>
@@ -1781,7 +1781,7 @@
                             <button type="button" class="nudge-btn" style="padding: 5px 10px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.45);" onclick="triggerClipboardOrImageOcr()" title="OCR a clipboard screenshot (Ctrl+V) or upload an image">🖼️ OCR Screenshot</button>
                         </div>
 
-                        <div aria-live="polite" style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: #94a3b8;">
+                        <div aria-live="polite" aria-atomic="true" style="display: flex; justify-content: space-between; font-size: 10px; font-family: var(--font-mono); color: #94a3b8;">
                             <span id="ocrStatusText">STATUS: STANDBY</span>
                             <span id="ocrLastCoordsText">GPS: NO LOCK</span>
                         </div>

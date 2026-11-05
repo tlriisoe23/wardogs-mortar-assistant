@@ -197,6 +197,20 @@ class TestIndexHtmlA11y(unittest.TestCase):
                 )
 
 
+    def test_aria_live_has_aria_atomic(self):
+        """Verify that dynamic status elements with aria-live have aria-atomic='true' to ensure full updates are read out, except for logs."""
+        live_elements = self.soup.find_all(attrs={"aria-live": True})
+        self.assertTrue(len(live_elements) > 0, "No aria-live elements found to test")
+        for el in live_elements:
+            if el.get('role') == 'log' or el.get('id') in ['coordChatFeed', 'logList']:
+                self.assertNotEqual(el.get("aria-atomic"), "true", f"aria-live log element {el.get('id') or el} should NOT have aria-atomic='true'")
+            else:
+                self.assertEqual(el.get("aria-atomic"), "true", f"aria-live element {el.get('id') or el} is missing aria-atomic='true'")
+
+        status_elements = self.soup.find_all(attrs={"role": ["status", "alert"]})
+        for el in status_elements:
+            self.assertEqual(el.get("aria-atomic"), "true", f"role='{el.get('role')}' element {el.get('id') or el} is missing aria-atomic='true'")
+
     def test_recon_live_regions(self):
         """Verify that recon callout and hazard banner have aria-live='polite' and aria-atomic='true'."""
         recon_html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'recon.html')
