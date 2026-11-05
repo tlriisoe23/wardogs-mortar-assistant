@@ -255,15 +255,15 @@ SPH_PRIMARY_MODELS = {
 assert SPH_GC_X[0] == 0.0 and all(float(x).is_integer() for x in SPH_GC_X)
 SPH_GC_LOOKUP = tuple(bisect.bisect_right(SPH_GC_X, float(i)) - 1 for i in range(int(SPH_GC_X[-1]) + 1))
 
-def _sph_drag_coeff(speed: float) -> float:
-    if speed <= SPH_GC_X[0]:
-        return SPH_GC_Y[0]
-    if speed >= SPH_GC_X[-1]:
-        return SPH_GC_Y[-1]
-    lo = SPH_GC_LOOKUP[int(speed)]
+def _sph_drag_coeff(speed: float, gc_x=SPH_GC_X, gc_y=SPH_GC_Y, lookup=SPH_GC_LOOKUP) -> float:
+    if speed <= gc_x[0]:
+        return gc_y[0]
+    if speed >= gc_x[-1]:
+        return gc_y[-1]
+    lo = lookup[int(speed)]
     hi = lo + 1
-    frac = (speed - SPH_GC_X[lo]) / (SPH_GC_X[hi] - SPH_GC_X[lo])
-    return SPH_GC_Y[lo] + (SPH_GC_Y[hi] - SPH_GC_Y[lo]) * frac
+    frac = (speed - gc_x[lo]) / (gc_x[hi] - gc_x[lo])
+    return gc_y[lo] + (gc_y[hi] - gc_y[lo]) * frac
 
 
 def _sph_height_at_distance(angle: float, distance: float, model: Dict[str, Any], dt: float = 0.02) -> Optional[float]:
@@ -276,25 +276,36 @@ def _sph_height_at_distance(angle: float, distance: float, model: Dict[str, Any]
     drag = model["drag"]
     dt_half = dt * 0.5
     max_steps = int(math.ceil(120.0 / dt))
+
+    # Bind globals and attribute lookups to locals for the hot path
+    math_hypot = math.hypot
+    drag_coeff = _sph_drag_coeff
+    model_offset = model["offset"]
+
     for _ in range(max_steps):
-        s1 = math.hypot(vx, vz)
-        q1 = drag * _sph_drag_coeff(s1) * s1
+        s1 = math_hypot(vx, vz)
+        q1 = drag * drag_coeff(s1) * s1
         a1x, a1z = -q1 * vx, -g - q1 * vz
         v2x, v2z = vx + a1x * dt_half, vz + a1z * dt_half
-        s2 = math.hypot(v2x, v2z)
-        q2 = drag * _sph_drag_coeff(s2) * s2
+
+        s2 = math_hypot(v2x, v2z)
+        q2 = drag * drag_coeff(s2) * s2
         a2x, a2z = -q2 * v2x, -g - q2 * v2z
         v3x, v3z = vx + a2x * dt_half, vz + a2z * dt_half
-        s3 = math.hypot(v3x, v3z)
-        q3 = drag * _sph_drag_coeff(s3) * s3
+
+        s3 = math_hypot(v3x, v3z)
+        q3 = drag * drag_coeff(s3) * s3
         a3x, a3z = -q3 * v3x, -g - q3 * v3z
         v4x, v4z = vx + a3x * dt, vz + a3z * dt
-        s4 = math.hypot(v4x, v4z)
-        q4 = drag * _sph_drag_coeff(s4) * s4
+
+        s4 = math_hypot(v4x, v4z)
+        q4 = drag * drag_coeff(s4) * s4
+
         next_x = x + dt * (vx + 2 * v2x + 2 * v3x + v4x) / 6.0
         next_z = z + dt * (vz + 2 * v2z + 2 * v3z + v4z) / 6.0
         if next_x >= distance:
-            return float(z + (next_z - z) * (distance - x) / (next_x - x) + model["offset"])
+            return float(z + (next_z - z) * (distance - x) / (next_x - x) + model_offset)
+
         vx += dt * (a1x + 2 * a2x + 2 * a3x - q4 * v4x) / 6.0
         vz += dt * (a1z + 2 * a2z + 2 * a3z - g - q4 * v4z) / 6.0
         x, z = next_x, next_z
