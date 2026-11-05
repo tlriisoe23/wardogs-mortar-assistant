@@ -204,6 +204,7 @@ DESKTOP_HUD_STATE: dict[str, Any] = {
         "Alt+A": "Toggle High/Low ballistic arc",
         "Alt+O": "Trigger single-shot WinRT map grid OCR (0% background polling)",
         "Alt+C": "Toggle borderless HUD click-through mode",
+        "Alt+S": "Toggle Audio Mute",
     },
 }
 
