@@ -598,3 +598,29 @@ def test_server_do_post_internal_error(live_test_server, monkeypatch):
         assert exc.value.code == 500
     finally:
         exc.value.close()
+
+def test_start_bind_capture_timeout():
+    from server import GlobalPTTWatcher
+    watcher = GlobalPTTWatcher()
+    import time
+
+    # Valid timeout
+    now = time.time()
+    watcher.start_bind_capture(10.0)
+    assert watcher.binding_mode is True
+    assert watcher.bind_deadline >= now + 10.0
+
+    # Negative timeout defaults to 6.0
+    now = time.time()
+    watcher.start_bind_capture(-5.0)
+    assert watcher.bind_deadline >= now + 6.0
+
+    # NaN timeout defaults to 6.0
+    now = time.time()
+    watcher.start_bind_capture(float('nan'))
+    assert watcher.bind_deadline >= now + 6.0
+
+    # Zero timeout defaults to 6.0
+    now = time.time()
+    watcher.start_bind_capture(0)
+    assert watcher.bind_deadline >= now + 6.0

@@ -24,7 +24,23 @@ from PIL import Image, ImageGrab, ImageOps  # type: ignore
 
 OMNICONVERT_URL = os.environ.get("OMNICONVERT_URL", "http://127.0.0.1:8100").rstrip("/")
 # qwen3-vl:2b-instruct smart_vision on ai-ctl-nuc observed at 12-18s per image; 15s caused intermittent timeouts.
-OMNICONVERT_TIMEOUT_S = float(os.environ.get("OMNICONVERT_TIMEOUT_S", "45"))
+import math
+
+def _parse_timeout_env(name: str, default: float = 45.0, min_s: float = 1.0, max_s: float = 600.0) -> float:
+    val = os.environ.get(name)
+    if val is None:
+        return default
+    try:
+        fval = float(val)
+        if not math.isfinite(fval) or fval <= 0:
+            logging.getLogger(__name__).warning(f"Invalid {name} ({fval}), falling back to {default}s")
+            return default
+        return max(min_s, min(fval, max_s))
+    except (ValueError, TypeError):
+        logging.getLogger(__name__).warning(f"Invalid {name} ({val}), falling back to {default}s")
+        return default
+
+OMNICONVERT_TIMEOUT_S = _parse_timeout_env("OMNICONVERT_TIMEOUT_S", 45.0)
 
 try:
     import winocr  # type: ignore
