@@ -481,35 +481,35 @@ def capture_and_scan_entries() -> List[Dict[str, Any]]:
     if not HAS_WINOCR:
         return []
     try:
-        screen = ImageGrab.grab()
-        w, h = screen.size
+        with ImageGrab.grab() as screen:
+            w, h = screen.size
 
-        # Region 1: Left & Bottom-Left 50% width x bottom 55% height (covers In-Game Chat Box + Map/HUD Coords)
-        crop_boxes = [
-            (0, int(h * 0.45), int(w * 0.50), h),
-            # Region 2: Top-Left 40% width x 35% height (top-left HUD / squad chat)
-            (0, 0, int(w * 0.40), int(h * 0.35)),
-            # Region 3: Bottom-Right 45% width x 40% height (bottom-right compass/vehicle/chat HUD)
-            (int(w * 0.55), int(h * 0.60), w, h),
-        ]
+            # Region 1: Left & Bottom-Left 50% width x bottom 55% height (covers In-Game Chat Box + Map/HUD Coords)
+            crop_boxes = [
+                (0, int(h * 0.45), int(w * 0.50), h),
+                # Region 2: Top-Left 40% width x 35% height (top-left HUD / squad chat)
+                (0, 0, int(w * 0.40), int(h * 0.35)),
+                # Region 3: Bottom-Right 45% width x 40% height (bottom-right compass/vehicle/chat HUD)
+                (int(w * 0.55), int(h * 0.60), w, h),
+            ]
 
-        found_entries: List[Dict[str, Any]] = []
-        seen_in_pass = set()
-        for box in crop_boxes:
-            cropped = screen.crop(box)
-            # First pass on contrast-enhanced upscaled crop (prevents small-font decimal loss), fallback to raw crop
-            enhanced = _preprocess_for_ocr(cropped)
-            res_enh = winocr.recognize_pil_sync(enhanced, 'en')
-            entries = extract_all_coord_lines(_extract_text_from_winocr_result(res_enh))
-            if not entries:
-                res_raw = winocr.recognize_pil_sync(cropped, 'en')
-                entries = extract_all_coord_lines(_extract_text_from_winocr_result(res_raw))
-            for entry in entries:
-                sig = (entry["role"], entry["x"], entry["y"])
-                if sig not in seen_in_pass:
-                    seen_in_pass.add(sig)
-                    found_entries.append(entry)
-        return found_entries
+            found_entries: List[Dict[str, Any]] = []
+            seen_in_pass = set()
+            for box in crop_boxes:
+                cropped = screen.crop(box)
+                # First pass on contrast-enhanced upscaled crop (prevents small-font decimal loss), fallback to raw crop
+                enhanced = _preprocess_for_ocr(cropped)
+                res_enh = winocr.recognize_pil_sync(enhanced, 'en')
+                entries = extract_all_coord_lines(_extract_text_from_winocr_result(res_enh))
+                if not entries:
+                    res_raw = winocr.recognize_pil_sync(cropped, 'en')
+                    entries = extract_all_coord_lines(_extract_text_from_winocr_result(res_raw))
+                for entry in entries:
+                    sig = (entry["role"], entry["x"], entry["y"])
+                    if sig not in seen_in_pass:
+                        seen_in_pass.add(sig)
+                        found_entries.append(entry)
+            return found_entries
     except Exception:
         return []
 
