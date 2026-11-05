@@ -208,6 +208,33 @@ DESKTOP_HUD_STATE: dict[str, Any] = {
     },
 }
 
+def _update_desktop_hud_state(action: str, step: int, body: dict) -> bytes:
+    global DESKTOP_HUD_VERSION
+    with DESKTOP_HUD_LOCK:
+        if action == 'elev_up':
+            current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
+            DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) + step))
+        elif action == 'elev_down':
+            current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
+            DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) - step))
+        elif action == 'toggle_arc':
+            DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
+        elif action == 'toggle_click_through':
+            DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
+        elif action == 'lock_target':
+            DESKTOP_HUD_STATE['locked_grid'] = str(body.get('grid') or 'LOCKED')[:100]
+        elif action == 'reset_target':
+            DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
+            DESKTOP_HUD_STATE['locked_grid'] = None
+
+        DESKTOP_HUD_STATE['last_action'] = action
+        DESKTOP_HUD_STATE['last_action_ts'] = time.time()
+        DESKTOP_HUD_VERSION += 1
+        DESKTOP_HUD_CACHE["payload"] = json.dumps(DESKTOP_HUD_STATE).encode('utf-8')
+        DESKTOP_HUD_CACHE["version"] = DESKTOP_HUD_VERSION
+        return DESKTOP_HUD_CACHE["payload"]
+
+
 
 async def generate_neural_tts(text: str, voice: str) -> bytes:
     try:
@@ -391,31 +418,32 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/targets':
             targets_file = os.path.join(DIRECTORY, 'data', 'targets.json')
 
-            with TARGETS_CACHE_LOCK:
-                try:
-                    st = os.stat(targets_file)
-                    mtime_ns = st.st_mtime_ns
-                    size = st.st_size
-                except OSError:
-                    mtime_ns = 0
-                    size = 0
+            try:
+                st = os.stat(targets_file)
+                mtime_ns = st.st_mtime_ns
+                size = st.st_size
+            except OSError:
+                mtime_ns = 0
+                size = 0
 
-                if mtime_ns == 0:
-                    payload = b"[]"
-                    TARGETS_CACHE["mtime_ns"] = 0
-                    TARGETS_CACHE["size"] = 0
-                    TARGETS_CACHE["payload"] = payload
-                elif mtime_ns != TARGETS_CACHE.get("mtime_ns") or size != TARGETS_CACHE.get("size"):
+            if mtime_ns == 0:
+                payload = b"[]"
+            else:
+                with TARGETS_CACHE_LOCK:
+                    cached_mtime = TARGETS_CACHE.get("mtime_ns")
+                    cached_size = TARGETS_CACHE.get("size")
+                    payload = TARGETS_CACHE.get("payload")
+
+                if mtime_ns != cached_mtime or size != cached_size:
                     try:
                         with open(targets_file, 'rb') as f:
                             payload = f.read()
-                        TARGETS_CACHE["mtime_ns"] = mtime_ns
-                        TARGETS_CACHE["size"] = size
-                        TARGETS_CACHE["payload"] = payload
+                        with TARGETS_CACHE_LOCK:
+                            TARGETS_CACHE["mtime_ns"] = mtime_ns
+                            TARGETS_CACHE["size"] = size
+                            TARGETS_CACHE["payload"] = payload
                     except OSError:
                         payload = b"[]"
-                else:
-                    payload = TARGETS_CACHE["payload"]
 
             try:
                 self._send_raw(payload)
@@ -488,30 +516,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     step = max(-6400, min(6400, step))
                 except (ValueError, TypeError, OverflowError):
                     step = 5
-                if action == 'elev_up':
-                    current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) + step))
-                elif action == 'elev_down':
-                    current_offset = DESKTOP_HUD_STATE.get('elevation_mils_offset', 0)
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = max(-6400, min(6400, int(current_offset) - step))
-                elif action == 'toggle_arc':
-                    DESKTOP_HUD_STATE['arc_mode'] = 'high' if DESKTOP_HUD_STATE['arc_mode'] == 'low' else 'low'
-                elif action == 'toggle_click_through':
-                    DESKTOP_HUD_STATE['click_through'] = not DESKTOP_HUD_STATE['click_through']
-                elif action == 'lock_target':
-                    DESKTOP_HUD_STATE['locked_grid'] = str(body.get('grid') or 'LOCKED')[:100]
-                elif action == 'reset_target':
-                    DESKTOP_HUD_STATE['elevation_mils_offset'] = 0
-                    DESKTOP_HUD_STATE['locked_grid'] = None
-                with DESKTOP_HUD_LOCK:
-                    DESKTOP_HUD_STATE['last_action'] = action
-                    DESKTOP_HUD_STATE['last_action_ts'] = time.time()
-                    global DESKTOP_HUD_VERSION
-                    DESKTOP_HUD_VERSION += 1
-                    DESKTOP_HUD_CACHE["payload"] = json.dumps(
-                        DESKTOP_HUD_STATE).encode('utf-8')
-                    DESKTOP_HUD_CACHE["version"] = DESKTOP_HUD_VERSION
-                    payload = DESKTOP_HUD_CACHE["payload"]
+                payload = _update_desktop_hud_state(action, step, body)
                 self._send_raw(payload)
                 return
             elif parsed.path == '/api/ocr/extract-image':
