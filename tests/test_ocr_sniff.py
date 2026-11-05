@@ -149,3 +149,33 @@ def test_capture_and_scan_entries_closes_image_on_error():
 
         assert result == []
         mock_img.__exit__.assert_called_once()
+
+def test_parse_timeout_env(monkeypatch, caplog):
+    from ocr_sniff import _parse_timeout_env
+    # Unset
+    monkeypatch.delenv("TEST_TIMEOUT", raising=False)
+    assert _parse_timeout_env("TEST_TIMEOUT", 45.0) == 45.0
+
+    # Valid string
+    monkeypatch.setenv("TEST_TIMEOUT", "30")
+    assert _parse_timeout_env("TEST_TIMEOUT", 45.0) == 30.0
+
+    # Non-finite values
+    monkeypatch.setenv("TEST_TIMEOUT", "nan")
+    assert _parse_timeout_env("TEST_TIMEOUT", 45.0) == 45.0
+    monkeypatch.setenv("TEST_TIMEOUT", "inf")
+    assert _parse_timeout_env("TEST_TIMEOUT", 45.0) == 45.0
+
+    # Negative or Zero
+    monkeypatch.setenv("TEST_TIMEOUT", "-5")
+    assert _parse_timeout_env("TEST_TIMEOUT", 45.0) == 45.0
+    monkeypatch.setenv("TEST_TIMEOUT", "0")
+    assert _parse_timeout_env("TEST_TIMEOUT", 45.0) == 45.0
+
+    # Clamp
+    monkeypatch.setenv("TEST_TIMEOUT", "99999")
+    assert _parse_timeout_env("TEST_TIMEOUT", 45.0, max_s=600.0) == 600.0
+
+    # Invalid String
+    monkeypatch.setenv("TEST_TIMEOUT", "abc")
+    assert _parse_timeout_env("TEST_TIMEOUT", 45.0) == 45.0

@@ -16,6 +16,7 @@ import threading
 import asyncio
 import ctypes
 import time
+import math
 import json
 import os
 import sys
@@ -132,6 +133,8 @@ class GlobalPTTWatcher:
         return bool(self._user32.GetAsyncKeyState(vk) & 0x8000)
 
     def start_bind_capture(self, timeout_sec: float = 6.0) -> None:
+        if not math.isfinite(timeout_sec) or timeout_sec <= 0:
+            timeout_sec = 6.0
         self.binding_mode = True
         self.bind_deadline = time.time() + timeout_sec
 
