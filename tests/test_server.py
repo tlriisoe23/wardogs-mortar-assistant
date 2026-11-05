@@ -126,6 +126,29 @@ def test_desktop_hud_post_non_dict_payload(live_test_server):
         data = json.loads(resp.read().decode("utf-8"))
         assert "last_action" in data
 
+def test_desktop_hud_post_malformed_and_deep_json(live_test_server):
+    req_malformed = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=b"not valid json",
+        headers={"Content-Type": "application/json"}
+    )
+    with urllib.request.urlopen(req_malformed, timeout=5) as resp:
+        assert resp.status == 200
+
+    import pytest
+    deep_json = ('[' * 10000) + (']' * 10000)
+    req_deep = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=deep_json.encode('utf-8'),
+        headers={"Content-Type": "application/json"}
+    )
+    try:
+        with urllib.request.urlopen(req_deep, timeout=5) as resp:
+            assert resp.status == 200
+    except urllib.error.HTTPError as e:
+        e.close()
+        assert e.code == 400
+
 
 def test_api_targets_endpoint(live_test_server):
     from server import DIRECTORY
@@ -365,11 +388,13 @@ def test_ocr_extract_image_endpoint_large_payload(live_test_server):
 
 
 def test_ocr_extract_image_endpoint_invalid_payloads(live_test_server):
+    deep_json = ('[' * 10000) + (']' * 10000)
     invalid_payloads = [
         (b"not json", 400),
         (b'["not a dict"]', 400),
         (json.dumps({"wrong_key": "data"}).encode('utf-8'), 400),
         (json.dumps({"image_base64": ""}).encode('utf-8'), 400),
+        (deep_json.encode('utf-8'), 400),
     ]
     for data, expected_code in invalid_payloads:
         req = urllib.request.Request(
