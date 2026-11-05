@@ -134,6 +134,8 @@ def test_desktop_hud_post_malformed_and_deep_json(live_test_server):
     )
     with urllib.request.urlopen(req_malformed, timeout=5) as resp:
         assert resp.status == 200
+        body = json.loads(resp.read().decode("utf-8"))
+        assert "ok" in body or "version" in body
 
     import pytest
     deep_json = ('[' * 10000) + (']' * 10000)
@@ -142,12 +144,10 @@ def test_desktop_hud_post_malformed_and_deep_json(live_test_server):
         data=deep_json.encode('utf-8'),
         headers={"Content-Type": "application/json"}
     )
-    try:
-        with urllib.request.urlopen(req_deep, timeout=5) as resp:
-            assert resp.status == 200
-    except urllib.error.HTTPError as e:
-        e.close()
-        assert e.code == 400
+    with urllib.request.urlopen(req_deep, timeout=5) as resp:
+        assert resp.status == 200
+        body = json.loads(resp.read().decode("utf-8"))
+        assert "ok" in body or "version" in body
 
 
 def test_api_targets_endpoint(live_test_server):
@@ -535,23 +535,44 @@ def test_do_post_malformed_content_length(live_test_server):
         headers={"Content-Type": "application/json", "Content-Length": "not_an_int"},
         method="POST"
     )
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        assert resp.status == 200
-        data = json.loads(resp.read().decode("utf-8"))
-        assert "ok" in data or "version" in data
-
-
-def test_do_post_invalid_json(live_test_server):
-    try:
-        req = urllib.request.Request(
-            f"{live_test_server}/api/desktop-hud",
-            data=b"invalid json",
-            headers={"Content-Type": "application/json"}
-        )
+    with pytest.raises(urllib.error.HTTPError) as exc:
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError):
-        assert False, "Should fallback to empty dict, not raise HTTP error"
+    try:
+        assert exc.value.code == 400
+        body = json.loads(exc.value.read().decode("utf-8"))
+        assert body["error"] == "invalid Content-Length"
+    finally:
+        exc.value.close()
+
+
+def test_do_post_missing_content_length(live_test_server):
+    import http.client
+    parsed = urllib.parse.urlparse(live_test_server)
+    conn = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=5)
+    try:
+        conn.putrequest("POST", "/api/desktop-hud")
+        conn.putheader("Content-Type", "application/json")
+        conn.endheaders()
+        conn.send(b"{}")
+        resp = conn.getresponse()
+        # Missing length defaults to 0 and returns valid JSON response (fallback to `{}`)
+        assert resp.status == 200
+        body = json.loads(resp.read().decode("utf-8"))
+        assert "ok" in body or "version" in body
+    finally:
+        conn.close()
+
+def test_do_post_invalid_json(live_test_server):
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=b"invalid json",
+        headers={"Content-Type": "application/json"}
+    )
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        assert resp.status == 200
+        body = json.loads(resp.read().decode("utf-8"))
+        assert "ok" in body or "version" in body
 
 
 def test_do_post_desktop_hud_step_value_error(live_test_server):

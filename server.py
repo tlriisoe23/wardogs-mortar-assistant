@@ -287,6 +287,8 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    timeout = 30
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
@@ -309,10 +311,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self._send_raw(json.dumps(data).encode('utf-8'), status_code)
 
     def _read_body_length(self, max_bytes: int = MAX_BODY_BYTES) -> int | None:
-        try:
-            length = int(self.headers.get('Content-Length', '0') or 0)
-        except ValueError:
+        length_str = self.headers.get('Content-Length')
+        if length_str is None:
             length = 0
+        else:
+            try:
+                length = int(length_str)
+            except ValueError:
+                self._send_json({"error": "invalid Content-Length"}, status_code=400)
+                return None
 
         if length < 0:
             self._send_json({"error": "invalid Content-Length"}, status_code=400)
@@ -505,8 +512,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
-                    body = json.loads(raw.decode('utf-8', errors='replace'))
-                except (ValueError, RecursionError):
+                    body = json.loads(raw.decode('utf-8'))
+                except (UnicodeDecodeError, json.JSONDecodeError, RecursionError):
                     body = {}
                 if not isinstance(body, dict):
                     body = {}
@@ -525,8 +532,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
-                    body = json.loads(raw.decode('utf-8', errors='replace'))
-                except (ValueError, RecursionError):
+                    body = json.loads(raw.decode('utf-8'))
+                except (UnicodeDecodeError, json.JSONDecodeError, RecursionError):
                     self._send_json({"error": "Invalid JSON body"}, status_code=400)
                     return
                 if not isinstance(body, dict):
