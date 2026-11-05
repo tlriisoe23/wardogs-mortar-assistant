@@ -1,4 +1,5 @@
 from ocr_sniff import (
+    capture_and_scan_entries,
     is_valid_wardogs_coord,
     _decode_compact_grid,
     _extract_text_from_winocr_result,
@@ -130,3 +131,21 @@ def test_screen_ocr_watcher_start_stop_and_recent_events():
     assert status["recent_events"][0]["seq"] == 1
     assert status["recent_events"][1]["role"] == "target"
     assert status["recent_events"][1]["seq"] == 2
+
+
+def test_capture_and_scan_entries_closes_image_on_error():
+    from unittest.mock import patch, MagicMock
+    with patch("ocr_sniff.ImageGrab.grab") as mock_grab:
+        mock_img = MagicMock()
+        mock_img.__enter__.return_value = mock_img
+        # Simulate exception during processing to test cleanup
+        mock_img.size = (1920, 1080)
+        mock_img.crop.side_effect = Exception("crop failure")
+        mock_grab.return_value = mock_img
+
+        # Enable WINOCR temporarily for this test
+        with patch("ocr_sniff.HAS_WINOCR", True):
+            result = capture_and_scan_entries()
+
+        assert result == []
+        mock_img.__exit__.assert_called_once()
