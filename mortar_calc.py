@@ -641,8 +641,8 @@ def interactive_cli() -> None:
     print("  left <m>       : Shift left by <m> meters")
     print("  miss <long> <right> : Inverse correction for missed shot")
     print("  impact <x> <y> : Adjust based on observed impact coordinates")
-    print("  calc           : Calculate fire solution")
-    print("  q              : Quit")
+    print("  calc|solution  : Calculate fire solution")
+    print("  q|quit|exit    : Quit")
     print("=" * 60)
     
     calc = MortarCalculator(10.0, 10.0)
@@ -709,8 +709,8 @@ if __name__ == "__main__":
         print("  left <m>       : Shift left by <m> meters")
         print("  miss <long> <right> : Inverse correction for missed shot")
         print("  impact <x> <y> : Adjust based on observed impact coordinates")
-        print("  calc           : Calculate fire solution")
-        print("  q              : Quit")
+        print("  calc|solution  : Calculate fire solution")
+        print("  q|quit|exit    : Quit")
         sys.exit(0)
     elif len(sys.argv) > 1 and sys.argv[1] == '--test':
         calc = MortarCalculator(10.0, 10.0)
