@@ -53,6 +53,12 @@ def live_test_server():
         httpd.server_close()
 
 
+def test_handler_timeout_contract():
+    """Verify that Handler sets a 30s timeout to prevent thread exhaustion."""
+    assert hasattr(Handler, "timeout")
+    assert Handler.timeout == 30
+
+
 def test_get_vk_name():
     assert get_vk_name(0x04) == "Middle Mouse (MMB)"
     assert get_vk_name(0x42) == "B Key"

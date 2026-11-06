@@ -290,6 +290,8 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    timeout = 30
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
