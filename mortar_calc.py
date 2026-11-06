@@ -216,21 +216,38 @@ def get_terrain_elevation(map_id: str, x: float, y: float) -> Optional[float]:
         dem_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "terrain", "terrain_dem.json")
         if os.path.exists(dem_path):
             with open(dem_path, "r", encoding="utf-8") as f:
-                _TERRAIN_DEM_CACHE = json.load(f)
+                raw_cache = json.load(f)
+                _TERRAIN_DEM_CACHE = {}
+                for k, v in raw_cache.items():
+                    if "heights" in v:
+                        v["n"] = v.get("gridSize", len(v["heights"]))
+                        v["span_x"] = v["maxX"] - v["minX"]
+                        v["span_y"] = v["maxY"] - v["minY"]
+                    _TERRAIN_DEM_CACHE[k] = v
         else:
             _TERRAIN_DEM_CACHE = {}
     dem = _TERRAIN_DEM_CACHE.get(map_id)
     if not dem or "heights" not in dem:
         return None
     heights = dem["heights"]
-    n = dem.get("gridSize", len(heights))
-    span_x = dem["maxX"] - dem["minX"]
-    span_y = dem["maxY"] - dem["minY"]
+    if "span_x" in dem:
+        n = dem["n"]
+        span_x = dem["span_x"]
+        span_y = dem["span_y"]
+        min_x = dem["minX"]
+        min_y = dem["minY"]
+    else:
+        n = dem.get("gridSize", len(heights))
+        span_x = dem["maxX"] - dem["minX"]
+        span_y = dem["maxY"] - dem["minY"]
+        min_x = dem["minX"]
+        min_y = dem["minY"]
+
     if n < 2 or span_x <= 0 or span_y <= 0:
         # Degenerate DEM (single sample or zero-width bounds) cannot be interpolated
         return None
-    fx = ((x - dem["minX"]) / span_x) * (n - 1)
-    fy = ((y - dem["minY"]) / span_y) * (n - 1)
+    fx = ((x - min_x) / span_x) * (n - 1)
+    fy = ((y - min_y) / span_y) * (n - 1)
     if fx < 0 or fx > n - 1 or fy < 0 or fy > n - 1:
         return None
     x0 = max(0, min(n - 1, int(math.floor(fx))))
