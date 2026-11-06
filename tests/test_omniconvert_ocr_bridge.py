@@ -321,3 +321,115 @@ def test_extract_text_via_omniconvert_malformed_json():
         assert result["engine"] == "unavailable"
         assert result["entries"] == []
         assert "OCR extraction failed" in result["error"]
+
+from ocr_sniff import extract_text_via_rapidocr, extract_text_via_ollama_vlm
+
+def test_extract_text_via_rapidocr_success():
+    sample_ocr_text = "CL X: 78.50 Y: 69.50"
+    mock_response_data = {
+        "text": sample_ocr_text,
+    }
+
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps(mock_response_data).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+    mock_resp.__exit__.return_value = None
+
+    with patch("urllib.request.urlopen", return_value=mock_resp) as mock_urlopen:
+        fake_png = b"fakeimagebytes"
+        result = extract_text_via_rapidocr(fake_png, filename="hud.png")
+
+        assert mock_urlopen.called
+        assert result["ok"] is True
+        assert result["engine"] == "rapidocr"
+        assert result["text"] == sample_ocr_text
+        assert len(result["entries"]) == 1
+        assert result["entries"][0]["role"] == "cl"
+        assert result["entries"][0]["x"] == 78.50
+        assert result["entries"][0]["y"] == 69.50
+
+def test_extract_text_via_rapidocr_http_error_fallback():
+    import io
+    mock_fp = MagicMock(spec=io.BytesIO)
+    mock_err = urllib.error.HTTPError(
+        url="http://fake",
+        code=500,
+        msg="Internal Server Error",
+        hdrs={},
+        fp=mock_fp
+    )
+
+    with patch("urllib.request.urlopen", side_effect=mock_err):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_rapidocr(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "rapidocr"
+        assert result["entries"] == []
+        assert "OCR extraction failed" in result["error"]
+        mock_fp.close.assert_called_once()
+
+def test_extract_text_via_rapidocr_exception():
+    with patch("urllib.request.urlopen", side_effect=Exception("general error")):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_rapidocr(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "rapidocr"
+        assert result["entries"] == []
+        assert "OCR extraction failed" in result["error"]
+
+def test_extract_text_via_ollama_vlm_success():
+    sample_ocr_text = "Target 112.40 88.20"
+    mock_response_data = {
+        "response": sample_ocr_text,
+    }
+
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps(mock_response_data).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+    mock_resp.__exit__.return_value = None
+
+    with patch("urllib.request.urlopen", return_value=mock_resp) as mock_urlopen:
+        fake_png = b"fakeimagebytes"
+        result = extract_text_via_ollama_vlm(fake_png)
+
+        assert mock_urlopen.called
+        assert result["ok"] is True
+        assert result["engine"] == "qwen3-vl:2b-instruct"
+        assert result["text"] == sample_ocr_text
+        assert len(result["entries"]) == 1
+        assert result["entries"][0]["role"] == "target"
+        assert result["entries"][0]["x"] == 112.40
+        assert result["entries"][0]["y"] == 88.20
+
+def test_extract_text_via_ollama_vlm_http_error_fallback():
+    import io
+    mock_fp = MagicMock(spec=io.BytesIO)
+    mock_err = urllib.error.HTTPError(
+        url="http://fake",
+        code=500,
+        msg="Internal Server Error",
+        hdrs={},
+        fp=mock_fp
+    )
+
+    with patch("urllib.request.urlopen", side_effect=mock_err):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_ollama_vlm(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "qwen3-vl:2b-instruct"
+        assert result["entries"] == []
+        assert "OCR extraction failed" in result["error"]
+        mock_fp.close.assert_called_once()
+
+def test_extract_text_via_ollama_vlm_exception():
+    with patch("urllib.request.urlopen", side_effect=Exception("general error")):
+        fake_png = b"dummy_bytes"
+        result = extract_text_via_ollama_vlm(fake_png)
+
+        assert result["ok"] is False
+        assert result["engine"] == "qwen3-vl:2b-instruct"
+        assert result["entries"] == []
+        assert "OCR extraction failed" in result["error"]
