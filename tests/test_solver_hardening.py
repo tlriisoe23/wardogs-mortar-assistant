@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup
 
 import mortar_calc
 from mortar_calc import (
+    SPH_PRIMARY_MODELS,
+    _sph_drag_coeff,
+    _sph_height_at_distance,
     L81_MORTAR_TABLE,
     SPH2_HIGH_TABLE,
     SPH2_LOW_TABLE,
@@ -389,3 +392,51 @@ def test_index_bearing_mils_wraps_like_python():
     with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
         html = f.read()
     assert "let bearingMils = Math.round(bearingDeg * (6400 / 360)) % 6400;" in html
+
+
+def _sph_height_at_distance_old(angle: float, distance: float, model: dict, dt: float = 0.02) -> float | None:
+    if angle <= 0 or angle >= math.pi / 2 or distance <= 0:
+        return None
+    x, z = 0.0, 0.0
+    vx = model["speed"] * math.cos(angle)
+    vz = model["speed"] * math.sin(angle)
+    g = model["gravity"]
+    drag = model["drag"]
+    dt_half = dt * 0.5
+    max_steps = int(math.ceil(120.0 / dt))
+    for _ in range(max_steps):
+        s1 = math.hypot(vx, vz)
+        q1 = drag * _sph_drag_coeff(s1) * s1
+        a1x, a1z = -q1 * vx, -g - q1 * vz
+        v2x, v2z = vx + a1x * dt_half, vz + a1z * dt_half
+        s2 = math.hypot(v2x, v2z)
+        q2 = drag * _sph_drag_coeff(s2) * s2
+        a2x, a2z = -q2 * v2x, -g - q2 * v2z
+        v3x, v3z = vx + a2x * dt_half, vz + a2z * dt_half
+        s3 = math.hypot(v3x, v3z)
+        q3 = drag * _sph_drag_coeff(s3) * s3
+        a3x, a3z = -q3 * v3x, -g - q3 * v3z
+        v4x, v4z = vx + a3x * dt, vz + a3z * dt
+        s4 = math.hypot(v4x, v4z)
+        q4 = drag * _sph_drag_coeff(s4) * s4
+        next_x = x + dt * (vx + 2 * v2x + 2 * v3x + v4x) / 6.0
+        next_z = z + dt * (vz + 2 * v2z + 2 * v3z + v4z) / 6.0
+        if next_x >= distance:
+            return float(z + (next_z - z) * (distance - x) / (next_x - x) + model["offset"])
+        vx += dt * (a1x + 2 * a2x + 2 * a3x - q4 * v4x) / 6.0
+        vz += dt * (a1z + 2 * a2z + 2 * a3z - g - q4 * v4z) / 6.0
+        x, z = next_x, next_z
+        if vx <= 1e-7:
+            return None
+    return None
+
+def test_sph_height_at_distance_equivalence():
+    model = SPH_PRIMARY_MODELS["high"]
+    distances = [500.0, 1500.0, 2500.0]
+    angles = [0.1, 0.5, 1.0, 1.4]
+
+    for dist in distances:
+        for ang in angles:
+            res_old = _sph_height_at_distance_old(ang, dist, model)
+            res_new = _sph_height_at_distance(ang, dist, model)
+            assert res_old == res_new, f"Mismatch at distance {dist}, angle {ang}: old={res_old}, new={res_new}"
