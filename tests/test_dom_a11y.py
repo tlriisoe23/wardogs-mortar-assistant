@@ -211,6 +211,25 @@ class TestIndexHtmlA11y(unittest.TestCase):
         for el in status_elements:
             self.assertEqual(el.get("aria-atomic"), "true", f"role='{el.get('role')}' element {el.get('id') or el} is missing aria-atomic='true'")
 
+    def test_aria_controls_targets_exist(self):
+        """Verify that all elements with aria-controls point to valid IDs that exist in the DOM."""
+        controlling_elements = self.soup.find_all(attrs={"aria-controls": True})
+        for el in controlling_elements:
+            target_ids = el['aria-controls'].split()
+            for target_id in target_ids:
+                target = self.soup.find(id=target_id)
+                self.assertIsNotNone(target, f"Element {el.get('id') or el.name} controls missing ID: '{target_id}'")
+
+    def test_no_nested_aria_live(self):
+        """Verify that aria-live regions are not nested inside other aria-live regions to prevent double announcements."""
+        live_elements = self.soup.find_all(attrs={"aria-live": True})
+        for el in live_elements:
+            parent = el.parent
+            while parent is not None and parent.name != 'body':
+                if parent.has_attr('aria-live'):
+                    self.fail(f"Nested aria-live found: Element (id='{el.get('id')}' class='{el.get('class')}') with aria-live='{el['aria-live']}' is nested inside another aria-live region (id='{parent.get('id')}').")
+                parent = parent.parent
+
     def test_recon_live_regions(self):
         """Verify that recon callout and hazard banner have aria-live='polite' and aria-atomic='true'."""
         recon_html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'recon.html')
