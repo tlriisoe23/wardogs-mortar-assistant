@@ -440,7 +440,7 @@ def test_cli_help_contract(monkeypatch, capsys):
     expected_commands = [
         "m <x> <y>", "t <x> <y>", "wpn <m|sph_h|sph_l>",
         "add <m>", "drop <m>", "right <m>", "left <m>",
-        "miss <long> <right>", "impact <x> <y>", "calc", "q"
+        "miss <long> <right>", "impact <x> <y>", "calc|solution", "q|quit|exit"
     ]
     for cmd in expected_commands:
         assert cmd in captured.out
