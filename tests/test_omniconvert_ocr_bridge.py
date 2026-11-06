@@ -369,7 +369,7 @@ def test_extract_text_via_rapidocr_http_error_fallback():
         assert "OCR extraction failed" in result["error"]
         mock_fp.close.assert_called_once()
 
-@pytest.mark.parametrize("side_effect", [urllib.error.URLError("Connection refused"), TimeoutError("Timed out")])
+@pytest.mark.parametrize("side_effect", [urllib.error.URLError("Connection refused"), TimeoutError("Timed out"), Exception("general error")])
 def test_extract_text_via_rapidocr_exception(side_effect):
     with patch("ocr_sniff.urllib.request.urlopen", side_effect=side_effect):
         fake_png = b"dummy_bytes"
@@ -425,7 +425,7 @@ def test_extract_text_via_ollama_vlm_http_error_fallback():
         assert "OCR extraction failed" in result["error"]
         mock_fp.close.assert_called_once()
 
-@pytest.mark.parametrize("side_effect", [urllib.error.URLError("Connection refused"), TimeoutError("Timed out")])
+@pytest.mark.parametrize("side_effect", [urllib.error.URLError("Connection refused"), TimeoutError("Timed out"), Exception("general error")])
 def test_extract_text_via_ollama_vlm_exception(side_effect):
     with patch("ocr_sniff.urllib.request.urlopen", side_effect=side_effect):
         fake_png = b"dummy_bytes"

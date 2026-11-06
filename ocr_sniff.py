@@ -315,7 +315,7 @@ def extract_text_via_rapidocr(image_bytes: bytes, filename: str = "hud.png") -> 
         finally:
             e.close()
         return {"ok": False, "text": "", "engine": "rapidocr", "entries": [], "error": "OCR extraction failed"}
-    except (urllib.error.URLError, TimeoutError, socket.timeout, ConnectionError) as exc:
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
         logging.getLogger(__name__).warning('OCR extraction failed (%s): %s', "rapidocr", type(exc).__name__)
         return {"ok": False, "text": "", "engine": "rapidocr", "entries": [], "error": "OCR extraction failed"}
     except Exception as exc:
@@ -350,7 +350,7 @@ def extract_text_via_ollama_vlm(image_bytes: bytes) -> Dict[str, Any]:
         finally:
             e.close()
         return {"ok": False, "text": "", "engine": "qwen3-vl:2b-instruct", "entries": [], "error": "OCR extraction failed"}
-    except (urllib.error.URLError, TimeoutError, socket.timeout, ConnectionError) as exc:
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
         logging.getLogger(__name__).warning('OCR extraction failed (%s): %s', "qwen3-vl:2b-instruct", type(exc).__name__)
         return {"ok": False, "text": "", "engine": "qwen3-vl:2b-instruct", "entries": [], "error": "OCR extraction failed"}
     except Exception as exc:
