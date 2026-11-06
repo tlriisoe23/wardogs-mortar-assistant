@@ -146,8 +146,10 @@ def test_desktop_hud_post_malformed_and_deep_json(live_test_server):
         with urllib.request.urlopen(req_deep, timeout=5) as resp:
             assert resp.status == 200
     except urllib.error.HTTPError as e:
-        e.close()
-        assert e.code == 400
+        try:
+            assert e.code == 400
+        finally:
+            e.close()
 
 
 def test_api_targets_endpoint(live_test_server):
