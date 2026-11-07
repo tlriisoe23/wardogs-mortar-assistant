@@ -314,6 +314,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self._send_raw(json.dumps(data).encode('utf-8'), status_code)
 
     def _read_body_length(self, max_bytes: int = MAX_BODY_BYTES) -> int | None:
+        if 'Content-Length' not in self.headers:
+            if self.headers.get('Transfer-Encoding', '').lower() == 'chunked':
+                self._send_json({"error": "Chunked encoding not supported"}, status_code=501)
+                return None
+            return 0
+
         try:
             length = int(self.headers.get('Content-Length', '0') or 0)
         except ValueError:
