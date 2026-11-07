@@ -1338,9 +1338,11 @@
                     <div id="rangeStatus" class="range-status in-range" role="status" aria-live="polite" aria-atomic="true" style="flex: 0 1 auto; padding: 3px 9px; white-space: nowrap;">
                         TARGET WITHIN EFFECTIVE ENVELOPE (132m - 684m)
                     </div>
-                    <div id="aimOffsetBanner" aria-live="polite" aria-atomic="true" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px; padding: 2px 8px; font-family: var(--font-mono); font-size: 10px; color: #fbbf24; gap: 6px; align-items: center;">
+                    <div aria-live="polite" aria-atomic="true">
+                        <div id="aimOffsetBanner" style="display: none; background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 4px; padding: 2px 8px; font-family: var(--font-mono); font-size: 10px; color: #fbbf24; gap: 6px; align-items: center;">
                         <span id="aimOffsetText">🎯 AIM OFFSET: (82.18, 71.53)</span>
                         <button type="button" class="map-tag-btn" style="color: #fde047; border-color: #f59e0b; padding: 1px 6px; min-block-size: 22px;" onclick="clearAimOffset()">Zero Offset</button>
+                        </div>
                     </div>
                     <form onsubmit="submitQuickCoordBar(event)" style="display: flex; gap: 4px; flex: 1; min-width: 240px; margin: 0; align-items: center;">
                         <input type="text" id="quickCoordInput" aria-label="Smart Coordinate, Dual Gun->Target, or Range Input" class="input-field" style="flex: 1; padding: 3px 8px; font-size: 11px; min-height: 26px;" placeholder="⚡ Smart Input: 78.5 69.5 CL  |  82.18 71.53  |  78.5 69.5 -> 82.18 71.53  |  420m">

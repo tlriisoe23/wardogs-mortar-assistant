@@ -259,7 +259,9 @@
     <!-- MAIN RECON CANVAS -->
     <div class="pip-canvas-container">
         <canvas id="reconCanvas" role="img" aria-label="Recon picture-in-picture view of the trajectory and terrain profile."></canvas>
-        <div class="ridge-hazard" id="ridgeHazardBanner" aria-live="polite" aria-atomic="true">⚠️ TERRAIN COLLISION: RIDGE CREST INTERSECTS TRAJECTORY</div>
+        <div aria-live="polite" aria-atomic="true">
+            <div class="ridge-hazard" id="ridgeHazardBanner">⚠️ TERRAIN COLLISION: RIDGE CREST INTERSECTS TRAJECTORY</div>
+        </div>
 
         <!-- BOTTOM TELEMETRY OVERLAY -->
         <div class="pip-telemetry-hud">

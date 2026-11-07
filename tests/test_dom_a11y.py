@@ -244,8 +244,8 @@ class TestIndexHtmlA11y(unittest.TestCase):
 
         hazard = recon_soup.find(id='ridgeHazardBanner')
         self.assertIsNotNone(hazard)
-        self.assertEqual(hazard.get('aria-live'), 'polite')
-        self.assertEqual(hazard.get('aria-atomic'), 'true')
+        self.assertEqual(hazard.parent.get('aria-live'), 'polite')
+        self.assertEqual(hazard.parent.get('aria-atomic'), 'true')
 
     def test_simplified_single_screen_ergonomics_and_pruned_bloat(self):
         """Verify AIS-487 feature pruning and single-screen zero-friction controls."""
