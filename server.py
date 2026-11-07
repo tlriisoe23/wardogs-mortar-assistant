@@ -331,7 +331,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             self._do_GET_inner()
         except Exception:
-            self._send_json({"error": "Internal server error"}, status_code=500)
+            import logging
+            logging.exception("Internal server error")
+            self._send_json({"error": "internal_error"}, status_code=500)
 
     def _do_GET_inner(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
@@ -482,8 +484,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._send_json({"error": "TTS upstream timed out"}, status_code=504)
                     return
                 except Exception as e:
-                    print(f"[TTS Error] {e}")
-                    self._send_json({"error": "TTS generation failed"}, status_code=500)
+                    import logging
+                    logging.exception("TTS generation failed")
+                    self._send_json({"error": "internal_error"}, status_code=500)
                     return
 
             try:
@@ -510,11 +513,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
-                    body = json.loads(raw.decode('utf-8', errors='replace'))
-                except (ValueError, RecursionError):
-                    body = {}
+                    body = json.loads(raw.decode('utf-8'))
+                except (ValueError, RecursionError, UnicodeDecodeError):
+                    self._send_json({"error": "invalid_json"}, status_code=400)
+                    return
                 if not isinstance(body, dict):
-                    body = {}
+                    self._send_json({"error": "invalid_json"}, status_code=400)
+                    return
                 action = str(body.get('action') or '').strip()
                 try:
                     step = int(body.get('step_mils', 5))
@@ -530,12 +535,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
-                    body = json.loads(raw.decode('utf-8', errors='replace'))
-                except (ValueError, RecursionError):
-                    self._send_json({"error": "Invalid JSON body"}, status_code=400)
+                    body = json.loads(raw.decode('utf-8'))
+                except (ValueError, RecursionError, UnicodeDecodeError):
+                    self._send_json({"error": "invalid_json"}, status_code=400)
                     return
                 if not isinstance(body, dict):
-                    self._send_json({"error": "Body must be a JSON object"}, status_code=400)
+                    self._send_json({"error": "invalid_json"}, status_code=400)
                     return
                 image_b64 = body.get('image_base64')
                 if not image_b64 or not isinstance(image_b64, str) or not image_b64.strip():
@@ -573,7 +578,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             self._send_json({"error": "Not found"}, status_code=404)
         except Exception:
-            self._send_json({"error": "Internal server error"}, status_code=500)
+            import logging
+            logging.exception("Internal server error")
+            self._send_json({"error": "internal_error"}, status_code=500)
 
     def do_HEAD(self) -> None:
         try:
