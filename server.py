@@ -626,15 +626,16 @@ if __name__ == '__main__':
         print(" Press CTRL+C to terminate.")
         print("=" * 65)
 
-        if "--no-browser" not in sys.argv:
-            try:
-                webbrowser.open(url)
-            except Exception:
-                pass
-
         try:
+            if "--no-browser" not in sys.argv:
+                try:
+                    webbrowser.open(url)
+                except Exception:
+                    pass
+
             httpd.serve_forever()
         except KeyboardInterrupt:
             print("\nShutting down server.")
-            httpd.server_close()
             sys.exit(0)
+        finally:
+            httpd.server_close()
