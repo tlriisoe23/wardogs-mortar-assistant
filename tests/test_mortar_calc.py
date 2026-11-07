@@ -438,7 +438,7 @@ def test_cli_help_contract(monkeypatch, capsys):
 
     # Assert interactive commands are present
     expected_commands = [
-        "m <x> <y>", "t <x> <y>", "wpn <m|sph_h|sph_l>",
+        "m <x> <y>", "t <x> <y>", "wpn <m|sph|sph2|sph_h|sph_l>",
         "add <m>", "drop <m>", "right <m>", "left <m>",
         "miss <long> <right>", "impact <x> <y>", "calc|solution", "q|quit|exit"
     ]
