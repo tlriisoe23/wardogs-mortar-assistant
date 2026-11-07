@@ -517,7 +517,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
                     body = json.loads(raw.decode('utf-8', errors='replace'))
-                except (ValueError, RecursionError):
+                except (ValueError, RecursionError, UnicodeDecodeError):
                     body = {}
                 if not isinstance(body, dict):
                     body = {}
@@ -537,7 +537,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 raw = self.rfile.read(length) if length > 0 else b'{}'
                 try:
                     body = json.loads(raw.decode('utf-8', errors='replace'))
-                except (ValueError, RecursionError):
+                except (ValueError, RecursionError, UnicodeDecodeError):
                     self._send_json({"error": "Invalid JSON body"}, status_code=400)
                     return
                 if not isinstance(body, dict):
