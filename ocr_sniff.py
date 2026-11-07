@@ -17,7 +17,6 @@ import ctypes
 import threading
 import urllib.request
 import urllib.error
-import socket
 import logging
 from typing import Optional, Tuple, Callable, Dict, Any, List
 from PIL import Image, ImageGrab, ImageOps  # type: ignore
@@ -424,7 +423,7 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
             "error": error_msg
         }
 
-    except (urllib.error.URLError, TimeoutError, socket.timeout, ConnectionError) as exc:
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
         print(f"[OCR Network Error] {type(exc).__name__}: {exc}")
         return {
             "ok": False,
