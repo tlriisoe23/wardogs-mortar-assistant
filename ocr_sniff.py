@@ -305,8 +305,13 @@ def extract_text_via_rapidocr(image_bytes: bytes, filename: str = "hud.png") -> 
     try:
         with urllib.request.urlopen(req, timeout=3.0) as resp:
             raw_data = resp.read(5 * 1024 * 1024)
-            data = json.loads(raw_data.decode("utf-8", errors="replace"))
-            text = (data.get("text") or data.get("markdown") or "") if isinstance(data, dict) else ""
+            try:
+                data = json.loads(raw_data.decode("utf-8", errors="replace"))
+            except (ValueError, RecursionError, UnicodeDecodeError):
+                data = {}
+            if not isinstance(data, dict):
+                data = {}
+            text = data.get("text") or data.get("markdown") or ""
             entries = extract_all_coord_lines(_flatten_markdown_table(text))
             return {"ok": bool(text or entries), "text": text, "engine": "rapidocr", "entries": entries}
     except urllib.error.HTTPError as e:
@@ -340,8 +345,13 @@ def extract_text_via_ollama_vlm(image_bytes: bytes) -> Dict[str, Any]:
     try:
         with urllib.request.urlopen(req, timeout=OMNICONVERT_TIMEOUT_S) as resp:
             raw_data = resp.read(10 * 1024 * 1024)
-            data = json.loads(raw_data.decode("utf-8", errors="replace"))
-            text = (data.get("response") or data.get("text") or "") if isinstance(data, dict) else ""
+            try:
+                data = json.loads(raw_data.decode("utf-8", errors="replace"))
+            except (ValueError, RecursionError, UnicodeDecodeError):
+                data = {}
+            if not isinstance(data, dict):
+                data = {}
+            text = data.get("response") or data.get("text") or ""
             entries = extract_all_coord_lines(_flatten_markdown_table(text))
             return {"ok": bool(text or entries), "text": text, "engine": "qwen3-vl:2b-instruct", "entries": entries}
     except urllib.error.HTTPError as e:
@@ -381,7 +391,16 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
     try:
         with urllib.request.urlopen(req, timeout=OMNICONVERT_TIMEOUT_S) as resp:
             raw_data = resp.read(10 * 1024 * 1024)
-            data = json.loads(raw_data.decode("utf-8", errors="replace"))
+            try:
+                data = json.loads(raw_data.decode("utf-8", errors="replace"))
+            except (ValueError, RecursionError, UnicodeDecodeError):
+                return {
+                    "ok": False,
+                    "text": "",
+                    "engine": "unavailable",
+                    "entries": [],
+                    "error": "OCR extraction failed"
+                }
             if not isinstance(data, dict):
                 data = {}
             text = data.get("text") or data.get("markdown") or ""
