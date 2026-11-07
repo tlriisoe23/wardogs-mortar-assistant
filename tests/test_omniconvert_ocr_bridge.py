@@ -264,41 +264,17 @@ def test_extract_text_via_omniconvert_http_error_closes_fp():
         assert "HTTP Error 503" in result["error"]
         mock_fp.close.assert_called_once()
 
-def test_extract_text_via_omniconvert_url_error():
-    with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("timeout")):
-        fake_png = b"dummy_bytes"
-        result = extract_text_via_omniconvert(fake_png)
+import socket
 
-        assert result["ok"] is False
-        assert result["engine"] == "unavailable"
-        assert result["entries"] == []
-        assert "OCR extraction failed" in result["error"]
-
-def test_extract_text_via_omniconvert_socket_timeout():
-    import socket
-    with patch("urllib.request.urlopen", side_effect=socket.timeout("timed out")):
-        fake_png = b"dummy_bytes"
-        result = extract_text_via_omniconvert(fake_png)
-
-        assert result["ok"] is False
-        assert result["engine"] == "unavailable"
-        assert result["entries"] == []
-        assert "OCR extraction failed" in result["error"]
-
-
-def test_extract_text_via_omniconvert_timeout():
-    with patch("urllib.request.urlopen", side_effect=TimeoutError("Request timed out")):
-        fake_png = b"dummy_bytes"
-        result = extract_text_via_omniconvert(fake_png)
-
-        assert result["ok"] is False
-        assert result["engine"] == "unavailable"
-        assert result["entries"] == []
-        assert "OCR extraction failed" in result["error"]
-
-
-def test_extract_text_via_omniconvert_connection_reset():
-    with patch("urllib.request.urlopen", side_effect=ConnectionResetError("Connection reset by peer")):
+@pytest.mark.parametrize("side_effect", [
+    urllib.error.URLError("timeout"),
+    TimeoutError("Request timed out"),
+    socket.timeout("timed out"),
+    ConnectionResetError("Connection reset by peer"),
+    Exception("general error")
+], ids=["url_error", "timeout", "socket_timeout", "connection_reset", "generic_exception"])
+def test_extract_text_via_omniconvert_exception(side_effect):
+    with patch("ocr_sniff.urllib.request.urlopen", side_effect=side_effect):
         fake_png = b"dummy_bytes"
         result = extract_text_via_omniconvert(fake_png)
 
