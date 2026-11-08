@@ -520,13 +520,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 except (ValueError, RecursionError, UnicodeDecodeError):
                     body = {}
                 if not isinstance(body, dict):
-                    body = {}
+                    err = {"ok": False, "error": "JSON object body required"}
+                    self._send_json(err, status_code=400)
+                    return
                 action = str(body.get('action') or '').strip()
                 try:
-                    step = int(body.get('step_mils', 5))
+                    raw_step = body.get('step_mils', 5)
+                    if isinstance(raw_step, bool):
+                        raise TypeError
+                    f_step = float(raw_step)
+                    if not math.isfinite(f_step):
+                        raise ValueError
+                    step = int(f_step)
                     step = max(-6400, min(6400, step))
                 except (ValueError, TypeError, OverflowError):
-                    step = 5
+                    err = {"ok": False, "error": "invalid step_mils"}
+                    self._send_json(err, status_code=400)
+                    return
                 payload = _update_desktop_hud_state(action, step, body)
                 self._send_raw(payload)
                 return

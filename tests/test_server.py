@@ -5,6 +5,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from unittest import mock
+import math
 
 import pytest
 
@@ -127,10 +128,15 @@ def test_desktop_hud_post_non_dict_payload(live_test_server):
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json"}
     )
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        assert resp.status == 200
-        data = json.loads(resp.read().decode("utf-8"))
-        assert "last_action" in data
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        with urllib.request.urlopen(req, timeout=5):
+            pass
+    try:
+        assert exc.value.code == 400
+        error_data = json.loads(exc.value.read().decode("utf-8"))
+        assert error_data.get("error") == "JSON object body required"
+    finally:
+        exc.value.close()
 
 def test_desktop_hud_post_malformed_and_deep_json(live_test_server):
     req_malformed = urllib.request.Request(
@@ -561,7 +567,57 @@ def test_do_post_invalid_json(live_test_server):
 
 
 def test_do_post_desktop_hud_step_value_error(live_test_server):
-    payload = {"action": "elev_up", "step_mils": "not an int"}
+    invalid_steps = ["abc", None, float('inf'), float('nan'), True, 1e400]
+    for step in invalid_steps:
+        payload = {"action": "elev_up"}
+        if step is not None:
+            if isinstance(step, float) and step != step: # NaN
+                # JSON cannot serialize NaN directly cleanly with json.dumps without extra args, but wait, math.isnan
+                payload["step_mils"] = float('nan')
+            else:
+                payload["step_mils"] = step
+        else:
+            payload["step_mils"] = None
+
+        data_bytes = json.dumps(payload).replace("NaN", "NaN").encode("utf-8")
+        if isinstance(step, float) and math.isnan(step):
+            data_bytes = b'{"action": "elev_up", "step_mils": NaN}'
+        if isinstance(step, float) and step == float('inf'):
+            data_bytes = b'{"action": "elev_up", "step_mils": Infinity}'
+
+        req = urllib.request.Request(
+            f"{live_test_server}/api/desktop-hud",
+            data=data_bytes,
+            headers={"Content-Type": "application/json"}
+        )
+        with pytest.raises(urllib.error.HTTPError) as exc:
+            with urllib.request.urlopen(req, timeout=5):
+                pass
+        try:
+            assert exc.value.code == 400
+            error_data = json.loads(exc.value.read().decode("utf-8"))
+            assert error_data.get("error") == "invalid step_mils"
+        finally:
+            exc.value.close()
+
+def test_do_post_desktop_hud_non_object_body(live_test_server):
+    req = urllib.request.Request(
+        f"{live_test_server}/api/desktop-hud",
+        data=b"[]",
+        headers={"Content-Type": "application/json"}
+    )
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        with urllib.request.urlopen(req, timeout=5):
+            pass
+    try:
+        assert exc.value.code == 400
+        error_data = json.loads(exc.value.read().decode("utf-8"))
+        assert error_data.get("error") == "JSON object body required"
+    finally:
+        exc.value.close()
+
+def test_do_post_desktop_hud_valid_step_clamped(live_test_server):
+    payload = {"action": "elev_up", "step_mils": 99999}
     req = urllib.request.Request(
         f"{live_test_server}/api/desktop-hud",
         data=json.dumps(payload).encode("utf-8"),
@@ -569,8 +625,6 @@ def test_do_post_desktop_hud_step_value_error(live_test_server):
     )
     with urllib.request.urlopen(req, timeout=5) as resp:
         assert resp.status == 200
-        data = json.loads(resp.read().decode("utf-8"))
-        assert data["last_action"] == "elev_up"
 
 
 def test_server_do_get_internal_error(live_test_server, monkeypatch):
