@@ -424,7 +424,7 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
         }
 
     except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
-        print(f"[OCR Network Error] {type(exc).__name__}: {exc}")
+        logging.getLogger(__name__).warning(f"[OCR Network Error] {type(exc).__name__}: {exc}")
         return {
             "ok": False,
             "text": "",
@@ -433,7 +433,7 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
             "error": "OCR extraction failed"
         }
     except (json.JSONDecodeError, UnicodeDecodeError, TypeError, ValueError) as exc:
-        print(f"[OCR Decode Error] {type(exc).__name__}: {exc}")
+        logging.getLogger(__name__).warning(f"[OCR Decode Error] {type(exc).__name__}: {exc}")
         return {
             "ok": False,
             "text": "",
@@ -442,7 +442,7 @@ def extract_text_via_omniconvert(image_bytes: bytes, filename: str = "hud.png", 
             "error": "OCR extraction failed"
         }
     except Exception as exc:
-        print(f"[OCR Unexpected Error] {type(exc).__name__}: {exc}")
+        logging.getLogger(__name__).error(f"[OCR Unexpected Error] {type(exc).__name__}: {exc}", exc_info=True)
         return {
             "ok": False,
             "text": "",

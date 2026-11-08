@@ -21,6 +21,7 @@ import json
 import os
 import sys
 import base64
+import logging
 from typing import Any
 
 from ocr_sniff import (
@@ -255,9 +256,9 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
         if len(audio_data) > 256:
             return audio_data
     except asyncio.TimeoutError:
-        print("[TTS Timeout] edge-tts stream exceeded timeout")
+        logging.getLogger(__name__).warning("[TTS Timeout] edge-tts stream exceeded timeout")
     except Exception as e:
-        print(f"[TTS Warning] edge_tts failed: {e}. Falling back to gTTS.")
+        logging.getLogger(__name__).warning(f"[TTS Warning] edge_tts failed: {e}. Falling back to gTTS.", exc_info=True)
     try:
         import io
         from gtts import gTTS  # type: ignore
@@ -269,7 +270,7 @@ async def generate_neural_tts(text: str, voice: str) -> bytes:
         if len(data) > 256:
             return data
     except Exception as e:
-        print(f"[TTS Warning] gTTS failed: {e}. Falling back to generated beep.")
+        logging.getLogger(__name__).warning(f"[TTS Warning] gTTS failed: {e}. Falling back to generated beep.", exc_info=True)
     import io, math, struct, wave
     buf = io.BytesIO()
     sample_rate = 22050
@@ -336,7 +337,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self) -> None:
         try:
             self._do_GET_inner()
-        except Exception:
+        except Exception as e:
+            logging.getLogger(__name__).error("Internal Server Error in GET", exc_info=True)
             self._send_json({"error": "Internal server error"}, status_code=500)
 
     def _do_GET_inner(self) -> None:
@@ -484,11 +486,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if len(TTS_CACHE) < 500:
                         TTS_CACHE[cache_key] = audio_bytes
                 except asyncio.TimeoutError:
-                    print("[TTS Error] Upstream timed out")
+                    logging.getLogger(__name__).warning("[TTS Error] Upstream timed out")
                     self._send_json({"error": "TTS upstream timed out"}, status_code=504)
                     return
                 except Exception as e:
-                    print(f"[TTS Error] {e}")
+                    logging.getLogger(__name__).error("TTS generation failed", exc_info=True)
                     self._send_json({"error": "TTS generation failed"}, status_code=500)
                     return
 
@@ -552,7 +554,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if not image_bytes:
                         self._send_json({"error": "Empty decoded image bytes"}, status_code=400)
                         return
-                except Exception:
+                except Exception as e:
+                    logging.getLogger(__name__).warning(f"Base64 decode failed: {e}")
                     self._send_json({"error": "Base64 decode failed"}, status_code=400)
                     return
 
@@ -578,7 +581,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 })
                 return
             self._send_json({"error": "Not found"}, status_code=404)
-        except Exception:
+        except Exception as e:
+            logging.getLogger(__name__).error("Internal Server Error in POST", exc_info=True)
             self._send_json({"error": "Internal server error"}, status_code=500)
 
     def do_HEAD(self) -> None:
