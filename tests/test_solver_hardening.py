@@ -430,6 +430,32 @@ def _sph_height_at_distance_old(angle: float, distance: float, model: dict, dt: 
             return None
     return None
 
+def _sph_drag_coeff_old(speed: float) -> float:
+    from mortar_calc import SPH_GC_X, SPH_GC_Y, SPH_GC_LOOKUP
+    if speed <= SPH_GC_X[0]:
+        return SPH_GC_Y[0]
+    if speed >= SPH_GC_X[-1]:
+        return SPH_GC_Y[-1]
+    lo = SPH_GC_LOOKUP[int(speed)]
+    hi = lo + 1
+    frac = (speed - SPH_GC_X[lo]) / (SPH_GC_X[hi] - SPH_GC_X[lo])
+    return SPH_GC_Y[lo] + (SPH_GC_Y[hi] - SPH_GC_Y[lo]) * frac
+
+def test_sph_drag_coeff_equivalence():
+    from mortar_calc import _sph_drag_coeff, SPH_GC_X
+    test_speeds = [-10.0, 0.0, 15.0, 30.0, 30.5, 600.0, 650.0]
+    # Sweeping from 0 to 610 in small increments
+    for i in range(-5, int(SPH_GC_X[-1]) + 15):
+        speed = float(i)
+        old_val = _sph_drag_coeff_old(speed)
+        new_val = _sph_drag_coeff(speed)
+        assert old_val == new_val, f"Mismatch at speed {speed}: old={old_val}, new={new_val}"
+        speed_frac = speed + 0.5
+        old_val = _sph_drag_coeff_old(speed_frac)
+        new_val = _sph_drag_coeff(speed_frac)
+        assert old_val == new_val, f"Mismatch at speed {speed_frac}: old={old_val}, new={new_val}"
+
+
 def test_sph_height_at_distance_equivalence():
     model = SPH_PRIMARY_MODELS["high"]
     distances = [500.0, 1500.0, 2500.0]

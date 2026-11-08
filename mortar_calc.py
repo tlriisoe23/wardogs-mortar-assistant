@@ -255,15 +255,15 @@ SPH_PRIMARY_MODELS = {
 assert SPH_GC_X[0] == 0.0 and all(float(x).is_integer() for x in SPH_GC_X)
 SPH_GC_LOOKUP = tuple(bisect.bisect_right(SPH_GC_X, float(i)) - 1 for i in range(int(SPH_GC_X[-1]) + 1))
 
-def _sph_drag_coeff(speed: float) -> float:
-    if speed <= SPH_GC_X[0]:
-        return SPH_GC_Y[0]
-    if speed >= SPH_GC_X[-1]:
-        return SPH_GC_Y[-1]
-    lo = SPH_GC_LOOKUP[int(speed)]
+def _sph_drag_coeff(speed: float, _x=SPH_GC_X, _y=SPH_GC_Y, _lkp=SPH_GC_LOOKUP, _i=int, _x0=SPH_GC_X[0], _xl=SPH_GC_X[-1], _y0=SPH_GC_Y[0], _yl=SPH_GC_Y[-1]) -> float:
+    if speed <= _x0:
+        return _y0
+    if speed >= _xl:
+        return _yl
+    lo = _lkp[_i(speed)]
     hi = lo + 1
-    frac = (speed - SPH_GC_X[lo]) / (SPH_GC_X[hi] - SPH_GC_X[lo])
-    return SPH_GC_Y[lo] + (SPH_GC_Y[hi] - SPH_GC_Y[lo]) * frac
+    frac = (speed - _x[lo]) / (_x[hi] - _x[lo])
+    return _y[lo] + (_y[hi] - _y[lo]) * frac
 
 
 def _sph_height_at_distance(angle: float, distance: float, model: Dict[str, Any], dt: float = 0.02) -> Optional[float]:
@@ -279,24 +279,7 @@ def _sph_height_at_distance(angle: float, distance: float, model: Dict[str, Any]
     max_steps = int(math.ceil(120.0 / dt))
 
     _hypot = math.hypot
-    _gc_x = SPH_GC_X
-    _gc_y = SPH_GC_Y
-    _gc_lookup = SPH_GC_LOOKUP
-    _int = int
-    _gc_x0 = SPH_GC_X[0]
-    _gc_x_last = SPH_GC_X[-1]
-    _gc_y0 = SPH_GC_Y[0]
-    _gc_y_last = SPH_GC_Y[-1]
-
-    def _drag_coeff(speed: float, _x=_gc_x, _y=_gc_y, _lkp=_gc_lookup, _i=_int, _x0=_gc_x0, _xl=_gc_x_last, _y0=_gc_y0, _yl=_gc_y_last) -> float:
-        if speed <= _x0:
-            return _y0
-        if speed >= _xl:
-            return _yl
-        lo = _lkp[_i(speed)]
-        hi = lo + 1
-        frac = (speed - _x[lo]) / (_x[hi] - _x[lo])
-        return _y[lo] + (_y[hi] - _y[lo]) * frac
+    _drag_coeff = _sph_drag_coeff
 
     for _ in range(max_steps):
         s1 = _hypot(vx, vz)
