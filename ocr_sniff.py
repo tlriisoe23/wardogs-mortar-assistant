@@ -19,7 +19,7 @@ import urllib.request
 import urllib.error
 import logging
 from typing import Optional, Tuple, Callable, Dict, Any, List
-from PIL import Image, ImageGrab, ImageOps  # type: ignore
+from PIL import Image, ImageGrab, ImageOps  # type: ignore[import-untyped,import-not-found,unused-ignore]
 
 OMNICONVERT_URL = os.environ.get("OMNICONVERT_URL", "http://127.0.0.1:8100").rstrip("/")
 # qwen3-vl:2b-instruct smart_vision on ai-ctl-nuc observed at 12-18s per image; 15s caused intermittent timeouts.

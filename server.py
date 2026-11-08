@@ -22,7 +22,7 @@ import os
 import sys
 import base64
 import logging
-from typing import Any
+from typing import Any, cast, Dict
 
 from ocr_sniff import (
     GLOBAL_OCR_WATCHER,
@@ -212,7 +212,7 @@ DESKTOP_HUD_STATE: dict[str, Any] = {
     },
 }
 
-def _update_desktop_hud_state(action: str, step: int, body: dict) -> bytes:
+def _update_desktop_hud_state(action: str, step: int, body: Dict[str, Any]) -> bytes:
     global DESKTOP_HUD_VERSION
     with DESKTOP_HUD_LOCK:
         if action == 'elev_up':
@@ -236,13 +236,13 @@ def _update_desktop_hud_state(action: str, step: int, body: dict) -> bytes:
         DESKTOP_HUD_VERSION += 1
         DESKTOP_HUD_CACHE["payload"] = json.dumps(DESKTOP_HUD_STATE).encode('utf-8')
         DESKTOP_HUD_CACHE["version"] = DESKTOP_HUD_VERSION
-        return DESKTOP_HUD_CACHE["payload"]
+        return cast(bytes, DESKTOP_HUD_CACHE["payload"])
 
 
 
 async def generate_neural_tts(text: str, voice: str) -> bytes:
     try:
-        import edge_tts  # type: ignore
+        import edge_tts  # type: ignore[import-untyped,import-not-found,unused-ignore]
         communicate = edge_tts.Communicate(text, voice, rate="+8%")
 
         async def _consume_edge_tts() -> bytes:
