@@ -306,3 +306,24 @@ class TestIndexHtmlA11y(unittest.TestCase):
         self.assertIn('<span aria-hidden="true">🟠</span> HIGH', html)
         self.assertIn('<span aria-hidden="true">🔵</span> LOW', html)
         self.assertIn('<span aria-hidden="true">🎯</span> Lock & Aim', html)
+
+    def test_top_bar_emojis_are_aria_hidden(self):
+        """Verify that specific buttons have their decorative leading emojis wrapped in aria-hidden."""
+        import re
+        emoji_pattern = re.compile(r'[\U0001F300-\U0001FAFF\u2600-\u27BF]')
+        test_buttons = ['openHowToUseBtn', 'pageTabManual', 'pageTabVoiceChat']
+
+        for btn_id in test_buttons:
+            btn = self.soup.find(id=btn_id)
+            self.assertIsNotNone(btn, f"Button {btn_id} not found")
+
+            hidden_emojis = []
+            for hidden_el in btn.find_all(attrs={'aria-hidden': 'true'}):
+                hidden_emojis.extend(emoji_pattern.findall(hidden_el.text))
+
+            unhidden = [e for e in emoji_pattern.findall(btn.text) if e not in hidden_emojis]
+            self.assertEqual(len(unhidden), 0, f"Button {btn_id} contains unhidden emojis: {unhidden}")
+
+            visible_text = btn.get_text(strip=True)
+            accessible_name = btn.get('aria-label', '').strip() or btn.get('title', '').strip()
+            self.assertTrue(bool(visible_text) or bool(accessible_name), f"Button {btn_id} has no accessible name.")

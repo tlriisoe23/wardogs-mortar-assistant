@@ -1268,7 +1268,7 @@
         </div>
         <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
             <button type="button" class="action-btn" id="openHowToUseBtn" style="padding: 5px 10px; font-size: 11px; background: #0369a1; color: #ffffff;" onclick="openHowToUseModal()" title="Open Quick-Start Field Manual &amp; Voice Guide">
-                📖 HOW TO USE
+                <span aria-hidden="true">📖</span> HOW TO USE
             </button>
             <button type="button" class="action-btn secondary" id="headerUndoBtn" style="padding: 5px 9px; font-size: 11px;" onclick="undoLastAction()" title="Undo last coordinate or impact change (Ctrl+Z)">
                 ↩ UNDO
@@ -1291,14 +1291,14 @@
             <div class="workspace-switcher" role="tablist" aria-label="Primary Workspace Pages" onkeydown="handleWorkspaceTabsKeydown(event)">
                 <button type="button" role="tab" id="pageTabManual" aria-selected="true" aria-controls="pageManualWorkspace" tabindex="0" class="workspace-tab-btn active" onclick="switchWorkspacePage('manual')">
                     <div>
-                        <div>🗺️ 1. Tactical Map &amp; Fire Control</div>
+                        <div><span aria-hidden="true">🗺️</span> 1. Tactical Map &amp; Fire Control</div>
                         <div class="workspace-tab-sub">All-in-One Map · Omni-Input · OCR &amp; PTT</div>
                     </div>
                     <span style="font-size: 13px;">▸</span>
                 </button>
                 <button type="button" role="tab" id="pageTabVoiceChat" aria-selected="false" aria-controls="pageVoiceChatWorkspace" tabindex="-1" class="workspace-tab-btn" onclick="switchWorkspacePage('voicechat')">
                     <div>
-                        <div>⚙️ 2. Voice Setup &amp; Activity Log</div>
+                        <div><span aria-hidden="true">⚙️</span> 2. Voice Setup &amp; Activity Log</div>
                         <div class="workspace-tab-sub">PTT Keybind · AI Voice · Full Log</div>
                     </div>
                     <span style="font-size: 13px;">▸</span>
@@ -1359,7 +1359,7 @@
                             🔍 Scan Now
                         </button>
                         <button type="button" class="map-tag-btn" id="topOcrPasteImgBtn" onclick="triggerClipboardOrImageOcr()" title="Paste coordinates or OCR a screenshot from clipboard (Ctrl+V)">
-                            📋 Paste/OCR
+                            <span aria-hidden="true">📋</span> Paste/OCR
                         </button>
                         <input type="file" id="ocrImageUploadInput" accept="image/*" aria-label="Upload Screenshot for OCR" style="display: none;" onchange="handleOcrImageFileSelect(event)">
                         <span id="topOcrStatusBadge" role="status" aria-live="polite" aria-atomic="true" style="font-size: 10px; font-family: var(--font-mono); padding: 3px 7px; border-radius: 4px; background: #090e15; border: 1px solid var(--border-dim); color: #94a3b8; white-space: nowrap;">OCR: STANDBY</span>
