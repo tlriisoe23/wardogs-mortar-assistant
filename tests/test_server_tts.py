@@ -3,7 +3,7 @@ import asyncio
 from unittest.mock import patch, MagicMock, AsyncMock
 from server import generate_neural_tts
 
-def test_generate_neural_tts_fallback(capsys):
+def test_generate_neural_tts_fallback(caplog):
     # Mocking missing modules to force fallbacks
     with patch.dict(sys.modules, {'edge_tts': None, 'gtts': None}):
         result = asyncio.run(generate_neural_tts("Hello", "en-US-ChristopherNeural"))
@@ -13,12 +13,11 @@ def test_generate_neural_tts_fallback(capsys):
         assert result.startswith(b"RIFF")
         assert b"WAVE" in result
 
-        captured = capsys.readouterr()
-        assert "[TTS Warning] edge_tts failed" in captured.out
-        assert "[TTS Warning] gTTS failed" in captured.out
+        assert "[TTS Warning] edge_tts failed" in caplog.text
+        assert "[TTS Warning] gTTS failed" in caplog.text
 
 
-def test_generate_neural_tts_upstream_timeout_recovery(capsys):
+def test_generate_neural_tts_upstream_timeout_recovery(caplog):
     async def hanging_stream():
         await asyncio.sleep(20.0)
         yield {"type": "audio", "data": b""}
@@ -61,7 +60,5 @@ def test_generate_neural_tts_upstream_timeout_recovery(capsys):
             assert result.startswith(b"RIFF")
             assert b"WAVE" in result
 
-            captured = capsys.readouterr()
-            assert "[TTS Timeout] edge-tts stream exceeded timeout" in captured.out
-
-            assert "[TTS Warning] gTTS failed" in captured.out
+            assert "[TTS Timeout] edge-tts stream exceeded timeout" in caplog.text
+            assert "[TTS Warning] gTTS failed" in caplog.text
