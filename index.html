@@ -1268,16 +1268,16 @@
         </div>
         <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
             <button type="button" class="action-btn" id="openHowToUseBtn" style="padding: 5px 10px; font-size: 11px; background: #0369a1; color: #ffffff;" onclick="openHowToUseModal()" title="Open Quick-Start Field Manual &amp; Voice Guide">
-                📖 HOW TO USE
+                <span aria-hidden="true">📖</span> HOW TO USE
             </button>
             <button type="button" class="action-btn secondary" id="headerUndoBtn" style="padding: 5px 9px; font-size: 11px;" onclick="undoLastAction()" title="Undo last coordinate or impact change (Ctrl+Z)">
-                ↩ UNDO
+                <span aria-hidden="true">↩</span> UNDO
             </button>
             <button type="button" class="action-btn" id="headerMuteBtn" aria-pressed="false" style="padding: 5px 10px; font-size: 11px; background: #047857; color: #ffffff;" onclick="toggleGlobalMute()" title="Mute or Unmute all Spoken Audio &amp; Radio Chimes">
-                🔊 AUDIO: ON
+                <span aria-hidden="true">🔊</span> <span class="btn-label">AUDIO: ON</span>
             </button>
             <button type="button" class="action-btn secondary" style="padding: 5px 10px; font-size: 11px;" onclick="speakCurrentSolution()">
-                🔊 REPEAT
+                <span aria-hidden="true">🔊</span> REPEAT
             </button>
             <button type="button" class="action-btn secondary" style="padding: 5px 10px; font-size: 11px;" onclick="resetAll()">
                 RESET GRID
@@ -1994,10 +1994,10 @@
             if (btn) {
                 btn.setAttribute('aria-pressed', String(isAudioMuted));
                 if (isAudioMuted) {
-                    btn.innerHTML = '🔇 MUTED';
+                    btn.innerHTML = '<span aria-hidden="true">🔇</span> <span class="btn-label">MUTED</span>';
                     btn.style.background = '#dc2626';
                 } else {
-                    btn.innerHTML = '🔊 AUDIO: ON';
+                    btn.innerHTML = '<span aria-hidden="true">🔊</span> <span class="btn-label">AUDIO: ON</span>';
                     btn.style.background = '#059669';
                 }
             }

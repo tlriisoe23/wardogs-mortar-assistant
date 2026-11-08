@@ -306,3 +306,22 @@ class TestIndexHtmlA11y(unittest.TestCase):
         self.assertIn('<span aria-hidden="true">🟠</span> HIGH', html)
         self.assertIn('<span aria-hidden="true">🔵</span> LOW', html)
         self.assertIn('<span aria-hidden="true">🎯</span> Lock & Aim', html)
+
+    def test_action_bar_buttons_hide_emoji_from_screen_readers(self):
+        """Verify that action bar buttons hide their emojis using aria-hidden='true' but retain accessible text."""
+        button_ids = ['openHowToUseBtn', 'headerUndoBtn', 'headerMuteBtn']
+        for btn_id in button_ids:
+            btn = self.soup.find(id=btn_id)
+            self.assertIsNotNone(btn, f"Button {btn_id} not found in index.html")
+
+            hidden_span = btn.find('span', attrs={'aria-hidden': 'true'})
+            self.assertIsNotNone(hidden_span, f"Button {btn_id} is missing an aria-hidden span for its emoji")
+
+            emoji_text = hidden_span.get_text(strip=True)
+            self.assertTrue(bool(emoji_text), f"Button {btn_id} aria-hidden span is empty (should contain emoji)")
+            self.assertIn(emoji_text, ['📖', '↩', '🔊'], f"Button {btn_id} aria-hidden span contains unexpected emoji: {emoji_text}")
+
+            full_text = btn.get_text(separator=' ', strip=True)
+            accessible_text = full_text.replace(emoji_text, '').strip()
+
+            self.assertTrue(bool(accessible_text), f"Button {btn_id} has no accessible text remaining after hiding the emoji")
