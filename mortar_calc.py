@@ -263,7 +263,7 @@ def _sph_drag_coeff(speed: float, _x: List[int] = SPH_GC_X, _y: List[float] = SP
     lo = _lkp[_i(speed)]
     hi = lo + 1
     frac = (speed - _x[lo]) / (_x[hi] - _x[lo])
-    return _y[lo] + (_y[hi] - _y[lo]) * frac
+    return float(_y[lo] + (_y[hi] - _y[lo]) * frac)
 
 
 def _sph_height_at_distance(angle: float, distance: float, model: Dict[str, Any], dt: float = 0.02) -> Optional[float]:
