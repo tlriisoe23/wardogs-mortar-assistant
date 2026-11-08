@@ -311,7 +311,7 @@ class TestIndexHtmlA11y(unittest.TestCase):
         """Verify that specific buttons have their decorative leading emojis wrapped in aria-hidden."""
         import re
         emoji_pattern = re.compile(r'[\U0001F300-\U0001FAFF\u2600-\u27BF]')
-        test_buttons = ['openHowToUseBtn', 'pageTabManual', 'pageTabVoiceChat']
+        test_buttons = ['openHowToUseBtn', 'pageTabManual', 'pageTabVoiceChat', 'topOcrPasteImgBtn']
 
         for btn_id in test_buttons:
             btn = self.soup.find(id=btn_id)
