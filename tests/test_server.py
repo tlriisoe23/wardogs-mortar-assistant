@@ -30,6 +30,7 @@ def _no_side_effects(monkeypatch):
     mock_ocr.get_status.return_value = {
         'running': True, 'recent_events': []
     }
+    mock_ocr.get_status_bytes.return_value = b'{"running": true, "recent_events": []}'
     monkeypatch.setattr('server.GLOBAL_OCR_WATCHER', mock_ocr)
 
     monkeypatch.setattr('server.capture_and_scan_entries',

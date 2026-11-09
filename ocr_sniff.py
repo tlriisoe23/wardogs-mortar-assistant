@@ -617,6 +617,9 @@ class ScreenOcrWatcher:
         self._last_clip_seq: int = self._get_clip_seq()
         self._thread: Optional[threading.Thread] = None
 
+        # Atomic (state, payload) cache tuple
+        self._cached_status: Tuple[Tuple[int, bool, bool], Optional[bytes]] = ((-1, False, False), None)
+
     def _get_clip_seq(self) -> int:
         if hasattr(ctypes, 'windll'):
             try:
@@ -702,6 +705,16 @@ class ScreenOcrWatcher:
                     self._record_entry(entry, source="ocr")
 
             time.sleep(0.2)
+
+    def get_status_bytes(self) -> bytes:
+        state = (self.event_seq, self.is_running, self.watch_clipboard)
+        cached_state, cached_payload = self._cached_status
+        if cached_payload is not None and cached_state == state:
+            return cached_payload
+        payload = json.dumps(self.get_status()).encode('utf-8')
+        # Atomic assignment to prevent race conditions
+        self._cached_status = (state, payload)
+        return payload
 
     def get_status(self) -> Dict[str, Any]:
         return {

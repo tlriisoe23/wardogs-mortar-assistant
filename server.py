@@ -394,7 +394,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         # Check for OCR API endpoints
         if parsed.path == '/api/ocr/status':
-            self._send_json(GLOBAL_OCR_WATCHER.get_status())
+            self._send_raw(GLOBAL_OCR_WATCHER.get_status_bytes())
             return
 
         if parsed.path == '/api/ocr/scan_once':
@@ -425,7 +425,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     GLOBAL_OCR_WATCHER.stop()
                 else:
                     GLOBAL_OCR_WATCHER.start()
-            self._send_json(GLOBAL_OCR_WATCHER.get_status())
+            self._send_raw(GLOBAL_OCR_WATCHER.get_status_bytes())
             return
 
         # Check for Blind Fire Hotspots Database endpoint

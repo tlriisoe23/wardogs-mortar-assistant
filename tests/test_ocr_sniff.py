@@ -179,3 +179,18 @@ def test_parse_timeout_env(monkeypatch, caplog):
     # Invalid String
     monkeypatch.setenv("TEST_TIMEOUT", "abc")
     assert _parse_timeout_env("TEST_TIMEOUT", 45.0) == 45.0
+
+def test_get_status_bytes_caching():
+    watcher = ScreenOcrWatcher()
+    b1 = watcher.get_status_bytes()
+    b2 = watcher.get_status_bytes()
+    assert b1 is b2  # Exact same cached bytes object
+
+    # Verify it invalidates on state change
+    watcher.is_running = True
+    b3 = watcher.get_status_bytes()
+    assert b1 is not b3
+
+    watcher._record_entry({"x": 10.0, "y": 20.0, "role": "target"}, "test")
+    b4 = watcher.get_status_bytes()
+    assert b3 is not b4
