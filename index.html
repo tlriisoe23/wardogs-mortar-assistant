@@ -1592,7 +1592,7 @@
         <!-- ========================================================================= -->
         <!-- PAGE 2: VOICE, PRIVATE CL CHAT & AUTO-OCR (ZERO-ALT-TAB COMMAND CENTER)   -->
         <!-- ========================================================================= -->
-        <section id="pageVoiceChatWorkspace" class="workspace-page inactive" role="tabpanel" aria-labelledby="pageTabVoiceChat" aria-hidden="true" tabindex="-1">
+        <section id="pageVoiceChatWorkspace" class="workspace-page inactive" role="tabpanel" aria-labelledby="pageTabVoiceChat" aria-hidden="true" tabindex="-1" inert>
             <div class="voice-workspace-grid">
                 <!-- COLUMN 1: TACTICAL VOICE & IN-GAME PTT -->
                 <div class="card" style="gap: 8px;">
@@ -2088,10 +2088,14 @@
             if (manualPage) {
                 manualPage.classList.toggle('inactive', !isManual);
                 manualPage.setAttribute('aria-hidden', String(!isManual));
+                if (!isManual) manualPage.setAttribute('inert', '');
+                else manualPage.removeAttribute('inert');
             }
             if (voicePage) {
                 voicePage.classList.toggle('inactive', isManual);
                 voicePage.setAttribute('aria-hidden', String(isManual));
+                if (isManual) voicePage.setAttribute('inert', '');
+                else voicePage.removeAttribute('inert');
             }
             if (tabManual) {
                 tabManual.className = isManual ? 'workspace-tab-btn active' : 'workspace-tab-btn';

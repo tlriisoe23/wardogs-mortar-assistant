@@ -325,3 +325,14 @@ class TestIndexHtmlA11y(unittest.TestCase):
             accessible_text = full_text.replace(emoji_text, '').strip()
 
             self.assertTrue(bool(accessible_text), f"Button {btn_id} has no accessible text remaining after hiding the emoji")
+
+    def test_hidden_workspaces_are_inert(self):
+        """Verify that inactive workspace pages have the 'inert' attribute to prevent keyboard focus traps when hidden."""
+        workspace_pages = self.soup.find_all(class_='workspace-page')
+        self.assertTrue(len(workspace_pages) > 0, "No workspace pages found")
+
+        for page in workspace_pages:
+            if 'inactive' in page.get('class', []) or page.get('aria-hidden') == 'true':
+                self.assertTrue(page.has_attr('inert'), f"Inactive workspace page (id={page.get('id')}) is missing the 'inert' attribute")
+            else:
+                self.assertFalse(page.has_attr('inert'), f"Active workspace page (id={page.get('id')}) should not have the 'inert' attribute")
