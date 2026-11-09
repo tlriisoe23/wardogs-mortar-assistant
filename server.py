@@ -521,9 +521,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 try:
                     body = json.loads(raw.decode('utf-8', errors='replace'))
                 except (ValueError, RecursionError, UnicodeDecodeError):
-                    body = {}
+                    self._send_json({"error": "invalid_json"}, status_code=400)
+                    return
                 if not isinstance(body, dict):
-                    body = {}
+                    self._send_json({"error": "invalid_json"}, status_code=400)
+                    return
                 action = str(body.get('action') or '').strip()
                 try:
                     step = int(body.get('step_mils', 5))
@@ -541,10 +543,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 try:
                     body = json.loads(raw.decode('utf-8', errors='replace'))
                 except (ValueError, RecursionError, UnicodeDecodeError):
-                    self._send_json({"error": "Invalid JSON body"}, status_code=400)
+                    self._send_json({"error": "invalid_json"}, status_code=400)
                     return
                 if not isinstance(body, dict):
-                    self._send_json({"error": "Body must be a JSON object"}, status_code=400)
+                    self._send_json({"error": "invalid_json"}, status_code=400)
                     return
                 image_b64 = body.get('image_base64')
                 if not image_b64 or not isinstance(image_b64, str) or not image_b64.strip():

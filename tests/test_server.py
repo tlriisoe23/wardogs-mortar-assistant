@@ -127,10 +127,14 @@ def test_desktop_hud_post_non_dict_payload(live_test_server):
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json"}
     )
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        assert resp.status == 200
-        data = json.loads(resp.read().decode("utf-8"))
-        assert "last_action" in data
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            pass
+        assert False, "Should raise HTTP 400 error"
+    except urllib.error.HTTPError as exc:
+        assert exc.code == 400
+        data = json.loads(exc.read().decode("utf-8"))
+        assert data.get("error") == "invalid_json"
 
 def test_desktop_hud_post_malformed_and_deep_json(live_test_server):
     req_malformed = urllib.request.Request(
@@ -138,8 +142,14 @@ def test_desktop_hud_post_malformed_and_deep_json(live_test_server):
         data=b"not valid json",
         headers={"Content-Type": "application/json"}
     )
-    with urllib.request.urlopen(req_malformed, timeout=5) as resp:
-        assert resp.status == 200
+    try:
+        with urllib.request.urlopen(req_malformed, timeout=5) as resp:
+            pass
+        assert False, "Should raise HTTP 400 error"
+    except urllib.error.HTTPError as exc:
+        assert exc.code == 400
+        data = json.loads(exc.read().decode("utf-8"))
+        assert data.get("error") == "invalid_json"
 
     import pytest
     deep_json = ('[' * 10000) + (']' * 10000)
@@ -150,10 +160,14 @@ def test_desktop_hud_post_malformed_and_deep_json(live_test_server):
     )
     try:
         with urllib.request.urlopen(req_deep, timeout=5) as resp:
-            assert resp.status == 200
+            pass
+        assert False, "Should raise HTTP 400 or 413 error"
     except urllib.error.HTTPError as e:
         try:
-            assert e.code == 400
+            assert e.code in (400, 413)
+            if e.code == 400:
+                data = json.loads(e.read().decode("utf-8"))
+                assert data.get("error") == "invalid_json"
         finally:
             e.close()
 
@@ -558,8 +572,11 @@ def test_do_post_invalid_json(live_test_server):
         )
         with urllib.request.urlopen(req, timeout=5):
             pass
-    except (urllib.error.HTTPError, urllib.error.URLError):
-        assert False, "Should fallback to empty dict, not raise HTTP error"
+        assert False, "Should raise HTTP 400 error"
+    except urllib.error.HTTPError as exc:
+        assert exc.code == 400
+        error_data = json.loads(exc.read().decode("utf-8"))
+        assert error_data.get("error") == "invalid_json"
 
 
 def test_do_post_desktop_hud_step_value_error(live_test_server):
