@@ -2,6 +2,7 @@ import json
 import base64
 import urllib.request
 import urllib.error
+import socket
 import threading
 from unittest.mock import patch, MagicMock
 import pytest
