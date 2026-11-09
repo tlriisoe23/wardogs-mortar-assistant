@@ -312,9 +312,10 @@ def _sph_bisect(fn: Callable[[float], Optional[float]], left: float, right: floa
     fl, fr = fn(left), fn(right)
     if fl is None or fr is None or fl * fr > 0:
         return None
-    if abs(fl) < 1e-8:
+    _abs = abs
+    if _abs(fl) < 1e-8:
         return left
-    if abs(fr) < 1e-8:
+    if _abs(fr) < 1e-8:
         return right
     for _ in range(40):
         if right - left <= tol:
@@ -323,7 +324,7 @@ def _sph_bisect(fn: Callable[[float], Optional[float]], left: float, right: floa
         fm = fn(mid)
         if fm is None:
             return None
-        if abs(fm) < 1e-8:
+        if _abs(fm) < 1e-8:
             return mid
         if fl * fm <= 0:
             right, fr = mid, fm
@@ -358,25 +359,27 @@ def solve_sph2_terrain_mils(arc: str, distance_m: float, flat_mils: Optional[flo
     max_a = 1.0 if arc == "low" else 1.55
 
     fn0_cache: Dict[float, Optional[float]] = {}
-    def fn0(a: float) -> Optional[float]:
-        if a not in fn0_cache:
-            fn0_cache[a] = _sph_height_at_distance(a, distance_m, model)
-        return fn0_cache[a]
+    def fn0(a: float, _m=model, _d=distance_m, _c=fn0_cache, _sph=_sph_height_at_distance) -> Optional[float]:
+        if a not in _c:
+            _c[a] = _sph(a, _d, _m)
+        return _c[a]
 
     f0 = fn0(center)
     ref = None
+    _max, _min, _abs = max, min, abs
+    _bisect, _on_arc = _sph_bisect, _sph_on_arc
     for span in (0.002, 0.005, 0.01, 0.02, 0.04, 0.08, 0.12, 0.2, 0.3):
-        l, r = max(min_a, center - span), min(max_a, center + span)
+        l, r = _max(min_a, center - span), _min(max_a, center + span)
         cands = []
         if f0 is not None:
             for edge in (l, r):
                 val = fn0(edge)
                 if val is not None and val * f0 <= 0:
-                    root = _sph_bisect(fn0, min(edge, center), max(edge, center), 1e-7)
-                    if root is not None and _sph_on_arc(arc, fn0, root, 1e-5):
+                    root = _bisect(fn0, _min(edge, center), _max(edge, center), 1e-7)
+                    if root is not None and _on_arc(arc, fn0, root, 1e-5):
                         cands.append(root)
         if cands:
-            cands.sort(key=lambda a: abs(a - center))
+            cands.sort(key=lambda a: _abs(a - center))
             ref = cands[0]
             break
     if ref is None:
@@ -386,9 +389,9 @@ def solve_sph2_terrain_mils(arc: str, distance_m: float, flat_mils: Optional[flo
             angle = min_a + (max_a - min_a) * i / 60.0
             val = fn0(angle)
             if val is not None and prev is not None and prev[1] * val <= 0:
-                root = _sph_bisect(fn0, prev[0], angle, 1e-7)
-                if root is not None and _sph_on_arc(arc, fn0, root, 1e-5):
-                    if best is None or abs(root - center) < abs(best - center):
+                root = _bisect(fn0, prev[0], angle, 1e-7)
+                if root is not None and _on_arc(arc, fn0, root, 1e-5):
+                    if best is None or _abs(root - center) < _abs(best - center):
                         best = root
             prev = None if val is None else (angle, val)
         ref = best
@@ -398,21 +401,21 @@ def solve_sph2_terrain_mils(arc: str, distance_m: float, flat_mils: Optional[flo
     max_cmd = 600.0 if arc == "low" else 1390.0
 
     fn_h_cache: Dict[float, Optional[float]] = {}
-    def fn_h(cmd: float) -> Optional[float]:
-        if cmd not in fn_h_cache:
-            h = _sph_height_at_distance(ref + (cmd - flat_mils) / 1000.0, distance_m, model)
-            fn_h_cache[cmd] = None if h is None else h - delta_z_m
-        return fn_h_cache[cmd]
+    def fn_h(cmd: float, _m=model, _d=distance_m, _c=fn_h_cache, _sph=_sph_height_at_distance, _r=ref, _f=flat_mils, _dz=delta_z_m) -> Optional[float]:
+        if cmd not in _c:
+            h = _sph(_r + (cmd - _f) / 1000.0, _d, _m)
+            _c[cmd] = None if h is None else h - _dz
+        return _c[cmd]
 
     f_flat = fn_h(flat_mils)
     direction = (1.0 if arc == "low" else -1.0) * (1.0 if delta_z_m >= 0 else -1.0)
     if f_flat is not None:
         for span in (15.0, 35.0, 70.0, 140.0, 260.0, 450.0, 780.0):
-            edge = max(min_cmd, min(max_cmd, flat_mils + direction * span))
+            edge = _max(min_cmd, _min(max_cmd, flat_mils + direction * span))
             f_edge = fn_h(edge)
             if f_edge is not None and f_flat * f_edge <= 0:
-                root = _sph_bisect(fn_h, min(flat_mils, edge), max(flat_mils, edge), 0.025)
-                if root is not None and _sph_on_arc(arc, fn_h, root, 0.05):
+                root = _bisect(fn_h, _min(flat_mils, edge), _max(flat_mils, edge), 0.025)
+                if root is not None and _on_arc(arc, fn_h, root, 0.05):
                     return root
     return None
 
