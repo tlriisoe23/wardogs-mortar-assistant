@@ -345,7 +345,13 @@ def test_extract_text_via_rapidocr_http_error_fallback():
         assert "OCR extraction failed" in result["error"]
         mock_fp.close.assert_called_once()
 
-@pytest.mark.parametrize("side_effect", [urllib.error.URLError("Connection refused"), TimeoutError("Timed out"), Exception("general error")])
+@pytest.mark.parametrize("side_effect", [
+    urllib.error.URLError("Connection refused"),
+    TimeoutError("Timed out"),
+    socket.timeout("timed out"),
+    ConnectionResetError("Connection reset by peer"),
+    Exception("general error")
+], ids=["url_error", "timeout", "socket_timeout", "connection_reset", "generic_exception"])
 def test_extract_text_via_rapidocr_exception(side_effect):
     with patch("ocr_sniff.urllib.request.urlopen", side_effect=side_effect):
         fake_png = b"dummy_bytes"
@@ -401,7 +407,13 @@ def test_extract_text_via_ollama_vlm_http_error_fallback():
         assert "OCR extraction failed" in result["error"]
         mock_fp.close.assert_called_once()
 
-@pytest.mark.parametrize("side_effect", [urllib.error.URLError("Connection refused"), TimeoutError("Timed out"), Exception("general error")])
+@pytest.mark.parametrize("side_effect", [
+    urllib.error.URLError("Connection refused"),
+    TimeoutError("Timed out"),
+    socket.timeout("timed out"),
+    ConnectionResetError("Connection reset by peer"),
+    Exception("general error")
+], ids=["url_error", "timeout", "socket_timeout", "connection_reset", "generic_exception"])
 def test_extract_text_via_ollama_vlm_exception(side_effect):
     with patch("ocr_sniff.urllib.request.urlopen", side_effect=side_effect):
         fake_png = b"dummy_bytes"
