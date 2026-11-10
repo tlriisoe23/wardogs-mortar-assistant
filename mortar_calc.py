@@ -447,7 +447,6 @@ class MortarCalculator:
         self.map_id = map_id
         self.delta_z_m: Optional[float] = None
         self.hull_heading_deg: Optional[float] = None
-        self.has_target = False
 
     def set_mortar(self, x: float, y: float) -> None:
         if not _is_finite_number(x) or not _is_finite_number(y):
@@ -460,7 +459,6 @@ class MortarCalculator:
             raise ValueError("Coordinates must be finite numbers")
         self.target_x = x
         self.target_y = y
-        self.has_target = True
 
     def calculate_solution(self) -> Dict[str, Any]:
         """

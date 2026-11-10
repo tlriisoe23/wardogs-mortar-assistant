@@ -141,7 +141,6 @@ def test_desktop_hud_post_malformed_and_deep_json(live_test_server):
     with urllib.request.urlopen(req_malformed, timeout=5) as resp:
         assert resp.status == 200
 
-    import pytest
     deep_json = ('[' * 10000) + (']' * 10000)
     req_deep = urllib.request.Request(
         f"{live_test_server}/api/desktop-hud",

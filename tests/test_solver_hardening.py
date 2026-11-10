@@ -443,7 +443,6 @@ def _sph_drag_coeff_old(speed: float) -> float:
 
 def test_sph_drag_coeff_equivalence():
     from mortar_calc import _sph_drag_coeff, SPH_GC_X
-    test_speeds = [-10.0, 0.0, 15.0, 30.0, 30.5, 600.0, 650.0]
     # Sweeping from 0 to 610 in small increments
     for i in range(-5, int(SPH_GC_X[-1]) + 15):
         speed = float(i)
