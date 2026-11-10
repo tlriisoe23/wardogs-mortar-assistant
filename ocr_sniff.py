@@ -554,14 +554,6 @@ def capture_and_scan_entries() -> List[Dict[str, Any]]:
         return []
 
 
-def capture_and_scan_coords() -> Optional[Tuple[float, float]]:
-    entries = capture_and_scan_entries()
-    if entries:
-        last = entries[-1]
-        return (last["x"], last["y"])
-    return None
-
-
 def read_windows_clipboard_text() -> Optional[str]:
     """Read CF_UNICODETEXT from Windows clipboard using ctypes (zero external deps)."""
     if not hasattr(ctypes, 'windll'):
