@@ -2573,7 +2573,7 @@
             const btn = document.getElementById('toggleContoursBtn');
             if (btn) {
                 btn.setAttribute('aria-pressed', String(showContoursOnMap));
-                btn.textContent = showContoursOnMap ? '⛰️ Contours: ON' : '⛰️ Contours: OFF';
+                btn.innerHTML = showContoursOnMap ? '<span aria-hidden="true">⛰️</span> <span class="btn-label">Contours: ON</span>' : '<span aria-hidden="true">⛰️</span> <span class="btn-label">Contours: OFF</span>';
                 btn.className = showContoursOnMap ? 'map-tag-btn active-filter' : 'map-tag-btn';
             }
             drawTacticalMap();
@@ -2583,7 +2583,7 @@
             showHotspotsOnMap = !showHotspotsOnMap;
             const btn = document.getElementById('togglePoiBtn');
             if (btn) {
-                btn.textContent = showHotspotsOnMap ? '📍 Hotspots: ON' : '📍 Hotspots: OFF';
+                btn.innerHTML = showHotspotsOnMap ? '<span aria-hidden="true">📍</span> <span class="btn-label">Hotspots: ON</span>' : '<span aria-hidden="true">📍</span> <span class="btn-label">Hotspots: OFF</span>';
                 btn.className = showHotspotsOnMap ? 'map-tag-btn active-filter' : 'map-tag-btn';
             }
             drawTacticalMap();
@@ -4595,7 +4595,7 @@
                 if (btn) {
                     btn.className = enabled ? 'map-tag-btn active-filter' : 'map-tag-btn';
                     btn.setAttribute('aria-pressed', String(enabled));
-                    btn.textContent = enabled ? '📷 Auto-OCR: ON' : '📷 Auto-OCR: OFF';
+                    btn.innerHTML = enabled ? '<span aria-hidden="true">📷</span> <span class="btn-label">Auto-OCR: ON</span>' : '<span aria-hidden="true">📷</span> <span class="btn-label">Auto-OCR: OFF</span>';
                 }
             }
             if (enabled) {
@@ -4974,12 +4974,12 @@
 
             if (leftBtn) {
                 leftBtn.setAttribute('aria-pressed', String(mortarLocked));
-                leftBtn.textContent = mortarLocked ? '🔒 Gun Locked' : '🔓 Lock Gun Pos';
+                leftBtn.innerHTML = mortarLocked ? '<span aria-hidden="true">🔒</span> <span class="btn-label">Gun Locked</span>' : '<span aria-hidden="true">🔓</span> <span class="btn-label">Lock Gun Pos</span>';
                 leftBtn.style.borderColor = mortarLocked ? '#f59e0b' : '';
                 leftBtn.style.color = mortarLocked ? '#fde047' : '';
             }
             if (mapBtn) {
-                mapBtn.textContent = mortarLocked ? '🔒 Gun Locked' : '🔓 Gun Unlocked';
+                mapBtn.innerHTML = mortarLocked ? '<span aria-hidden="true">🔒</span> <span class="btn-label">Gun Locked</span>' : '<span aria-hidden="true">🔓</span> <span class="btn-label">Gun Unlocked</span>';
                 mapBtn.style.borderColor = mortarLocked ? '#f59e0b' : '';
                 mapBtn.style.color = mortarLocked ? '#fde047' : '';
             }
@@ -6471,7 +6471,7 @@
             if (topPttBtn) {
                 topPttBtn.className = enable ? 'map-tag-btn active-filter' : 'map-tag-btn';
                 topPttBtn.setAttribute('aria-pressed', String(enable));
-                topPttBtn.textContent = enable ? '🎙️ PTT: ON (M4)' : '🎙️ PTT: OFF';
+                topPttBtn.innerHTML = enable ? '<span aria-hidden="true">🎙️</span> <span class="btn-label">PTT: ON (M4)</span>' : '<span aria-hidden="true">🎙️</span> <span class="btn-label">PTT: OFF</span>';
             }
             const vk = document.getElementById('globalPttKeySelect')?.value || '5';
             fetch(`/api/ptt/config?enabled=${enable}&vk=${vk}`)
