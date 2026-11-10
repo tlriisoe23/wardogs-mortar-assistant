@@ -554,7 +554,6 @@ def capture_and_scan_entries() -> List[Dict[str, Any]]:
         return []
 
 
-
 def read_windows_clipboard_text() -> Optional[str]:
     """Read CF_UNICODETEXT from Windows clipboard using ctypes (zero external deps)."""
     if not hasattr(ctypes, 'windll'):
